@@ -1,0 +1,114 @@
+name: Clang
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  context:
+    name: Context
+    uses: ./.github/workflows/context.yml
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Clang format
+        uses: cpp-linter/cpp-linter-action@8120e05c7fbd25fa09fa93424ec49f55f7b304ab # v2.23.1
+        id: format
+        with:
+          files-changed-only: false
+          step-summary: true
+          style: file
+          tidy-checks: -*
+
+      - name: Summary
+        run: |
+          echo "Clang report:"
+          if [ -n "${{ github.event.pull_request.number }}" ]; then
+            echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}?pr=${{ github.event.pull_request.number }}"
+          else
+            echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          exit $(( ${{ steps.format.outputs.clang-format-checks-failed }} != 0 ))
+
+  tidy:
+    name: Tidy
+    needs: context
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.context.outputs.pio-environments) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore Cache for PlatformIO
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          fail-on-cache-miss: ${{ runner.environment == 'github-hosted' }}
+          key: platformio-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('platformio.ini') }}
+          path: .platformio/.cache/downloads
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: 3.11
+          version: latest-known
+
+      - name: PlatformIO compilation database
+        env:
+          PIO_ENVIRONMENT: ${{ matrix.environment }}
+        run: |
+          cat <<'EOL' > include/config/secrets.h
+          #pragma once
+          #define PIN_BATTERY 1
+          #define PIN_BUTTONS_BACK 2
+          #define PIN_BUTTONS_TOP 3
+          #define PIN_CDS 4
+          #define PIN_CLK1 5
+          #define PIN_CLK2 6
+          #define PIN_CLK4 7
+          #define PIN_DIN1 8
+          #define PIN_DIN2 9
+          #define PIN_DIN4 10
+          #define WIFI_KEY "redacted"
+          #define WIFI_SSID "redacted"
+          EOL
+          uv run pio run -t compiledb -e "$PIO_ENVIRONMENT"
+
+      - name: Clang tidy
+        uses: cpp-linter/cpp-linter-action@8120e05c7fbd25fa09fa93424ec49f55f7b304ab # v2.23.1
+        id: tidy
+        with:
+          file-annotations: false
+          files-changed-only: false
+          step-summary: true
+          style: ""
+          tidy-checks: ""
+
+      - name: Summary
+        env:
+          clang-threshold: 9999
+        run: |
+          echo "Status: ${{ steps.tidy.outputs.checks-failed }} checks failed, threshold for success is ${{ env.clang-threshold }}."
+          echo "Clang report:"
+          if [ -n "${{ github.event.pull_request.number }}" ]; then
+            echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}?pr=${{ github.event.pull_request.number }}"
+          else
+            echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          exit $(( ${{ steps.tidy.outputs.checks-failed }} > ${{ env.clang-threshold }} ))

@@ -1,0 +1,55 @@
+#pragma once
+
+#include <Arduino.h>
+#include <span>
+#include <string_view>
+#include <variant>
+
+class FontModule
+{
+public:
+    virtual ~FontModule() = default;
+
+    FontModule(const FontModule &) = delete;
+    FontModule &operator=(const FontModule &) = delete;
+    FontModule(FontModule &&) = delete;
+    FontModule &operator=(FontModule &&) = delete;
+
+    struct Symbol
+    {
+        const std::variant<std::span<const uint8_t>, std::span<const uint16_t>> bitmap{};
+        uint8_t offsetX{};
+        int8_t offsetY{};
+    };
+
+    const std::string_view name{};
+
+    [[nodiscard]] virtual Symbol getChar(char32_t character) const = 0;
+
+protected:
+    explicit FontModule(std::string_view name) : name(name) {};
+
+    template <typename T, size_t N> [[nodiscard]] Symbol toSymbol(const std::array<T, N> &bitmap) const;
+    template <typename T, size_t N> [[nodiscard]] Symbol toSymbol(const std::array<T, N> &bitmap, int8_t offsetY) const;
+    template <typename T, size_t N>
+    [[nodiscard]] Symbol toSymbol(const std::array<T, N> &bitmap, uint8_t offsetX, int8_t offsetY) const;
+
+    [[nodiscard]] Symbol whitespace(uint8_t offsetX) const;
+};
+
+template <typename T, size_t N> FontModule::Symbol FontModule::toSymbol(const std::array<T, N> &bitmap) const
+{
+    return {bitmap, 0U, 0};
+}
+
+template <typename T, size_t N>
+FontModule::Symbol FontModule::toSymbol(const std::array<T, N> &bitmap, int8_t offsetY) const
+{
+    return {bitmap, 0U, offsetY};
+}
+
+template <typename T, size_t N>
+FontModule::Symbol FontModule::toSymbol(const std::array<T, N> &bitmap, uint8_t offsetX, int8_t offsetY) const
+{
+    return {bitmap, offsetX, offsetY};
+}

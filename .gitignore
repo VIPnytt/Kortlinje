@@ -1,4 +1,7 @@
 /.idea
 /.pio
 /.platformio
+/.venv
 /.vscode
+/firmware/include/config/secrets*.h
+/logs

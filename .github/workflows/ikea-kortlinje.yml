@@ -1,0 +1,117 @@
+name: IKEA Kortlinje
+
+on:
+  merge_group:
+    types:
+      - checks_requested
+
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  context:
+    name: Context
+    uses: ./.github/workflows/context.yml
+
+  full:
+    name: Full
+    needs: context
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.context.outputs.pio-environments) }}
+        exclude:
+          - environment: attiny841
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore Cache for PlatformIO
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          fail-on-cache-miss: ${{ runner.environment == 'github-hosted' }}
+          key: platformio-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('platformio.ini') }}
+          path: .platformio/.cache/downloads
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: 3.11
+          version: latest-known
+
+      - name: PlatformIO build
+        env:
+          PIO_ENVIRONMENT: ${{ matrix.environment }}
+        run: |
+          cat <<'EOL' > include/config/secrets.h
+          #pragma once
+          #define PIN_BATTERY 1
+          #define PIN_BUTTONS_BACK 2
+          #define PIN_BUTTONS_TOP 3
+          #define PIN_CDS 4
+          #define PIN_CLK1 5
+          #define PIN_CLK2 6
+          #define PIN_CLK4 7
+          #define PIN_DIN1 8
+          #define PIN_DIN2 9
+          #define PIN_DIN4 10
+          #define WIFI_KEY "redacted"
+          #define WIFI_SSID "redacted"
+          EOL
+          uv run pio run -e "$PIO_ENVIRONMENT"
+
+  minimal:
+    name: Minimal
+    needs: context
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.context.outputs.pio-environments) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore Cache for PlatformIO
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          fail-on-cache-miss: ${{ runner.environment == 'github-hosted' }}
+          key: platformio-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('platformio.ini') }}
+          path: .platformio/.cache/downloads
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: 3.11
+          version: latest-known
+
+      - name: PlatformIO build
+        env:
+          PIO_ENVIRONMENT: ${{ matrix.environment }}
+        run: |
+          cat <<'EOL' > include/config/secrets.h
+          #pragma once
+          #define PIN_BATTERY 1
+          #define PIN_BUTTONS_BACK 2
+          #define PIN_BUTTONS_TOP 3
+          #define PIN_CDS 4
+          #define PIN_CLK1 5
+          #define PIN_CLK2 6
+          #define PIN_CLK4 7
+          #define PIN_DIN1 8
+          #define PIN_DIN2 9
+          #define PIN_DIN4 10
+          #define WIFI_KEY "redacted"
+          #define WIFI_SSID "redacted"
+          EOL
+          uv run pio run -e "$PIO_ENVIRONMENT"

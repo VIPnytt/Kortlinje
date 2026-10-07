@@ -1,0 +1,14 @@
+Checks: >
+  *
+CheckOptions:
+  - key: cppcoreguidelines-macro-usage.CheckCapsOnly
+    value: true
+  - key: misc-include-cleaner.MissingIncludes
+    value: false
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: ^(tv|x|y)$
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: ^(id|tv|x|y)$
+  - key: readability-identifier-length.IgnoredLoopCounterNames
+    value: ^(x|y)$
+FormatStyle: file
