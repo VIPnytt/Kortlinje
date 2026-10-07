@@ -73,7 +73,7 @@ jobs:
         env:
           PIO_ENVIRONMENT: ${{ matrix.environment }}
         run: |
-          cat <<'EOL' > include/config/secrets.h
+          cat <<'EOL' > firmware/include/config/secrets.h
           #pragma once
           #define PIN_BATTERY 1
           #define PIN_BUTTONS_BACK 2
