@@ -1,5 +1,18 @@
 Checks: >
-  *
+  *,
+  -altera-id-dependent-backward-branch,
+  -altera-struct-pack-align,
+  -altera-unroll-loops,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -fuchsia-default-arguments-calls,
+  -google-runtime-int,
+  -llvm-header-guard,
+  -llvmlibc-callee-namespace,
+  -llvmlibc-implementation-in-namespace,
+  -llvmlibc-inline-function-decl,
+  -modernize-use-trailing-return-type,
+  -portability-avoid-pragma-once,
+  -readability-convert-member-functions-to-static
 CheckOptions:
   - key: cppcoreguidelines-macro-usage.CheckCapsOnly
     value: true

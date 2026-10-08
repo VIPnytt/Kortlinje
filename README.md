@@ -11,10 +11,10 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 
 | Subsystem | Status | Details |
 | :--- | :--- | :--- |
-| **Display** | Operational | Fully functional 2-wire driver for the triple VK1640 controllers. |
+| **Display** | Operational | Fully functional driver for the triple VK1640 controllers. |
 | **Buttons** | Partial | Resistor ladder decoded. Two buttons cycle demo modes; remaining buttons emit raw Serial debug events. |
 | **Power** | Operational | Continuous 5V USB-C supply is required. Battery contacts serve strictly as a passive ADC voltage monitor. |
-| **Audio** | Reverse Engineering | Piezo buzzer driver circuit partially traced; no software implementation yet. |
+| **Audio** | Partial | Basic test beep implemented on alarm buttons; dedicated sound and alarm manager pending. |
 | **Sensors** | Reverse Engineering | Temperature and humidity daughterboard lines require further mapping before MCU integration. The CdS is partially up and running, emitting raw Serial debug events. |
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
 

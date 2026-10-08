@@ -18,3 +18,5 @@
 #define PIN_BATTERY 9U
 
 #define PIN_CDS 10U
+
+#define PIN_BUZ 11U

@@ -7,6 +7,7 @@ void ButtonExtension::begin()
 {
     pinMode(PIN_BUTTONS_BACK, PinMode::INPUT);
     pinMode(PIN_BUTTONS_TOP, PinMode::INPUT);
+    pinMode(PIN_BUZ, PinMode::OUTPUT_2MA);
 }
 
 void ButtonExtension::handle()
@@ -101,7 +102,11 @@ ButtonExtension::ButtonLevel ButtonExtension::parse(uint16_t raw)
     return ButtonLevel::INVALID;
 }
 
-void ButtonExtension::backAlarm() { Serial.println("ButtonExtension::backAlarm()"); }
+void ButtonExtension::backAlarm()
+{
+    Serial.println("ButtonExtension::backAlarm()");
+    tone(PIN_BUZ, 0b1U << 12U, 0b1UL << 8U);
+}
 
 void ButtonExtension::backDown()
 {
@@ -117,7 +122,11 @@ void ButtonExtension::backUp()
     Modes.setModeNext();
 }
 
-void ButtonExtension::topAlarm() { Serial.println("ButtonExtension::topAlarm()"); }
+void ButtonExtension::topAlarm()
+{
+    Serial.println("ButtonExtension::topAlarm()");
+    tone(PIN_BUZ, 0b1U << 11U, 0b1UL << 7U);
+}
 
 void ButtonExtension::topBrightness() { Serial.println("ButtonExtension::topBrightness()"); }
 
