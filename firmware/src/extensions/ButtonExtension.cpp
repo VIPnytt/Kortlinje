@@ -5,8 +5,8 @@
 
 void ButtonExtension::begin()
 {
-    pinMode(PIN_BUTTONS_BACK, PinMode::INPUT);
-    pinMode(PIN_BUTTONS_TOP, PinMode::INPUT);
+    pinMode(PIN_REAR, PinMode::INPUT);
+    pinMode(PIN_TOP, PinMode::INPUT);
     pinMode(PIN_BUZ, PinMode::OUTPUT_2MA);
 }
 
@@ -19,7 +19,7 @@ void ButtonExtension::handle()
 void ButtonExtension::back()
 {
     const ButtonLevel _stateBack{stateBack};
-    stateBack = parse(static_cast<uint16_t>(analogRead(PIN_BUTTONS_BACK)));
+    stateBack = parse(static_cast<uint16_t>(analogRead(PIN_REAR)));
     if (pressBack && stateBack == _stateBack && stateBack == ButtonLevel::LEVEL4)
     {
         pressBack = false;
@@ -49,7 +49,7 @@ void ButtonExtension::back()
 void ButtonExtension::top()
 {
     const ButtonLevel _stateTop{stateTop};
-    stateTop = parse(static_cast<uint16_t>(analogRead(PIN_BUTTONS_TOP)));
+    stateTop = parse(static_cast<uint16_t>(analogRead(PIN_TOP)));
     if (pressTop && stateTop == _stateTop && stateTop == ButtonLevel::LEVEL4)
     {
         pressTop = false;

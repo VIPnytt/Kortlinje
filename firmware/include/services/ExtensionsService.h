@@ -1,6 +1,5 @@
 #pragma once
 
-#include "extensions/BatteryExtension.h"
 #include "extensions/ButtonExtension.h"
 #include "extensions/CdsExtension.h"
 #include "extensions/OtaExtension.h"
@@ -17,13 +16,11 @@ private:
 
     unsigned long lastMillis{0UL};
 
-    BatteryExtension extensionBattery{};
     ButtonExtension extensionButton{};
     CdsExtension extensionCds{};
     OtaExtension extensionOta{};
 
-    const std::array<ExtensionModule *, 4U> modules{
-        &extensionBattery,
+    const std::array<ExtensionModule *, 3U> modules{
         &extensionButton,
         &extensionCds,
         &extensionOta,

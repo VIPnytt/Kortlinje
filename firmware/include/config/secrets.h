@@ -3,20 +3,22 @@
 #define WIFI_SSID "name"
 #define WIFI_KEY "password"
 
-#define PIN_CLK1 1U
-#define PIN_DIN1 2U
+#define PIN_CLK1 1
+#define PIN_CLK2 2
+#define PIN_CLK3 3
 
-#define PIN_CLK2 3U
-#define PIN_DIN2 4U
+#define PIN_DA1 4
+#define PIN_DA2 5
+#define PIN_DA3 6
 
-#define PIN_CLK4 5U
-#define PIN_DIN4 6U
+#define PIN_PDM 9
+#define PIN_EN 10
 
-#define PIN_BUTTONS_BACK 7U
-#define PIN_BUTTONS_TOP 8U
+#define PIN_BUZ 9
 
-#define PIN_BATTERY 9U
+#define PIN_CDS 10
 
-#define PIN_CDS 10U
+#define PIN_WAKE 11
 
-#define PIN_BUZ 11U
+#define PIN_TOP 26
+#define PIN_REAR 27

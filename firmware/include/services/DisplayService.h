@@ -80,8 +80,8 @@ private:
 
     std::array<bool, pixels.size()> frame{};
 
-    std::array<pin_size_t, (pixels.size() >> 7U)> din{PIN_DIN1, PIN_DIN2, PIN_DIN4};
-    std::array<pin_size_t, (pixels.size() >> 7U)> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK4};
+    std::array<pin_size_t, (pixels.size() >> 7U)> din{PIN_DA1, PIN_DA2, PIN_DA3};
+    std::array<pin_size_t, (pixels.size() >> 7U)> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
 
     std::array<std::array<uint8_t, 16U>, (pixels.size() >> 7U)> buffer{};
 
