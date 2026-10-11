@@ -11,8 +11,8 @@
 #define PIN_DA2 5
 #define PIN_DA3 6
 
-#define PIN_PDM 9
-#define PIN_EN 10
+#define PIN_PDM 7
+#define PIN_EN 8
 
 #define PIN_BUZ 9
 

@@ -11,7 +11,7 @@ class TickerMode final : public ModeModule
 private:
     static inline std::string message{"Kortlinje"};
 
-    bool pending{false};
+    static inline bool pending{false};
 
     int8_t offsetY{static_cast<int8_t>(GRID_ROWS / 2U)};
 
@@ -25,7 +25,6 @@ private:
     std::unique_ptr<TextHandler> text{};
 
     void setFont(std::string_view fontName);
-    void setMessage(std::string_view _message);
 
 public:
     static constexpr std::string_view name{"Ticker"};
@@ -35,4 +34,6 @@ public:
     void begin() override;
     void handle() override;
     void end() override;
+
+    static void setMessage(std::string_view _message);
 };

@@ -1,6 +1,7 @@
 #include "extensions/CdsExtension.h"
 
 #include "config/secrets.h"
+#include "services/DisplayService.h"
 
 void CdsExtension::begin()
 {
@@ -23,6 +24,7 @@ void CdsExtension::handle()
             debounce = 0;
             state = false;
             Serial.println("CdsExtension::handle() - LOW");
+            Display.setPower(false);
         }
         else if (debounce > 0)
         {
@@ -35,6 +37,7 @@ void CdsExtension::handle()
             debounce = 0;
             state = true;
             Serial.println("CdsExtension::handle() - HIGH");
+            Display.setPower(true);
         }
         else if (debounce < 0)
         {

@@ -17,7 +17,7 @@ void DisplayService::begin()
         pinMode(pin, PinMode::OUTPUT_2MA);
         digitalWrite(pin, PinStatus::HIGH);
     }
-    setBrightness(Brightness::DUTY16_1);
+    setBrightness(Brightness::DUTY16_14);
 }
 
 void DisplayService::drawEllipseOutline(float x, float y, float radius, bool lit)

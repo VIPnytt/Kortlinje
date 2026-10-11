@@ -1,6 +1,7 @@
 #include "extensions/ButtonExtension.h"
 
 #include "config/secrets.h"
+#include "services/DisplayService.h"
 #include "services/ModesService.h"
 
 void ButtonExtension::begin()
@@ -128,8 +129,43 @@ void ButtonExtension::topAlarm()
     tone(PIN_BUZ, 0b1U << 11U, 0b1UL << 7U);
 }
 
-void ButtonExtension::topBrightness() { Serial.println("ButtonExtension::topBrightness()"); }
+void ButtonExtension::topBrightness()
+{
+    Serial.println("ButtonExtension::topBrightness()");
+    switch (Display.getBrightness())
+    {
+    case DisplayService::Brightness::DUTY16_1:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_14);
+        Display.setPower(false);
+        break;
+    case DisplayService::Brightness::DUTY16_2:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_1);
+        break;
+    case DisplayService::Brightness::DUTY16_4:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_2);
+        break;
+    case DisplayService::Brightness::DUTY16_10:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_4);
+        break;
+    case DisplayService::Brightness::DUTY16_11:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_10);
+        break;
+    case DisplayService::Brightness::DUTY16_12:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_11);
+        break;
+    case DisplayService::Brightness::DUTY16_13:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_12);
+        break;
+    case DisplayService::Brightness::DUTY16_14:
+        Display.setBrightness(DisplayService::Brightness::DUTY16_13);
+        break;
+    }
+}
 
-void ButtonExtension::topCycle() { Serial.println("ButtonExtension::topCycle()"); }
+void ButtonExtension::topCycle()
+{
+    Serial.println("ButtonExtension::topCycle()");
+    Modes.setModeNext();
+}
 
 void ButtonExtension::topSnooze() { Serial.println("ButtonExtension::topSnooze()"); }

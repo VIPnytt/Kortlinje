@@ -2,6 +2,7 @@
 
 #include "extensions/ButtonExtension.h"
 #include "extensions/CdsExtension.h"
+#include "extensions/EnvironmentExtension.h"
 #include "extensions/OtaExtension.h"
 #include "modules/ExtensionModule.h"
 #include "modules/ServiceModule.h"
@@ -18,11 +19,13 @@ private:
 
     ButtonExtension extensionButton{};
     CdsExtension extensionCds{};
+    EnvironmentExtension extensionEnvironment{};
     OtaExtension extensionOta{};
 
-    const std::array<ExtensionModule *, 3U> modules{
+    const std::array<ExtensionModule *, 4U> modules{
         &extensionButton,
         &extensionCds,
+        &extensionEnvironment,
         &extensionOta,
     };
 

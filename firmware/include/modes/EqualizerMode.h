@@ -20,6 +20,6 @@ public:
 
     explicit EqualizerMode() : ModeModule(name) {};
 
-    void begin();
-    void handle();
+    void begin() override;
+    void handle() override;
 };

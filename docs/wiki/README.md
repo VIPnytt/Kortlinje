@@ -20,10 +20,10 @@ CLK1 ─────────┐│
       │ ┤ ├                          B4 ┼ B4
       │ ┤ ├                          B5 ┼ B5
       │ ┤ ├                             │
-      │ ┤ ├    U3                    P1 ┤
- DA2 ─┼─┤ ├   ┌─┐                    P2 ┤
-CLK2 ─┼─┤ ├   ┤ ├                    P3 ┤
-      │ ┤ ├   ┤ ├    U6              P4 ┼─ BAT+
+      │ ┤ ├    U3                     1 ┤
+ DA2 ─┼─┤ ├   ┌─┐                     2 ┤
+CLK2 ─┼─┤ ├   ┤ ├                     3 ┤
+      │ ┤ ├   ┤ ├    U6               4 ┼─ BAT+
       │ ┤ ├   ┤ ├   ┌─┐                 │
       │ ┤ ├   ┤ ├   ┤ ├             VDD ┼─ +5.0 V DC
       │ ┤ ├   ┤ ├   ┤ ├   Q2  D43   GND ┼─ 0 V DC
@@ -46,9 +46,9 @@ CLK3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───�
 
 ```text
 ┌───┐
-│ 1 ┼─ 0 V DC
-│ 2 ┼─ Buttons
-│ 3 ┼─ +3.3 V DC
+│ 1 ┼─ 0 V DC    [white]
+│ 2 ┼─ Buttons   [red]
+│ 3 ┼─ +3.3 V DC [black]
 └───┘
 ```
 
@@ -56,10 +56,10 @@ CLK3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───�
 
 ```text
 ┌───┐
-│ 1 ┼─ +3.3 V DC
-│ 2 ┼─ Buttons
-│ 3 ┼─ 0 V DC
-│ 4 ┼─ BAT+
+│ 1 ┼─ +3.3 V DC [blue]
+│ 2 ┼─ Buttons   [black]
+│ 3 ┼─ 0 V DC    [red]
+│ 4 ┼─ BAT+      [white]
 └───┘
 ```
 
@@ -67,11 +67,11 @@ CLK3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───�
 
 ```text
 ┌────┐
-│ B1 ┼─ B1
-│ B2 ┼─ B2
-│ B3 ┼─ B3
-│ B4 ┼─ B4
-│ B5 ┼─ B5
+│ B1 ┼─ B1 [white]
+│ B2 ┼─ B2 [red]
+│ B3 ┼─ B3 [black]
+│ B4 ┼─ B4 [blue]
+│ B5 ┼─ B5 [yellow]
 └────┘
 ```
 
@@ -97,17 +97,18 @@ Green ┼─ USB CC
 │  ADC ├─ Buttons top
 │  ADC ├─ Buttons rear
 │      │
-│   GP ├─ DA1
 │   GP ├─ CLK1
-│   GP ├─ DA2
 │   GP ├─ CLK2
-│   GP ├─ DA3
 │   GP ├─ CLK3
-│   GP ├─ Buzzer
-│   GP ├─ PDM
-│   GP ├─ Enable
-│   GP ├─ Wake
+│   GP ├─ DA1
+│   GP ├─ DA2
+│   GP ├─ DA3
 │   GP ├─ CdS
+│   GP ├─ Enable
+│   GP ├─ PDM
+│   GP ├─ Wake
+│      │
+│  PWM ├─ Buzzer
 └──────┘              
 ```
 

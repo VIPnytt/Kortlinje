@@ -54,6 +54,6 @@ public:
 
     explicit SnakeMode() : ModeModule(name) {};
 
-    void begin();
-    void handle();
+    void begin() override;
+    void handle() override;
 };
