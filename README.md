@@ -15,7 +15,7 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 | **Buttons** | Operational | Resistor ladder decoded. Dedicated buttons cycle demo modes and display brightness; remaining buttons emit Serial debug events pending feature mapping. |
 | **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
 | **Audio** | Partial | Buzzer driver verified with test beeps on alarm buttons; dedicated sound and alarm manager pending. |
-| **Power** | Partial | Continuous 5V USB-C supply required. Battery sleep and USB wakeup pending. |
+| **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
 
 ## Active Display Modes
@@ -29,6 +29,6 @@ The firmware currently includes three standalone render modes switchable via on-
 ## Hardware & Modding
 
 - **Modding Documentation:** Step-by-step disassembly and wiring instructions are documented in the [Kortlinje Wiki](https://github.com/VIPnytt/Kortlinje/wiki).
-- **Power Requirements:** Continuous 5V via USB-C is required to power the MCU, display drivers, and sensors.
+- **Power Requirements:** Designed for 5V USB-C operation with support for low-power battery standby (2× AAA).
 - **Firmware Build:** Built with PlatformIO targeting RP2350 Arduino framework environments.
 - **Hardware Modifications:** Requires opening the enclosure, isolating stock MCU lines, and soldering connections to the VK1640 clock/data buses, button ladder, buzzer driver, and sensor lines.
