@@ -9,36 +9,38 @@ class ButtonExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"Button"};
 
-    static constexpr uint16_t level1{2'005U};
-    static constexpr uint16_t level2{2'650U};
-    static constexpr uint16_t level3{2'972U};
-    static constexpr uint16_t level4{3'933U};
-
-    static constexpr uint8_t margin{static_cast<uint8_t>((level3 - level2) / 3U)};
-
     enum ButtonLevel : uint8_t
     {
         LEVEL0,
         LEVEL1,
         LEVEL2,
         LEVEL3,
-        LEVEL4,
+        IDLE,
         INVALID,
     };
 
-    bool pressBack{false};
+    bool pressRear{false};
     bool pressTop{false};
     bool toggle{false};
 
-    ButtonLevel stateBack{ButtonLevel::INVALID};
+    uint8_t margin{0U};
+
+    uint16_t high{0U};
+    uint16_t low{0U};
+    uint16_t medium{0U};
+    uint16_t idle{0U};
+
+    unsigned long lastMillis{0UL};
+
+    ButtonLevel stateRear{ButtonLevel::INVALID};
     ButtonLevel stateTop{ButtonLevel::INVALID};
 
-    void back();
-    void backAlarm();
-    void backDown();
-    void backSet();
-    void backUp();
-    void top();
+    void readRear();
+    void rearAlarm();
+    void rearDown();
+    void rearSet();
+    void rearUp();
+    void readTop();
     void topAlarm();
     void topBrightness();
     void topCycle();

@@ -268,3 +268,4 @@ A collection of external links for deeper exploration — provided for reference
 
 - [Hackaday: Another IKEA Product Yields An LED Matrix](https://hackaday.com/2026/10/10/another-ikea-product-yields-an-led-matrix/)
 - [IKEA: KORTLINJE](https://www.ikea.com/se/en/p/kortlinje-alarm-clock-with-hygro-thermometer-red-90620468/)
+- [RevSpace forum: ikea kortlinje klok hacken](https://forum.revspace.nl/t/ikea-kortlinje-klok-hacken/1129)

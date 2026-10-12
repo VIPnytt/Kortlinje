@@ -9,49 +9,58 @@ void ButtonExtension::begin()
     pinMode(PIN_REAR, PinMode::INPUT);
     pinMode(PIN_TOP, PinMode::INPUT);
     pinMode(PIN_BUZ, PinMode::OUTPUT_2MA);
+    idle = static_cast<uint16_t>((analogRead(PIN_REAR) + analogRead(PIN_TOP)) / 2);
+    high = idle * 3U / 4U;
+    medium = idle * 2U / 3U;
+    low = idle / 2U;
+    margin = static_cast<uint8_t>((high - medium) / 2U);
 }
 
 void ButtonExtension::handle()
 {
-    toggle ? top() : back();
-    toggle = !toggle;
+    if (millis() - lastMillis > 0b1U << 3U)
+    {
+        lastMillis = millis();
+        toggle ? readTop() : readRear();
+        toggle = !toggle;
+    }
 }
 
-void ButtonExtension::back()
+void ButtonExtension::readRear()
 {
-    const ButtonLevel _stateBack{stateBack};
-    stateBack = parse(static_cast<uint16_t>(analogRead(PIN_REAR)));
-    if (pressBack && stateBack == _stateBack && stateBack == ButtonLevel::LEVEL4)
+    const ButtonLevel _stateRear{stateRear};
+    stateRear = parse(static_cast<uint16_t>(analogRead(PIN_REAR)));
+    if (pressRear && stateRear == _stateRear && stateRear == ButtonLevel::IDLE)
     {
-        pressBack = false;
+        pressRear = false;
     }
-    else if (!pressBack && stateBack == _stateBack && stateBack == ButtonLevel::LEVEL3)
+    else if (!pressRear && stateRear == _stateRear && stateRear == ButtonLevel::LEVEL3)
     {
-        pressBack = true;
-        backDown();
+        pressRear = true;
+        rearDown();
     }
-    else if (!pressBack && stateBack == _stateBack && stateBack == ButtonLevel::LEVEL2)
+    else if (!pressRear && stateRear == _stateRear && stateRear == ButtonLevel::LEVEL2)
     {
-        pressBack = true;
-        backUp();
+        pressRear = true;
+        rearUp();
     }
-    else if (!pressBack && stateBack == _stateBack && stateBack == ButtonLevel::LEVEL1)
+    else if (!pressRear && stateRear == _stateRear && stateRear == ButtonLevel::LEVEL1)
     {
-        pressBack = true;
-        backAlarm();
+        pressRear = true;
+        rearAlarm();
     }
-    else if (!pressBack && stateBack == _stateBack && stateBack == ButtonLevel::LEVEL0)
+    else if (!pressRear && stateRear == _stateRear && stateRear == ButtonLevel::LEVEL0)
     {
-        pressBack = true;
-        backSet();
+        pressRear = true;
+        rearSet();
     }
 }
 
-void ButtonExtension::top()
+void ButtonExtension::readTop()
 {
     const ButtonLevel _stateTop{stateTop};
     stateTop = parse(static_cast<uint16_t>(analogRead(PIN_TOP)));
-    if (pressTop && stateTop == _stateTop && stateTop == ButtonLevel::LEVEL4)
+    if (pressTop && stateTop == _stateTop && stateTop == ButtonLevel::IDLE)
     {
         pressTop = false;
     }
@@ -79,19 +88,19 @@ void ButtonExtension::top()
 
 ButtonExtension::ButtonLevel ButtonExtension::parse(uint16_t raw)
 {
-    if (raw >= level4 - margin && raw <= level4 + margin)
+    if (raw >= idle - margin && raw <= idle + margin)
     {
-        return ButtonLevel::LEVEL4;
+        return ButtonLevel::IDLE;
     }
-    if (raw >= level3 - margin && raw <= level3 + margin)
+    if (raw >= high - margin && raw <= high + margin)
     {
         return ButtonLevel::LEVEL3;
     }
-    if (raw >= level2 - margin && raw <= level2 + margin)
+    if (raw >= medium - margin && raw <= medium + margin)
     {
         return ButtonLevel::LEVEL2;
     }
-    if (raw >= level1 - margin && raw <= level1 + margin)
+    if (raw >= low - margin && raw <= low + margin)
     {
         return ButtonLevel::LEVEL1;
     }
@@ -99,27 +108,26 @@ ButtonExtension::ButtonLevel ButtonExtension::parse(uint16_t raw)
     {
         return ButtonLevel::LEVEL0;
     }
-    // Serial.printf("[Button] raw: %4u\n", raw);
     return ButtonLevel::INVALID;
 }
 
-void ButtonExtension::backAlarm()
+void ButtonExtension::rearAlarm()
 {
-    Serial.println("ButtonExtension::backAlarm()");
+    Serial.println("ButtonExtension::rearAlarm()");
     tone(PIN_BUZ, 0b1U << 12U, 0b1UL << 8U);
 }
 
-void ButtonExtension::backDown()
+void ButtonExtension::rearDown()
 {
-    Serial.println("ButtonExtension::backDown()");
+    Serial.println("ButtonExtension::rearDown()");
     Modes.setModePrevious();
 }
 
-void ButtonExtension::backSet() { Serial.println("ButtonExtension::backSet()"); }
+void ButtonExtension::rearSet() { Serial.println("ButtonExtension::rearSet()"); }
 
-void ButtonExtension::backUp()
+void ButtonExtension::rearUp()
 {
-    Serial.println("ButtonExtension::backUp()");
+    Serial.println("ButtonExtension::rearUp()");
     Modes.setModeNext();
 }
 
