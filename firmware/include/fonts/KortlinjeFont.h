@@ -7,6 +7,19 @@
 class KortlinjeFont final : public FontModule
 {
 private:
+    // U+0021 ! EXCLAMATION MARK
+    static constexpr std::array<uint16_t, 9U> exclamationMark{
+        0b11U,
+        0b11U,
+        0b11U,
+        0b11U,
+        0b11U,
+        0b11U,
+        0b11U,
+        0b00U,
+        0b11U,
+    };
+
     // U+0025 % PERCENT SIGN
     static constexpr std::array<uint16_t, 9U> percentSign{
         0b011100001U,
@@ -420,6 +433,31 @@ private:
         },
     }};
 
+    // U+0065 e LATIN SMALL LETTER E
+    static constexpr std::array<uint8_t, 8U> latinSmallLetterE{
+        0b00111100U,
+        0b01100110U,
+        0b11000011U,
+        0b11111111U,
+        0b11000000U,
+        0b11000000U,
+        0b01100011U,
+        0b00111110U,
+    };
+
+    // U+006A j LATIN SMALL LETTER J
+    static constexpr std::array<uint8_t, 9U> latinSmallLetterJ{
+        0b000011U,
+        0b000000U,
+        0b000011U,
+        0b000011U,
+        0b000011U,
+        0b000011U,
+        0b110011U,
+        0b110011U,
+        0b011110U,
+    };
+
     // U+0059 Y LATIN CAPITAL LETTER Y
     static constexpr std::array<uint8_t, 9U> latinCapitalLetterY{
         0b110011U,
@@ -437,6 +475,19 @@ private:
     static constexpr std::array<uint8_t, 2U> degreeSign{
         0b11U,
         0b11U,
+    };
+
+    // U+2665 ♥ BLACK HEART SUIT
+    static constexpr std::array<uint16_t, 9U> blackHeartSuit{
+        0b00110001100U,
+        0b01111011110U,
+        0b11111111111U,
+        0b11111111111U,
+        0b01111111110U,
+        0b00111111100U,
+        0b00011111000U,
+        0b00001110000U,
+        0b00000100000U,
     };
 
     // U+1F504 🔄 ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS
