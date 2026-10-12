@@ -1,9 +1,9 @@
 #pragma once
 
 #include "extensions/ButtonExtension.h"
-#include "extensions/CdsExtension.h"
 #include "extensions/EnvironmentExtension.h"
 #include "extensions/OtaExtension.h"
+#include "extensions/PhotocellExtension.h"
 #include "modules/ExtensionModule.h"
 #include "modules/ServiceModule.h"
 
@@ -18,15 +18,15 @@ private:
     unsigned long lastMillis{0UL};
 
     ButtonExtension extensionButton{};
-    CdsExtension extensionCds{};
     EnvironmentExtension extensionEnvironment{};
     OtaExtension extensionOta{};
+    PhotocellExtension extensionPhotocell{};
 
     const std::array<ExtensionModule *, 4U> modules{
         &extensionButton,
-        &extensionCds,
         &extensionEnvironment,
         &extensionOta,
+        &extensionPhotocell,
     };
 
 public:

@@ -13,7 +13,7 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 | :--- | :--- | :--- |
 | **Display** | Operational | Fully functional driver for the triple VK1640 controllers with multi-step brightness control. |
 | **Buttons** | Operational | Resistor ladder decoded. Dedicated buttons cycle demo modes and display brightness; remaining buttons emit Serial debug events pending feature mapping. |
-| **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor (CdS) is operational. |
+| **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
 | **Audio** | Partial | Buzzer driver verified with test beeps on alarm buttons; dedicated sound and alarm manager pending. |
 | **Power** | Partial | Continuous 5V USB-C supply required. Battery sleep and USB wakeup pending. |
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |

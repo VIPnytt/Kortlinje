@@ -291,7 +291,7 @@ void DisplayService::setPixel(Symbol symbol, bool lit)
 
 void DisplayService::setPower(bool _power)
 {
-    if (power == _power)
+    if (_power == power)
     {
         return;
     }
@@ -307,6 +307,7 @@ void DisplayService::setPower(bool _power)
             vkSet(chip, 0b1000'0000U);
             vkEnd(chip);
         }
+        power = false;
     }
 }
 

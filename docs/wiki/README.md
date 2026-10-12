@@ -261,3 +261,10 @@ Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware
 ```h
 #define PIN_REAR 13
 ```
+
+## 🔗 Resources
+
+A collection of external links for deeper exploration — provided for reference only and with no formal connection to this project.
+
+- [Hackaday: Another IKEA Product Yields An LED Matrix](https://hackaday.com/2026/10/10/another-ikea-product-yields-an-led-matrix/)
+- [IKEA: KORTLINJE](https://www.ikea.com/se/en/p/kortlinje-alarm-clock-with-hygro-thermometer-red-90620468/)

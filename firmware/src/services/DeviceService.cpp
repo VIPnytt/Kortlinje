@@ -32,7 +32,10 @@ void DeviceService::handle0()
 
 void DeviceService::handle1()
 {
-    Display.flush();
+    if (Display.getPower())
+    {
+        Display.flush();
+    }
     if (millis() - lastMillis > 0b1U << 16U)
     {
         lastMillis = millis();
