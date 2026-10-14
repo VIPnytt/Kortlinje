@@ -23,6 +23,14 @@ void ModesService::handle()
 
 std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
 {
+    if (modeName == ClockMode::name)
+    {
+        return std::make_unique<ClockMode>();
+    }
+    if (modeName == DateMode::name)
+    {
+        return std::make_unique<DateMode>();
+    }
     if (modeName == EqualizerMode::name)
     {
         return std::make_unique<EqualizerMode>();
@@ -42,6 +50,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     if (modeName == TickerMode::name)
     {
         return std::make_unique<TickerMode>();
+    }
+    if (modeName == WeekdayMode::name)
+    {
+        return std::make_unique<WeekdayMode>();
     }
     return nullptr;
 }

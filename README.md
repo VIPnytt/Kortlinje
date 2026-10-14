@@ -11,20 +11,26 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 
 | Subsystem | Status | Details |
 | :--- | :--- | :--- |
-| **Display** | Operational | Fully functional driver for the triple VK1640 controllers with multi-step brightness control. |
-| **Buttons** | Operational | Resistor ladder decoded. Dedicated buttons cycle demo modes and display brightness; remaining buttons emit Serial debug events pending feature mapping. |
-| **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
 | **Audio** | Partial | Buzzer driver verified with test beeps on alarm buttons; dedicated sound and alarm manager pending. |
-| **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
+| **Buttons** | Operational | Resistor ladder decoded. Dedicated buttons cycle demo modes and display brightness; remaining buttons emit Serial debug events pending feature mapping. |
+| **Display** | Operational | Fully functional driver for the triple VK1640 controllers with multi-step brightness control. |
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
+| **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
+| **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
+| **Timekeeping** | Work in Progress | RTC and time zone pending. |
 
 ## Active Display Modes
 
-The firmware currently includes three standalone render modes switchable via on-device buttons:
+The firmware currently includes eight standalone render modes switchable via on-device buttons:
 
-- **Text Ticker:** Horizontal scrolling marquee displaying text along with live ambient temperature and humidity telemetry from the onboard sensors.
-- **Snake:** Autonomous, self-playing demo animation.
+- **Clock:** Displays the current UTC time in hours and minutes.
+- **Date:** Displays the current month and day of the month.
 - **Equalizer:** Autonomous simulated spectrum visualizer.
+- **Humidity:** Displays live ambient humidity telemetry from the onboard sensor.
+- **Snake:** Autonomous, self-playing demo animation.
+- **Temperature:** Displays live ambient temperature telemetry from the onboard sensor.
+- **Text Ticker:** Horizontal scrolling marquee displaying text.
+- **Weekday:** Displays the current day of the week.
 
 ## Hardware & Modding
 

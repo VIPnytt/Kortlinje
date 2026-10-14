@@ -7,12 +7,16 @@
 #include "services/ModesService.h"
 
 #include <WiFi.h>
+#include <time.h>
 
 void DeviceService::begin0()
 {
     Serial.begin(115'200U);
     WiFi.setHostname("kortlinje");
     WiFi.begin(WIFI_SSID, WIFI_KEY);
+    NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
+    setenv("TZ", "UTC0", 1);
+    tzset();
     Extensions.begin();
     Modes.begin();
 }

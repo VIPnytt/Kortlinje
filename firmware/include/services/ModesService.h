@@ -1,10 +1,13 @@
 #pragma once
 
-#include "modes/EqualizerMode.h"
-#include "modes/HumidityMode.h"
-#include "modes/SnakeMode.h"
-#include "modes/TemperatureMode.h"
-#include "modes/TickerMode.h"
+#include "modes/ClockMode.h"       //NOLINT(misc-include-cleaner)
+#include "modes/DateMode.h"        //NOLINT(misc-include-cleaner)
+#include "modes/EqualizerMode.h"   //NOLINT(misc-include-cleaner)
+#include "modes/HumidityMode.h"    //NOLINT(misc-include-cleaner)
+#include "modes/SnakeMode.h"       //NOLINT(misc-include-cleaner)
+#include "modes/TemperatureMode.h" //NOLINT(misc-include-cleaner)
+#include "modes/TickerMode.h"      //NOLINT(misc-include-cleaner)
+#include "modes/WeekdayMode.h"     //NOLINT(misc-include-cleaner)
 #include "modules/ModeModule.h"
 #include "modules/ServiceModule.h"
 
@@ -21,13 +24,16 @@ private:
     std::unique_ptr<ModeModule> mode{};
 
 public:
-    static constexpr auto names{std::to_array<std::string_view>({
+    static constexpr std::array<std::string_view, 8U> names{
+        ClockMode::name,
+        DateMode::name,
         EqualizerMode::name,
         HumidityMode::name,
         SnakeMode::name,
         TickerMode::name,
         TemperatureMode::name,
-    })};
+        WeekdayMode::name,
+    };
 
     void begin();
     void handle();
