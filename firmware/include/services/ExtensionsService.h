@@ -36,6 +36,8 @@ public:
     void begin();
     void handle();
 
+    EnvironmentExtension &Environment();
+
     [[nodiscard]] std::span<ExtensionModule *const> getAll();
 
     static ExtensionsService &getInstance();

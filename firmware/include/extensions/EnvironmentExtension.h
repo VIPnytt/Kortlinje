@@ -3,23 +3,21 @@
 #include "modules/ExtensionModule.h"
 
 #include <Arduino.h>
+#include <array>
+#include <span>
 
 class EnvironmentExtension final : public ExtensionModule
 {
 private:
     static constexpr std::string_view name{"Environment"};
 
-    static constexpr uint16_t MAX_EDGES{200U};
-
-    static constexpr uint32_t SYNC_MIN_US{3'200U};
-    static constexpr uint32_t SYNC_MAX_US{4'500U};
-    static constexpr uint32_t BIT_THRESHOLD_US{1'450U}; // < 1450 us = '0', > 1450 us = '1'
-
     struct Transition
     {
         uint32_t delta;
         PinStatus level;
     };
+
+    bool pending{false};
 
     uint8_t humidity{0U};
 
@@ -33,11 +31,11 @@ private:
 
     static inline volatile uint32_t lastEdge{0U};
 
-    static inline Transition edgeBuffer[MAX_EDGES];
+    static inline std::array<Transition, 200U> edgeBuffer;
 
-    void read();
+    void poll();
 
-    bool parse(uint16_t idxSync, uint8_t payload[5U]);
+    bool parse(uint16_t idxSync, std::span<uint8_t, 5U> payload);
 
     static void onChange();
 
@@ -46,4 +44,5 @@ public:
 
     void begin() override;
     void handle() override;
+    void queue();
 };

@@ -27,9 +27,17 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     {
         return std::make_unique<EqualizerMode>();
     }
+    if (modeName == HumidityMode::name)
+    {
+        return std::make_unique<HumidityMode>();
+    }
     if (modeName == SnakeMode::name)
     {
         return std::make_unique<SnakeMode>();
+    }
+    if (modeName == TemperatureMode::name)
+    {
+        return std::make_unique<TemperatureMode>();
     }
     if (modeName == TickerMode::name)
     {

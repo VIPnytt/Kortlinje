@@ -10,6 +10,8 @@ void ExtensionsService::begin()
     }
 }
 
+EnvironmentExtension &ExtensionsService::Environment() { return extensionEnvironment; }
+
 std::span<ExtensionModule *const> ExtensionsService::getAll() { return modules; }
 
 void ExtensionsService::handle()

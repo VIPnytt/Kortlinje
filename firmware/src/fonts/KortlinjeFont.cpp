@@ -68,7 +68,7 @@ FontModule::Symbol KortlinjeFont::getChar(char32_t character) const
     case 'y': // U+0079 LATIN SMALL LETTER Y
         return toSymbol(latinCapitalLetterY);
     case U'°': // U+00B0 DEGREE SIGN
-        return toSymbol(degreeSign, 4);
+        return toSymbol(degreeSign, 7U);
     case U'♥': // U+2665 BLACK HEART SUIT
         return toSymbol(blackHeartSuit);
     case U'🔄': // U+1F504 ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "modes/EqualizerMode.h"
+#include "modes/HumidityMode.h"
 #include "modes/SnakeMode.h"
+#include "modes/TemperatureMode.h"
 #include "modes/TickerMode.h"
 #include "modules/ModeModule.h"
 #include "modules/ServiceModule.h"
@@ -21,8 +23,10 @@ private:
 public:
     static constexpr auto names{std::to_array<std::string_view>({
         EqualizerMode::name,
+        HumidityMode::name,
         SnakeMode::name,
         TickerMode::name,
+        TemperatureMode::name,
     })};
 
     void begin();
