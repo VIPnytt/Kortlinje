@@ -76,14 +76,16 @@ private:
 
     static constexpr std::array<uint16_t, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> pixels{LED_MAP};
 
+    static constexpr size_t chips{pixels.size() >> 7U};
+
     bool render{false};
 
     std::array<bool, pixels.size()> frame{};
 
-    std::array<pin_size_t, (pixels.size() >> 7U)> din{PIN_DA1, PIN_DA2, PIN_DA3};
-    std::array<pin_size_t, (pixels.size() >> 7U)> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
+    std::array<pin_size_t, chips> sda{PIN_DA1, PIN_DA2, PIN_DA3};
+    std::array<pin_size_t, chips> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
 
-    std::array<std::array<uint8_t, 16U>, (pixels.size() >> 7U)> buffer{};
+    std::array<std::array<uint8_t, 16U>, chips> buffer{};
 
     void vkEnd(size_t chip);
     void vkSet(size_t chip, uint8_t byte);

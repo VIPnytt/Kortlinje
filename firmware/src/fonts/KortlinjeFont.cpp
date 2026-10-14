@@ -22,11 +22,6 @@ FontModule::Symbol KortlinjeFont::getChar(char32_t character) const
         // U+0052-U+0057
         return toSymbol(latinCapitalLetterR_latinCapitalLetterW[character - 'R']);
     }
-    if (character >= 'a' && character <= 'j')
-    {
-        // U+0041-U+004A
-        return toSymbol(latinCapitalLetterA_latinCapitalLetterJ[character - 'a']);
-    }
     if (character >= 'a' && character <= 'd')
     {
         // U+0041-U+0044

@@ -9,8 +9,7 @@ class OtaExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"OTA"};
 
-    static void onError(ota_error_t error);
-    static void onProgress(unsigned int progress, unsigned int total);
+    static void onStart();
 
 public:
     explicit OtaExtension() : ExtensionModule(name) {};

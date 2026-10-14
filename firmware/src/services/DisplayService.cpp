@@ -1,5 +1,8 @@
 #include "services/DisplayService.h"
 
+#include "fonts/KortlinjeFont.h"
+#include "handlers/TextHandler.h"
+
 #include <ranges>
 
 void DisplayService::begin()
@@ -7,16 +10,14 @@ void DisplayService::begin()
 #ifdef PIN_LED
     pinMode(PIN_LED, PinMode::OUTPUT_2MA);
 #endif // PIN_LED
-    for (const pin_size_t pin : sclk)
+    for (size_t chip{0U}; chip < chips; ++chip)
     {
-        pinMode(pin, PinMode::OUTPUT_2MA);
-        digitalWrite(pin, PinStatus::HIGH);
+        pinMode(sclk[chip], PinMode::OUTPUT_2MA);
+        pinMode(sda[chip], PinMode::OUTPUT_2MA);
+        buffer[chip].fill(true);
     }
-    for (const pin_size_t pin : din)
-    {
-        pinMode(pin, PinMode::OUTPUT_2MA);
-        digitalWrite(pin, PinStatus::HIGH);
-    }
+    KortlinjeFont font{};
+    TextHandler("Hej ♥", font).draw();
     setBrightness(Brightness::DUTY16_14);
 }
 
@@ -166,7 +167,6 @@ void DisplayService::flush()
         return;
     }
     render = false;
-    constexpr size_t chips{pixels.size() >> 7U};
     std::array<std::array<uint8_t, 16U>, chips> nextBuffer{};
     for (size_t idx{0U}; idx < pixels.size(); ++idx)
     {
@@ -249,7 +249,7 @@ void DisplayService::setBrightness(Brightness _brightness)
     {
         return;
     }
-    for (size_t chip{0U}; chip < pixels.size() >> 7U; ++chip)
+    for (size_t chip{0U}; chip < chips; ++chip)
     {
         vkStart(chip);
         vkSet(chip, static_cast<uint8_t>(_brightness));
@@ -301,7 +301,7 @@ void DisplayService::setPower(bool _power)
     }
     else
     {
-        for (size_t chip{0U}; chip < pixels.size() >> 7U; ++chip)
+        for (size_t chip{0U}; chip < chips; ++chip)
         {
             vkStart(chip);
             vkSet(chip, 0b1000'0000U);
@@ -313,21 +313,21 @@ void DisplayService::setPower(bool _power)
 
 void DisplayService::vkStart(size_t chip)
 {
-    digitalWrite(din[chip], PinStatus::HIGH);
+    digitalWrite(sda[chip], PinStatus::HIGH);
     digitalWrite(sclk[chip], PinStatus::HIGH);
     busy_wait_at_least_cycles(cycles);
-    digitalWrite(din[chip], PinStatus::LOW);
+    digitalWrite(sda[chip], PinStatus::LOW);
     busy_wait_at_least_cycles(cycles);
     digitalWrite(sclk[chip], PinStatus::LOW);
 }
 
 void DisplayService::vkEnd(size_t chip)
 {
-    digitalWrite(din[chip], PinStatus::LOW);
+    digitalWrite(sda[chip], PinStatus::LOW);
     busy_wait_at_least_cycles(cycles);
     digitalWrite(sclk[chip], PinStatus::HIGH);
     busy_wait_at_least_cycles(cycles);
-    digitalWrite(din[chip], PinStatus::HIGH);
+    digitalWrite(sda[chip], PinStatus::HIGH);
 }
 
 void DisplayService::vkSet(size_t chip, uint8_t byte)
@@ -335,7 +335,7 @@ void DisplayService::vkSet(size_t chip, uint8_t byte)
     for (uint8_t idx{0U}; idx < 8U; idx++, byte >>= 1U)
     {
         digitalWrite(sclk[chip], PinStatus::LOW);
-        digitalWrite(din[chip], byte & 1U);
+        digitalWrite(sda[chip], byte & 1U);
         busy_wait_at_least_cycles(cycles);
         digitalWrite(sclk[chip], PinStatus::HIGH);
         busy_wait_at_least_cycles(cycles);

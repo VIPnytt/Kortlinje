@@ -433,6 +433,19 @@ private:
         },
     }};
 
+    // U+0059 Y LATIN CAPITAL LETTER Y
+    static constexpr std::array<uint8_t, 9U> latinCapitalLetterY{
+        0b110011U,
+        0b110011U,
+        0b110011U,
+        0b110011U,
+        0b110011U,
+        0b011110U,
+        0b001100U,
+        0b001100U,
+        0b001100U,
+    };
+
     // U+0065 e LATIN SMALL LETTER E
     static constexpr std::array<uint8_t, 8U> latinSmallLetterE{
         0b00111100U,
@@ -456,19 +469,6 @@ private:
         0b110011U,
         0b110011U,
         0b011110U,
-    };
-
-    // U+0059 Y LATIN CAPITAL LETTER Y
-    static constexpr std::array<uint8_t, 9U> latinCapitalLetterY{
-        0b110011U,
-        0b110011U,
-        0b110011U,
-        0b110011U,
-        0b110011U,
-        0b011110U,
-        0b001100U,
-        0b001100U,
-        0b001100U,
     };
 
     // U+00B0 ° DEGREE SIGN
