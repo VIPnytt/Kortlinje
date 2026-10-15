@@ -25,6 +25,7 @@ void DeviceService::begin1()
 {
     analogReadResolution(ADC_RESOLUTION);
     pinMode(A3, INPUT);
+    pinMode(PIN_BUZ, PinMode::OUTPUT_2MA);
     Display.begin();
 }
 

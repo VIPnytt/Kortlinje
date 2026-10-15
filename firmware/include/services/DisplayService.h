@@ -27,9 +27,9 @@ public:
     {
         AM,
         PM,
-        AL1,
-        SNZ,
-        AL2,
+        ALARM1,
+        SNOOZE,
+        ALARM2,
         STATUS,
     };
 

@@ -11,9 +11,9 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 
 | Subsystem | Status | Details |
 | :--- | :--- | :--- |
-| **Audio** | Partial | Buzzer driver verified with test beeps on alarm buttons; dedicated sound and alarm manager pending. |
-| **Buttons** | Operational | Resistor ladder decoded. Dedicated buttons cycle demo modes and display brightness; remaining buttons emit Serial debug events pending feature mapping. |
-| **Display** | Operational | Fully functional driver for the triple VK1640 controllers with multi-step brightness control. |
+| **Audio** | Partial | Buzzer driver verified with test beeps on alarm button; dedicated sound and alarm manager pending. |
+| **Buttons** | Operational | All buttons are mapped to available functionality; behavior currently remains constrained pending core features like the alarm clock. |
+| **Display** | Operational | Fully functional driver for the triple VK1640 controllers with 8-step brightness control. |
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
 | **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
 | **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
