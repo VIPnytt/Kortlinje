@@ -144,7 +144,7 @@ void DisplayService::fillColumn(uint8_t x, bool lit)
 
 void DisplayService::fillFrame(bool lit)
 {
-    frame.fill(lit);
+    std::ranges::fill(std::span{frame}.first((GRID_COLUMNS * GRID_ROWS) + 2U), lit);
     render = true;
 }
 
@@ -232,6 +232,7 @@ bool DisplayService::getPixel(Symbol symbol) const
 {
     return frame[static_cast<size_t>(symbol) + static_cast<size_t>(GRID_COLUMNS * GRID_ROWS)];
 }
+
 bool DisplayService::getPower() const { return power; }
 
 void DisplayService::invertFrame()

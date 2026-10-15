@@ -15,7 +15,9 @@ void DeviceService::begin0()
     WiFi.setHostname("kortlinje");
     WiFi.begin(WIFI_SSID, WIFI_KEY);
     NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
-    setenv("TZ", "UTC0", 1);
+#ifdef TIME_ZONE_POSIX
+    setenv("TZ", TIME_ZONE_POSIX, 1);
+#endif // TIME_ZONE_POSIX
     tzset();
     Extensions.begin();
     Modes.begin();

@@ -17,13 +17,12 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
 | **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
 | **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
-| **Timekeeping** | Work in Progress | RTC and time zone pending. |
 
 ## Active Display Modes
 
 The firmware currently includes eight standalone render modes switchable via on-device buttons:
 
-- **Clock:** Displays the current UTC time in hours and minutes.
+- **Clock:** Displays the current time in hours and minutes.
 - **Date:** Displays the current month and day of the month.
 - **Equalizer:** Autonomous simulated spectrum visualizer.
 - **Humidity:** Displays live ambient humidity telemetry from the onboard sensor.

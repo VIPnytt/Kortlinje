@@ -1,5 +1,7 @@
 #pragma once
 
+#define TIME_ZONE_POSIX "UTC0"
+
 #define WIFI_SSID "name"
 #define WIFI_KEY "password"
 
@@ -22,3 +24,5 @@
 
 #define PIN_TOP 26
 #define PIN_REAR 27
+
+// #define CLOCK_12H true
