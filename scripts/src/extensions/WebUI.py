@@ -9,10 +9,10 @@ import dotenv
 import nodejs_wheel
 
 if typing.TYPE_CHECKING:
-    from ..components.Types import COMMAND_LINE_TARGETS, Environment
+    from ..components.Types import COMMAND_LINE_TARGETS
     from ..Kortlinje import Kortlinje
 else:
-    from SCons.Script import COMMAND_LINE_TARGETS, Environment
+    from SCons.Script import COMMAND_LINE_TARGETS
 
 
 class WebUI:
@@ -68,22 +68,6 @@ class WebUI:
                 if _option not in self.project.dotenv and (_option in options or _option.startswith(prefixes)):
                     dotenv.unset_key(self.path / ".env", option)
         self._npm_build()
-        for target in (
-            "uploadfsota",
-            "uploadota",
-        ):
-            self.project.env.AddPostAction(target, self._commissioning)
-
-    def _commissioning(self, target: list[str], source: list[str], env: Environment) -> None:
-        """
-        Display the local URL for the web application.
-
-        Parameters:
-            target (list[str]): Commissioning target paths.
-            source (list[str]): Commissioning source paths.
-            env (Environment): Build environment associated with the commissioning operation.
-        """
-        print(f"{self.NAME}: http://{self.project.dotenv['HOSTNAME']}.local")
 
     def _npm_build(self) -> None:
         """

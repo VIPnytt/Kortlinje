@@ -5,10 +5,7 @@ import pathlib
 import typing
 
 if typing.TYPE_CHECKING:
-    from .components.Types import COMMAND_LINE_TARGETS
     from .Kortlinje import Kortlinje
-else:
-    from SCons.Script import COMMAND_LINE_TARGETS
 
 
 class Firmware:

@@ -18,7 +18,7 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 | **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
 | **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
 | **Web UI** | Work in Progress | Initial draft ported from Frekvens; functional baseline, but unstable with upstream modules pending removal and Kortlinje adaptations. |
-| **Build Environment** | Experimental | Python build automation migrated from Frekvens; handles end-to-end workflows, but requires refactoring and pruning for Kortlinje. |
+| **Build Environment** | Experimental | Python build automation initialized, integration and configuration options pending. |
 
 ## Active Display Modes
 

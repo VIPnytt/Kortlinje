@@ -12,10 +12,8 @@ from .config.version import VERSION
 from .devices.IkeaKortlinje import IkeaKortlinje
 from .extensions.Ota import Ota
 from .extensions.WebUI import WebUI
-from .Extra import Extra
 from .Firmware import Firmware
 from .modes.Weather import Weather
-from .Tools import Tools
 
 if typing.TYPE_CHECKING:
     from .components.Types import Environment
@@ -27,11 +25,9 @@ class Kortlinje:
     dependency: Dependency | None = None
     dotenv: dict[str, str]
     env: Environment
-    extra: Extra
     firmware: Firmware | None = None
     ota: Ota | None = None
     time: Time | None = None
-    tools: Tools
     weather: Weather | None = None
     webui: WebUI | None = None
 
@@ -45,15 +41,11 @@ class Kortlinje:
         self.env = env
         self.dotenv = {key: (value if value is not None else "") for key, value in dotenv.dotenv_values(".env").items()}
         self.dependency = Dependency(self)
-        self.extra = Extra(self)
         self.firmware = Firmware(self)
+        self.ota = Ota(self)
         self.time = Time(self)
-        self.tools = Tools(self)
+        self.weather = Weather(self)
         self.webui = WebUI(self)
-        if Ota.ENV_OPTION in self.dotenv and self.dotenv[Ota.ENV_OPTION] == "true":
-            self.ota = Ota(self)
-        if Weather.ENV_OPTION in self.dotenv and self.dotenv[Weather.ENV_OPTION] == "true":
-            self.weather = Weather(self)
 
     def run(self) -> None:
         """
@@ -62,7 +54,6 @@ class Kortlinje:
         print(f"Kortlinje {VERSION}")
         self.initialize()
         self.configure()
-        self.validate()
         self.finalize()
 
     def initialize(self) -> None:
@@ -83,10 +74,6 @@ class Kortlinje:
             ).strip("-")
         if self.dependency:
             self.dependency.initialize()
-        if self.time:
-            self.time.initialize()
-        if self.weather:
-            self.weather.initialize()
         if self.webui:
             self.webui.initialize()
 
@@ -99,13 +86,6 @@ class Kortlinje:
         if self.weather:
             self.weather.configure()
 
-    def validate(self) -> None:
-        """Validate the configured OTA, partition, weather, and web application components."""
-        if self.ota:
-            self.ota.validate()
-        if self.weather:
-            self.weather.validate()
-
     def finalize(self) -> None:
         if self.firmware:
             self.firmware.finalize()
@@ -117,9 +97,7 @@ class Kortlinje:
     @staticmethod
     def clean() -> None:
         """Remove generated files and directories from the project workspace."""
-        Extra.clean()
         WebUI.clean()
-        Tools.clean()
         for path in (
             "logs",
             "scripts/__pycache__",

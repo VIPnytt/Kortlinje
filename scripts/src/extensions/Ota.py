@@ -1,5 +1,4 @@
 import hashlib
-import logging
 import typing
 
 if typing.TYPE_CHECKING:
@@ -10,7 +9,6 @@ else:
 
 
 class Ota:
-    ENV_OPTION: typing.Final[str] = "EXTENSION_OTA"
     NAME: typing.Final[str] = "OTA"
     project: "Kortlinje"
     auth: str | None
@@ -29,14 +27,6 @@ class Ota:
         if "OTA_KEY" in self.project.dotenv and len(self.project.dotenv["OTA_KEY"]) != 64:
             self.auth = self.project.dotenv["OTA_KEY"]
             self.project.dotenv["OTA_KEY"] = hashlib.sha256(self.project.dotenv["OTA_KEY"].encode()).hexdigest()
-
-    def validate(self) -> None:
-        if (
-            self.ENV_OPTION not in self.project.dotenv or self.project.dotenv[self.ENV_OPTION] != "true"
-        ) and self.project.env.GetProjectOption("upload_protocol", None) == "espota":
-            logging.warning(
-                "%s: %s is disabled. Future uploads will require wired flashing.", self.ENV_OPTION, self.NAME
-            )
 
     def finalize(self) -> None:
         """

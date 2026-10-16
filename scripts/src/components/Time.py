@@ -10,9 +10,6 @@ import tzlocal
 
 if typing.TYPE_CHECKING:
     from ..Kortlinje import Kortlinje
-    from .Types import COMMAND_LINE_TARGETS
-else:
-    from SCons.Script import COMMAND_LINE_TARGETS
 
 
 class Time:
@@ -25,15 +22,6 @@ class Time:
             project (Kortlinje): Project whose time configuration is managed.
         """
         self.project = project
-
-    def initialize(self) -> None:
-        """Disable project time configuration for filesystem build and upload targets."""
-        if COMMAND_LINE_TARGETS in [
-            ["buildfs"],
-            ["uploadfs"],
-            ["uploadfsota"],
-        ]:
-            self.project.time = None
 
     def configure(self) -> None:
         """
@@ -54,7 +42,7 @@ class Time:
                 clock = {
                     "11": "CLOCK_12H",
                     "23": "CLOCK_24H",
-                }.get(datetime.datetime.now(datetime.timezone.utc).replace(hour=23).strftime("%X")[:2])
+                }.get(datetime.datetime.now(datetime.UTC).replace(hour=23).strftime("%X")[:2])
                 if clock is not None:
                     self.project.dotenv[clock] = "true"
             finally:
