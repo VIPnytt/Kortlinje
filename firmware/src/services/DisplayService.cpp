@@ -15,7 +15,6 @@ void DisplayService::begin()
     const float clockDivider{static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 2'000'000.0F};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
-        buffer[chip].fill(0xFFU);
         stateMachine[chip] = pio_claim_unused_sm(pio, true);
         pio_sm_config config{vk1640_program_get_default_config(offset)};
         sm_config_set_out_pins(&config, sda[chip], 1U);
@@ -30,6 +29,16 @@ void DisplayService::begin()
         pio_sm_set_consecutive_pindirs(pio, stateMachine[chip], sclk[chip], 1U, true);
         pio_sm_init(pio, stateMachine[chip], offset, &config);
         pio_sm_set_enabled(pio, stateMachine[chip], true);
+        pio_sm_put_blocking(pio, stateMachine[chip], 0U);
+        pio_sm_put_blocking(pio, stateMachine[chip], 0b0100'0000U << 1U);
+        pio_sm_put_blocking(pio, stateMachine[chip], 1U);
+        pio_sm_put_blocking(pio, stateMachine[chip], 0U);
+        pio_sm_put_blocking(pio, stateMachine[chip], 0xC0U << 1U);
+        for (size_t grid{0U}; grid < 16U; ++grid)
+        {
+            pio_sm_put_blocking(pio, stateMachine[chip], 0U << 1U);
+        }
+        pio_sm_put_blocking(pio, stateMachine[chip], 1U);
     }
     KortlinjeFont font{};
     TextHandler("Hej ♥", font).draw();
