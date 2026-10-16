@@ -34,7 +34,7 @@ void DisplayService::begin()
         pio_sm_put_blocking(pio, stateMachine[chip], 1U);
         pio_sm_put_blocking(pio, stateMachine[chip], 0U);
         pio_sm_put_blocking(pio, stateMachine[chip], 0xC0U << 1U);
-        for (size_t grid{0U}; grid < 16U; ++grid)
+        for (uint8_t grid{0U}; grid < 16U; ++grid)
         {
             pio_sm_put_blocking(pio, stateMachine[chip], 0U << 1U);
         }
