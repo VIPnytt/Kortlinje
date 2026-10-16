@@ -4,6 +4,7 @@
 #include "modes/DateMode.h"        //NOLINT(misc-include-cleaner)
 #include "modes/EqualizerMode.h"   //NOLINT(misc-include-cleaner)
 #include "modes/HumidityMode.h"    //NOLINT(misc-include-cleaner)
+#include "modes/PingPongMode.h"    //NOLINT(misc-include-cleaner)
 #include "modes/SnakeMode.h"       //NOLINT(misc-include-cleaner)
 #include "modes/TemperatureMode.h" //NOLINT(misc-include-cleaner)
 #include "modes/TickerMode.h"      //NOLINT(misc-include-cleaner)
@@ -24,11 +25,12 @@ private:
     std::unique_ptr<ModeModule> mode{};
 
 public:
-    static constexpr std::array<std::string_view, 8U> names{
+    static constexpr std::array<std::string_view, 9U> names{
         ClockMode::name,
         DateMode::name,
         EqualizerMode::name,
         HumidityMode::name,
+        PingPongMode::name,
         SnakeMode::name,
         TickerMode::name,
         TemperatureMode::name,

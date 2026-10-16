@@ -20,12 +20,13 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 
 ## Active Display Modes
 
-The firmware currently includes eight standalone render modes switchable via on-device buttons:
+The firmware currently includes the following standalone render modes switchable via on-device buttons:
 
 - **Clock:** Displays the current time in hours and minutes.
 - **Date:** Displays the current month and day of the month.
 - **Equalizer:** Autonomous simulated spectrum visualizer.
 - **Humidity:** Displays live ambient humidity telemetry from the onboard sensor.
+- **Ping Pong:** Autonomous, self-playing demo animation.
 - **Snake:** Autonomous, self-playing demo animation.
 - **Temperature:** Displays live ambient temperature telemetry from the onboard sensor.
 - **Text Ticker:** Horizontal scrolling marquee displaying text.

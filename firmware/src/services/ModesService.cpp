@@ -39,6 +39,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     {
         return std::make_unique<HumidityMode>();
     }
+    if (modeName == PingPongMode::name)
+    {
+        return std::make_unique<PingPongMode>();
+    }
     if (modeName == SnakeMode::name)
     {
         return std::make_unique<SnakeMode>();
