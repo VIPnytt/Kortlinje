@@ -91,7 +91,7 @@ jobs:
           #define WIFI_KEY "redacted"
           #define WIFI_SSID "redacted"
           EOL
-          uv run pio run -t compiledb -e "$PIO_ENVIRONMENT"
+          uv run --only-group platformio pio run -t compiledb -e "$PIO_ENVIRONMENT"
 
       - name: Clang tidy
         uses: cpp-linter/cpp-linter-action@8120e05c7fbd25fa09fa93424ec49f55f7b304ab # v2.23.1

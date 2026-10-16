@@ -68,7 +68,7 @@ jobs:
           #define WIFI_KEY "redacted"
           #define WIFI_SSID "redacted"
           EOL
-          uv run pio run -e "$PIO_ENVIRONMENT"
+          uv run --only-group platformio pio run -e "$PIO_ENVIRONMENT"
 
   minimal:
     name: Minimal
@@ -120,4 +120,4 @@ jobs:
           #define WIFI_KEY "redacted"
           #define WIFI_SSID "redacted"
           EOL
-          uv run pio run -e "$PIO_ENVIRONMENT"
+          uv run --only-group platformio pio run -e "$PIO_ENVIRONMENT"
