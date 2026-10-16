@@ -8,7 +8,7 @@
 
 void SnakeMode::begin()
 {
-    Display.fillFrame(0U);
+    Display.fillFrame(false);
     snakeClear();
     target = static_cast<size_t>(random(0L, static_cast<long>(GRID_COLUMNS * GRID_ROWS)));
     stage = Stage::READY;

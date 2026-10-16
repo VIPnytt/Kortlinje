@@ -13,7 +13,11 @@ class FontsService final : public ServiceModule
 private:
     explicit FontsService() : ServiceModule("Fonts") {};
 
+    void transmit();
+
 public:
+    void begin();
+
     [[nodiscard]] std::unique_ptr<const FontModule> get(std::string_view fontName) const;
 
     static constexpr std::array<std::string_view, 2U> names{

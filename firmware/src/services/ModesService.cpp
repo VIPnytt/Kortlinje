@@ -77,10 +77,20 @@ void ModesService::setMode(std::string_view modeName, bool power)
             Display.setPower(true);
         }
         mode->begin();
+        transmit();
     }
 }
 
 ModeModule *ModesService::getMode() { return mode.get(); }
+
+void ModesService::onReceive(JsonObjectConst payload, std::string_view source)
+{
+    // Mode
+    if (payload["mode"].is<std::string_view>())
+    {
+        setMode(payload["mode"].as<std::string_view>());
+    }
+}
 
 void ModesService::setModeNext()
 {
@@ -108,6 +118,21 @@ void ModesService::setModePrevious()
             return;
         }
     }
+}
+
+void ModesService::transmit()
+{
+    JsonDocument doc{};
+    JsonArray list{doc["list"].to<JsonArray>()};
+    for (const std::string_view _name : names)
+    {
+        list.add(_name);
+    }
+    if (mode != nullptr)
+    {
+        doc["mode"].set(mode->name);
+    }
+    Device.transmit(doc.as<JsonObjectConst>(), name);
 }
 
 ModesService &ModesService::getInstance()

@@ -5,6 +5,7 @@
 #include "modules/ModeModule.h"
 
 #include <bits/unique_ptr.h>
+#include <string_view>
 
 class TickerMode final : public ModeModule
 {
@@ -25,6 +26,8 @@ private:
     std::unique_ptr<TextHandler> text{};
 
     void setFont(std::string_view fontName);
+    void setMessage(std::string_view _message);
+    void transmit();
 
 public:
     static constexpr std::string_view name{"Ticker"};
@@ -34,6 +37,5 @@ public:
     void begin() override;
     void handle() override;
     void end() override;
-
-    static void setMessage(std::string_view _message);
+    void onReceive(JsonObjectConst payload, std::string_view source) override;
 };

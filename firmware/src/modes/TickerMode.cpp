@@ -23,6 +23,7 @@ void TickerMode::handle()
         offsetX = GRID_COLUMNS;
         offsetY = (GRID_ROWS - text->getHeight()) / 2U;
         width = text->getWidth();
+        transmit();
         pending = false;
     }
     else if (text && millis() - lastMillis > INT8_MAX)
@@ -32,9 +33,25 @@ void TickerMode::handle()
             offsetX = GRID_COLUMNS;
         }
         lastMillis = millis();
-        Display.fillFrame(0U);
+        Display.fillFrame(false);
         text->draw(offsetX, offsetY);
         --offsetX;
+    }
+}
+
+void TickerMode::end() { text.reset(); }
+
+void TickerMode::onReceive(JsonObjectConst payload, std::string_view source)
+{
+    // Font
+    if (payload["font"].is<std::string_view>())
+    {
+        setFont(payload["font"].as<std::string_view>());
+    }
+    //  Message
+    if (payload["message"].is<std::string_view>())
+    {
+        setMessage(payload["message"].as<std::string_view>());
     }
 }
 
@@ -56,4 +73,10 @@ void TickerMode::setMessage(std::string_view _message)
     }
 }
 
-void TickerMode::end() { text.reset(); }
+void TickerMode::transmit()
+{
+    JsonDocument doc{};
+    doc["font"].set(font->name);
+    doc["message"].set(message);
+    Device.transmit(doc.as<JsonObjectConst>(), name);
+}

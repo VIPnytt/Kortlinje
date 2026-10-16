@@ -1,0 +1,44 @@
+import { mdiWaveform } from "@mdi/js";
+import { type Component, createSignal, For } from "solid-js";
+
+import { Icon } from "../components/Icon";
+import { SidebarSection } from "../extensions/WebUI";
+import { WebSocketWS } from "../extensions/WebSocket";
+
+export const name = "Waveform";
+
+const [getWave, setWave] = createSignal<string>("");
+const [getWaves, setWaves] = createSignal<string[]>([]);
+
+export const receiver = (json: { wave?: string; waves?: string[] }) => {
+    json?.wave !== undefined && setWave(json.wave);
+    json?.waves !== undefined && setWaves(json.waves);
+};
+
+export const Sidebar: Component = () => {
+    const handleVariant = (variant: string) => {
+        setWave(variant);
+        WebSocketWS.send(
+            JSON.stringify({
+                [name]: {
+                    wave: getWave(),
+                },
+            }),
+        );
+    };
+
+    return (
+        <SidebarSection title="Wave">
+            <div class="action grid-cols-[--spacing(4)_1fr]">
+                <Icon path={mdiWaveform} />
+                <select
+                    class="w-full"
+                    value={getWave()}
+                    onchange={(e) => handleVariant(e.currentTarget.value)}
+                >
+                    <For each={getWaves()}>{(wave) => <option>{wave}</option>}</For>
+                </select>
+            </div>
+        </SidebarSection>
+    );
+};

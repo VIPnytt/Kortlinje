@@ -32,6 +32,48 @@ jobs:
             core.info(`Branch active: ${active}`);
             core.setOutput('active', active);
 
+  nodejs-wheel:
+    name: Node.js wheel version
+    needs: idle-check
+    runs-on: ubuntu-latest
+    if: ${{ fromJSON(needs.idle-check.outputs.active) }}
+  
+    outputs:
+      version: ${{ steps.lock.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Node.js wheel binaries version
+        id: lock
+        run: echo "version=$(yq -o toml -p toml '.package[] | select(.name == "nodejs-wheel-binaries") | .version' uv.lock)" >> "$GITHUB_OUTPUT"
+
+  nodejs:
+    name: Node.js
+    needs:
+      - idle-check
+      - nodejs-wheel
+    runs-on: ubuntu-slim
+    if: ${{ fromJSON(needs.idle-check.outputs.active) }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - ${{ needs.nodejs-wheel.outputs.version }}
+          - 24
+
+    steps:
+      - name: End-of-Life
+        uses: sindrel/endoflife-github-action@5f91adaabc542a346876290ff0f447c7bc355f99 # v1.0.3
+        with:
+          product: nodejs
+          version: ${{ matrix.node-version }}
+          fail_on_eol: true
+
   python:
     name: Python
     needs: idle-check

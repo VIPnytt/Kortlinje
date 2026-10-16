@@ -17,6 +17,8 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
 | **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
 | **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
+| **Web UI** | Work in Progress | Initial draft ported from Frekvens; functional baseline, but unstable with upstream modules pending removal and Kortlinje adaptations. |
+| **Build Environment** | Experimental | Python build automation migrated from Frekvens; handles end-to-end workflows, but requires refactoring and pruning for Kortlinje. |
 
 ## Active Display Modes
 
@@ -26,7 +28,7 @@ The firmware currently includes the following standalone render modes switchable
 - **Date:** Displays the current month and day of the month.
 - **Equalizer:** Autonomous simulated spectrum visualizer.
 - **Humidity:** Displays live ambient humidity telemetry from the onboard sensor.
-- **Ping Pong:** Autonomous, self-playing demo animation.
+- **Ping-pong:** Autonomous, self-playing demo animation.
 - **Snake:** Autonomous, self-playing demo animation.
 - **Temperature:** Displays live ambient temperature telemetry from the onboard sensor.
 - **Text Ticker:** Horizontal scrolling marquee displaying text.

@@ -34,6 +34,7 @@ public:
     };
 
     void begin();
+    void handle();
     void drawEllipseOutline(float x, float y, float radius, bool lit);
     void drawEllipseSolid(float x, float y, float radius, bool lit);
     void drawLineHorizontal(uint8_t xMin, size_t columns, uint8_t y, bool lit);
@@ -47,12 +48,14 @@ public:
     void flush();
     void getFrame(std::span<bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> _frame) const;
     void invertFrame();
+    void onReceive(JsonObjectConst payload, std::string_view source) override;
     void setBrightness(Brightness _brightness);
     void setFrame(std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> _frame);
     void setPixel(size_t idx, bool lit);
     void setPixel(uint8_t x, uint8_t y, bool lit);
     void setPixel(Symbol symbol, bool lit);
     void setPower(bool _power);
+    void transmit();
 
     [[nodiscard]] bool getPixel(size_t idx) const;
     [[nodiscard]] bool getPixel(uint8_t x, uint8_t y) const;
@@ -66,14 +69,11 @@ public:
 private:
     explicit DisplayService() : ServiceModule("Display") {};
 
-    static constexpr uint32_t cycles{static_cast<uint32_t>(
-        ((static_cast<unsigned long long>(CLK_PULSE_WIDTH) * static_cast<unsigned long long>(F_CPU)) + 999'999'999ULL) /
-        1'000'000'000ULL)};
-
     static constexpr std::array<uint16_t, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> pixels{LED_MAP};
 
     static constexpr size_t chips{pixels.size() >> 7U};
 
+    bool pending{false};
     bool power{false};
     bool render{false};
 
@@ -89,10 +89,6 @@ private:
     Brightness brightness{Brightness::DUTY16_14};
 
     PIO pio{pio0};
-
-    void vkEnd(size_t chip);
-    void vkSet(size_t chip, uint8_t byte);
-    void vkStart(size_t chip);
 };
 
 extern DisplayService &Display;

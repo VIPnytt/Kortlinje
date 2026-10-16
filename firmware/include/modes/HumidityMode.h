@@ -1,10 +1,9 @@
 #pragma once
 
 #include "config/IkeaKortlinje.h"
-#include "handlers/TextHandler.h"
 #include "modules/ModeModule.h"
 
-#include <bits/unique_ptr.h>
+#include <Arduino.h>
 
 class HumidityMode final : public ModeModule
 {

@@ -1,7 +1,6 @@
 #include "extensions/PhotocellExtension.h"
 
 #include "config/secrets.h"
-#include "modes/TickerMode.h"
 #include "services/DisplayService.h"
 
 void PhotocellExtension::begin() { pinMode(PIN_CDS, PinMode::INPUT); }

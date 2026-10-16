@@ -90,7 +90,7 @@ void EnvironmentExtension::poll()
 
 void EnvironmentExtension::queue() { pending = true; }
 
-void __not_in_flash_func(EnvironmentExtension::onChange())
+void __attribute__((section(".time_critical.EnvironmentExtension::onChange()"))) EnvironmentExtension::onChange()
 {
     const uint32_t now{micros()};
     if (!capturing)

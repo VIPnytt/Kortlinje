@@ -1,6 +1,7 @@
 #include "modes/TemperatureMode.h"
 
 #include "fonts/KortlinjeFont.h"
+#include "handlers/TextHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"

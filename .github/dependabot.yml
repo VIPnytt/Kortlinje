@@ -5,7 +5,14 @@ updates:
     schedule:
       interval: daily
 
+  - package-ecosystem: npm
+    directory: /webui
+    schedule:
+      interval: daily
+    versioning-strategy: increase
+
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: daily
+    versioning-strategy: increase

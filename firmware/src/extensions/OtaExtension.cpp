@@ -6,7 +6,10 @@
 
 void OtaExtension::begin()
 {
-    ArduinoOTA.setHostname("kortlinje");
+    ArduinoOTA.setHostname(HOSTNAME);
+#ifdef OTA_KEY
+    ArduinoOTA.setPasswordHash(OTA_KEY);
+#endif // OTA_KEY
     ArduinoOTA.onStart(&onStart);
     ArduinoOTA.begin();
 }

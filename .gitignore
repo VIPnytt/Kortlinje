@@ -1,8 +1,14 @@
 *.pio.h
+/.env*
 /.idea
 /.pio
 /.platformio
+/.ruff_cache
 /.venv
 /.vscode
 /firmware/include/config/secrets*.h
 /logs
+/webui/.env*
+/webui/dist
+/webui/node_modules
+__pycache__

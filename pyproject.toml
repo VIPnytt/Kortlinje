@@ -1,9 +1,52 @@
 [project]
 name = "kortlinje"
+description = "Build system for the Kortlinje project."
 version = "0.0.0"
+license = "MIT"
 readme = { file = "README.md", content-type = "text/markdown" }
 classifiers = ["Private :: Do Not Upload"]
 requires-python = ">=3.11"
 
+[project.urls]
+Homepage = "https://github.com/VIPnytt/Kortlinje"
+Documentation = "https://github.com/VIPnytt/Kortlinje/wiki"
+
 [dependency-groups]
-dev = ["platformio==6.2.0"]
+dev = [
+    { include-group = "nodejs" },
+    { include-group = "ruff" },
+]
+nodejs = [
+    "nodejs-wheel==24.19.0",
+]
+packaging = [
+    "packaging==26.3",
+]
+platformio = [
+    "platformio==6.2.0",
+]
+ruff = [
+    "ruff==0.15.22",
+]
+scons = [
+    "scons==4.11.1",
+]
+scripts = [
+    { include-group = "nodejs" },
+    { include-group = "packaging" },
+    "python-dotenv==1.2.3",
+    "tzdata==2026.4",
+    "tzlocal==5.4.4",
+]
+
+[tool.ruff]
+extend-exclude = [
+    ".pio",
+]
+line-length = 120
+
+[tool.ruff.lint]
+ignore = [
+    "LOG015",
+    "N999",
+]

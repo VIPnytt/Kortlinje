@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ArduinoJson.h>
 #include <string_view>
 
 class ModeModule
@@ -20,4 +21,5 @@ public:
     virtual void begin();
     virtual void handle();
     virtual void end();
+    virtual void onReceive(JsonObjectConst payload, std::string_view source);
 };

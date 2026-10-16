@@ -10,7 +10,7 @@ private:
     static constexpr std::string_view name{"Photocell"};
 
     bool active{true};
-    bool detected{true};
+    bool detected{false};
 
     unsigned long lastMillis{0UL};
 

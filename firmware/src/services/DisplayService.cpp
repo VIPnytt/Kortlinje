@@ -3,6 +3,7 @@
 #include "fonts/KortlinjeFont.h"
 #include "handlers/TextHandler.h"
 #include "pio/vk1640.pio.h"
+#include "services/DeviceService.h"
 
 #include <ranges>
 
@@ -12,7 +13,7 @@ void DisplayService::begin()
     pinMode(PIN_LED, PinMode::OUTPUT_2MA);
 #endif // PIN_LED
     const uint offset{static_cast<uint>(pio_add_program(pio, &vk1640_program))};
-    const float clockDivider{static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 2'000'000.0F};
+    const float divider{static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 2'000'000.0F};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
         stateMachine[chip] = pio_claim_unused_sm(pio, true);
@@ -22,7 +23,7 @@ void DisplayService::begin()
         sm_config_set_sideset_pins(&config, sclk[chip]);
         sm_config_set_out_shift(&config, true, false, 32U);
         sm_config_set_fifo_join(&config, pio_fifo_join::PIO_FIFO_JOIN_TX);
-        sm_config_set_clkdiv(&config, clockDivider);
+        sm_config_set_clkdiv(&config, divider);
         pio_gpio_init(pio, sda[chip]);
         pio_gpio_init(pio, sclk[chip]);
         pio_sm_set_consecutive_pindirs(pio, stateMachine[chip], sda[chip], 1U, true);
@@ -43,6 +44,15 @@ void DisplayService::begin()
     KortlinjeFont font{};
     TextHandler("Hej ♥", font).draw();
     setBrightness(Brightness::DUTY16_14);
+}
+
+void DisplayService::handle()
+{
+    if (pending)
+    {
+        transmit();
+        pending = false;
+    }
 }
 
 void DisplayService::drawEllipseOutline(float x, float y, float radius, bool lit)
@@ -222,21 +232,21 @@ void DisplayService::flush()
             {
                 if (!active)
                 {
-                    vkStart(chip);
-                    vkSet(chip, 0xC0U | grid);
+                    pio_sm_put_blocking(pio, stateMachine[chip], 0U);
+                    pio_sm_put_blocking(pio, stateMachine[chip], (0xC0U | grid) << 1U);
                     active = true;
                 }
-                vkSet(chip, buffer[chip][grid]);
+                pio_sm_put_blocking(pio, stateMachine[chip], static_cast<uint32_t>(buffer[chip][grid]) << 1U);
             }
             else if (active)
             {
-                vkEnd(chip);
+                pio_sm_put_blocking(pio, stateMachine[chip], 1U);
                 active = false;
             }
         }
         if (active)
         {
-            vkEnd(chip);
+            pio_sm_put_blocking(pio, stateMachine[chip], 1U);
         }
     }
 }
@@ -268,6 +278,21 @@ void DisplayService::invertFrame()
     render = true;
 }
 
+void DisplayService::onReceive(JsonObjectConst payload, std::string_view source)
+{
+    // Brightness
+    if (payload["brightness"].is<uint8_t>())
+    {
+        setBrightness(static_cast<Brightness>((payload["brightness"].as<uint8_t>()) +
+                                              static_cast<uint8_t>(Brightness::DUTY16_1) - 1U));
+    }
+    // Power
+    if (payload["power"].is<bool>())
+    {
+        setPower(payload["power"].as<bool>());
+    }
+}
+
 void DisplayService::setBrightness(Brightness _brightness)
 {
     if (power && _brightness == brightness)
@@ -276,12 +301,13 @@ void DisplayService::setBrightness(Brightness _brightness)
     }
     for (size_t chip{0U}; chip < chips; ++chip)
     {
-        vkStart(chip);
-        vkSet(chip, static_cast<uint8_t>(_brightness));
-        vkEnd(chip);
+        pio_sm_put_blocking(pio, stateMachine[chip], 0U);
+        pio_sm_put_blocking(pio, stateMachine[chip], static_cast<uint32_t>(_brightness) << 1U);
+        pio_sm_put_blocking(pio, stateMachine[chip], 1U);
     }
     brightness = _brightness;
     power = true;
+    pending = true;
 }
 
 void DisplayService::setFrame(std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> _frame)
@@ -328,22 +354,22 @@ void DisplayService::setPower(bool _power)
     {
         for (size_t chip{0U}; chip < chips; ++chip)
         {
-            vkStart(chip);
-            vkSet(chip, 0b1000'0000U);
-            vkEnd(chip);
+            pio_sm_put_blocking(pio, stateMachine[chip], 0U);
+            pio_sm_put_blocking(pio, stateMachine[chip], 0b1000'0000U << 1U);
+            pio_sm_put_blocking(pio, stateMachine[chip], 1U);
         }
         power = false;
+        pending = true;
     }
 }
 
-void DisplayService::vkEnd(size_t chip) { pio_sm_put_blocking(pio, stateMachine[chip], 1U); }
-
-void DisplayService::vkSet(size_t chip, uint8_t byte)
+void DisplayService::transmit()
 {
-    pio_sm_put_blocking(pio, stateMachine[chip], static_cast<uint32_t>(byte) << 1U);
+    JsonDocument doc{};
+    doc["brightness"].set(static_cast<uint8_t>(brightness) + 1U - static_cast<uint8_t>(Brightness::DUTY16_1));
+    doc["power"].set(power);
+    Device.transmit(doc.as<JsonObjectConst>(), name);
 }
-
-void DisplayService::vkStart(size_t chip) { pio_sm_put_blocking(pio, stateMachine[chip], 0U); }
 
 DisplayService &DisplayService::getInstance()
 {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ArduinoJson.h>
 #include <string_view>
 
 class ServiceModule
@@ -16,4 +17,6 @@ public:
     ServiceModule &operator=(ServiceModule &&) = delete;
 
     const std::string_view name{};
+
+    virtual void onReceive(JsonObjectConst payload, std::string_view source);
 };
