@@ -33,10 +33,6 @@ public:
         STATUS,
     };
 
-    bool power{false};
-
-    Brightness brightness{Brightness::DUTY16_14};
-
     void begin();
     void drawEllipseOutline(float x, float y, float radius, bool lit);
     void drawEllipseSolid(float x, float y, float radius, bool lit);
@@ -78,14 +74,21 @@ private:
 
     static constexpr size_t chips{pixels.size() >> 7U};
 
+    bool power{false};
     bool render{false};
 
     std::array<bool, pixels.size()> frame{};
+
+    std::array<int, chips> stateMachine{};
 
     std::array<pin_size_t, chips> sda{PIN_DA1, PIN_DA2, PIN_DA3};
     std::array<pin_size_t, chips> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
 
     std::array<std::array<uint8_t, 16U>, chips> buffer{};
+
+    Brightness brightness{Brightness::DUTY16_14};
+
+    PIO pio{pio0};
 
     void vkEnd(size_t chip);
     void vkSet(size_t chip, uint8_t byte);

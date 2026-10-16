@@ -2,6 +2,7 @@
 
 #include "fonts/KortlinjeFont.h"
 #include "handlers/TextHandler.h"
+#include "pio/vk1640.pio.h"
 
 #include <ranges>
 
@@ -10,11 +11,25 @@ void DisplayService::begin()
 #ifdef PIN_LED
     pinMode(PIN_LED, PinMode::OUTPUT_2MA);
 #endif // PIN_LED
+    const uint offset{static_cast<uint>(pio_add_program(pio, &vk1640_program))};
+    const float clockDivider{static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 2'000'000.0F};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
-        pinMode(sclk[chip], PinMode::OUTPUT_2MA);
-        pinMode(sda[chip], PinMode::OUTPUT_2MA);
-        buffer[chip].fill(true);
+        buffer[chip].fill(0xFFU);
+        stateMachine[chip] = pio_claim_unused_sm(pio, true);
+        pio_sm_config config{vk1640_program_get_default_config(offset)};
+        sm_config_set_out_pins(&config, sda[chip], 1U);
+        sm_config_set_set_pins(&config, sda[chip], 1U);
+        sm_config_set_sideset_pins(&config, sclk[chip]);
+        sm_config_set_out_shift(&config, true, false, 32U);
+        sm_config_set_fifo_join(&config, pio_fifo_join::PIO_FIFO_JOIN_TX);
+        sm_config_set_clkdiv(&config, clockDivider);
+        pio_gpio_init(pio, sda[chip]);
+        pio_gpio_init(pio, sclk[chip]);
+        pio_sm_set_consecutive_pindirs(pio, stateMachine[chip], sda[chip], 1U, true);
+        pio_sm_set_consecutive_pindirs(pio, stateMachine[chip], sclk[chip], 1U, true);
+        pio_sm_init(pio, stateMachine[chip], offset, &config);
+        pio_sm_set_enabled(pio, stateMachine[chip], true);
     }
     KortlinjeFont font{};
     TextHandler("Hej ♥", font).draw();
@@ -312,37 +327,14 @@ void DisplayService::setPower(bool _power)
     }
 }
 
-void DisplayService::vkStart(size_t chip)
-{
-    digitalWrite(sda[chip], PinStatus::HIGH);
-    digitalWrite(sclk[chip], PinStatus::HIGH);
-    busy_wait_at_least_cycles(cycles);
-    digitalWrite(sda[chip], PinStatus::LOW);
-    busy_wait_at_least_cycles(cycles);
-    digitalWrite(sclk[chip], PinStatus::LOW);
-}
-
-void DisplayService::vkEnd(size_t chip)
-{
-    digitalWrite(sda[chip], PinStatus::LOW);
-    busy_wait_at_least_cycles(cycles);
-    digitalWrite(sclk[chip], PinStatus::HIGH);
-    busy_wait_at_least_cycles(cycles);
-    digitalWrite(sda[chip], PinStatus::HIGH);
-}
+void DisplayService::vkEnd(size_t chip) { pio_sm_put_blocking(pio, stateMachine[chip], 1U); }
 
 void DisplayService::vkSet(size_t chip, uint8_t byte)
 {
-    for (uint8_t idx{0U}; idx < 8U; idx++, byte >>= 1U)
-    {
-        digitalWrite(sclk[chip], PinStatus::LOW);
-        digitalWrite(sda[chip], byte & 1U);
-        busy_wait_at_least_cycles(cycles);
-        digitalWrite(sclk[chip], PinStatus::HIGH);
-        busy_wait_at_least_cycles(cycles);
-    }
-    digitalWrite(sclk[chip], PinStatus::LOW);
+    pio_sm_put_blocking(pio, stateMachine[chip], static_cast<uint32_t>(byte) << 1U);
 }
+
+void DisplayService::vkStart(size_t chip) { pio_sm_put_blocking(pio, stateMachine[chip], 0U); }
 
 DisplayService &DisplayService::getInstance()
 {

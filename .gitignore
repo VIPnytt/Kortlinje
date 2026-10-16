@@ -1,3 +1,4 @@
+*.pio.h
 /.idea
 /.pio
 /.platformio
