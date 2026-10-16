@@ -27,12 +27,9 @@ def main() -> None:
     Import("env")
     env: Environment = typing.cast(Environment, globals()["env"])
 
-    uv_env = os.environ.copy()
-    uv_env["VIRTUAL_ENV"] = os.path.join(env.subst("$PROJECT_CORE_DIR"), "penv")
     uv = subprocess.run(
         [sys.executable, "-m", "uv", "sync", "--active", "--inexact", "--only-group", "scripts"],
         stderr=subprocess.DEVNULL,
-        env=uv_env,
         check=False,
     )
     if uv.returncode:
@@ -44,7 +41,7 @@ def main() -> None:
         if pip.returncode:
             subprocess.run([sys.executable, "-m", "ensurepip"], check=True)
             subprocess.run(pip.args, check=True)
-        subprocess.run(uv.args, env=uv_env, check=True)
+        subprocess.run(uv.args, check=True)
 
     from src.Kortlinje import Kortlinje
 
