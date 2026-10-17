@@ -20,11 +20,19 @@ import { WebSocketWS } from "../extensions/WebSocket";
 
 export const name = "Draw";
 
-const [getFrame, setFrame] = createSignal<number[]>();
+const [getFrame, setFrame] = createSignal<boolean[]>();
 const [getSaved, setSaved] = createSignal<boolean>(false);
 
+const unpackFrame = (bytes: number[]): boolean[] => {
+    const pixels = new Array<boolean>(Device.GRID_COLUMNS * Device.GRID_ROWS);
+    for (let idx = 0; idx < Device.GRID_COLUMNS * Device.GRID_ROWS; ++idx) {
+        pixels[idx] = ((bytes[idx >> 3] >> (idx & 7)) & 1) === 1;
+    }
+    return pixels;
+};
+
 export const receiver = (json: { frame?: number[] }) => {
-    json?.frame !== undefined && setFrame(json.frame);
+    json?.frame !== undefined && setFrame(unpackFrame(json.frame));
 };
 
 export const Sidebar: Component = () => {
@@ -91,7 +99,7 @@ export const Sidebar: Component = () => {
                 <Tooltip text="Save drawing">
                     <button
                         class="action-positive w-full"
-                        disabled={!getFrame()?.some((pixel) => pixel > 0) || getSaved()}
+                        disabled={!getFrame()?.some((pixel) => pixel) || getSaved()}
                         onclick={handleSave}
                         type="button"
                     >
@@ -114,7 +122,7 @@ export const Sidebar: Component = () => {
                 <Tooltip text="Download drawing">
                     <button
                         class="w-full"
-                        disabled={!getFrame()?.some((pixel) => pixel > 0)}
+                        disabled={!getFrame()?.some((pixel) => pixel)}
                         onclick={handleDownload}
                         type="button"
                     >
@@ -140,14 +148,14 @@ export const Main: Component = () => {
         );
     };
 
-    const handleFrame = (data: number[]) => {
+    const handleFrame = (data: boolean[]) => {
         setSaved(false);
         setFrame([
             ...data,
         ]);
     };
 
-    const handlePixel = (x: number, y: number, brightness: number) => {
+    const handlePixel = (x: number, y: number, lit: boolean) => {
         setSaved(false);
         WebSocketWS.send(
             JSON.stringify({
@@ -156,7 +164,7 @@ export const Main: Component = () => {
                         {
                             x: x,
                             y: y,
-                            brightness: brightness,
+                            lit: lit,
                         },
                     ],
                 },
@@ -184,7 +192,7 @@ export const Main: Component = () => {
                         <Tooltip text="Clear drawing">
                             <button
                                 class="canvas-action-negative"
-                                disabled={!getFrame()?.some((pixel) => pixel > 0)}
+                                disabled={!getFrame()?.some((pixel) => pixel)}
                                 onclick={handleClear}
                                 type="button"
                             >

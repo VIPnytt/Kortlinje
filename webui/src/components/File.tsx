@@ -1,12 +1,12 @@
 import { Device } from "../config/devices";
 
-export const fileImport = (callback: (frames: number[][]) => void) => {
-    const csvParser = (file: File, callback: (frames: number[][]) => void) => {
+export const fileImport = (callback: (frames: boolean[][]) => void) => {
+    const csvParser = (file: File, callback: (frames: boolean[][]) => void) => {
         const reader = new FileReader();
         reader.readAsText(file);
         reader.onload = () => {
-            const frames: number[][] = [];
-            let frame: number[] = [];
+            const frames: boolean[][] = [];
+            let frame: boolean[] = [];
             let y = 0;
             reader.result
                 ?.toString()
@@ -15,13 +15,13 @@ export const fileImport = (callback: (frames: number[][]) => void) => {
                     let x = 0;
                     row.split(",").forEach((column) => {
                         if (column.length && x < Device.GRID_COLUMNS) {
-                            frame.push(parseInt(column, 10));
+                            frame.push(parseInt(column, 10) !== 0);
                             ++x;
                         }
                     });
                     if (x > 0) {
                         while (x < Device.GRID_COLUMNS) {
-                            frame.push(0);
+                            frame.push(false);
                             ++x;
                         }
                         ++y;
@@ -34,7 +34,7 @@ export const fileImport = (callback: (frames: number[][]) => void) => {
                 });
             if (y > 0) {
                 while (frame.length < Device.GRID_COLUMNS * Device.GRID_ROWS) {
-                    frame.push(0);
+                    frame.push(false);
                 }
                 frames.push(frame);
             }
@@ -44,7 +44,7 @@ export const fileImport = (callback: (frames: number[][]) => void) => {
         };
     };
 
-    const imageParser = (file: File, callback: (frame: number[][]) => void) => {
+    const imageParser = (file: File, callback: (frame: boolean[][]) => void) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
@@ -64,7 +64,7 @@ export const fileImport = (callback: (frames: number[][]) => void) => {
                         return p + (c - p) / (i + 1);
                     }, 0);
                     callback([
-                        frame.map((i) => (i > avg ? 2 ** 8 - 1 : 0)),
+                        frame.map((i) => (i > avg)),
                     ]);
                 }
             };
@@ -85,12 +85,12 @@ export const fileImport = (callback: (frames: number[][]) => void) => {
     };
 };
 
-export const csvExport = (name: string, frames: number[][]) => {
-    const csvGenerator = (pixels: number[]) => {
+export const csvExport = (name: string, frames: boolean[][]) => {
+    const csvGenerator = (pixels: boolean[]) => {
         let csv = "";
         let column = 1;
-        for (const brightness of pixels) {
-            csv += brightness;
+        for (const lit of pixels) {
+            csv += lit;
             if (column >= Device.GRID_COLUMNS) {
                 csv += "\r\n";
                 column = 1;

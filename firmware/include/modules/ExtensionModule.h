@@ -21,4 +21,5 @@ public:
     virtual void begin();
     virtual void handle();
     virtual void onReceive(JsonObjectConst payload, std::string_view source);
+    virtual void onTransmit(JsonObjectConst payload, std::string_view source);
 };

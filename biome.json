@@ -1,0 +1,32 @@
+{
+    "$schema": "./webui/node_modules/@biomejs/biome/configuration_schema.json",
+    "css": {
+        "formatter": {
+            "enabled": true
+        },
+        "parser": {
+            "tailwindDirectives": true
+        }
+    },
+    "files": {
+        "ignoreUnknown": true
+    },
+    "formatter": {
+        "attributePosition": "multiline",
+        "expand": "always",
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120
+    },
+    "html": {
+        "formatter": {
+            "attributePosition": "auto",
+            "enabled": true
+        }
+    },
+    "vcs": {
+        "clientKind": "git",
+        "enabled": true,
+        "useIgnoreFile": true
+    }
+}

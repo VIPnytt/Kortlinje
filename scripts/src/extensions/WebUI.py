@@ -85,17 +85,18 @@ class WebUI:
             if subprocess.run(["npm", *build_cmd], stderr=subprocess.DEVNULL, cwd=self.path, check=False).returncode:
                 subprocess.run(["npm", *install_cmd], cwd=self.path, check=True)
                 subprocess.run(["npm", *build_cmd], cwd=self.path, check=True)
-        with gzip.open(self.path / "dist" / "index.html.gz", "wb") as gz:
-            gz.write((self.path / "dist" / "index.html").read_bytes())
+        for file in (self.path / "dist").iterdir():
+            if file.is_file() and file.suffix != ".gz":
+                with gzip.open(file.parent / f"{file.name}.gz", "wb") as gz:
+                    gz.write(file.read_bytes())
 
     @staticmethod
     def clean() -> None:
         """Remove generated web app files and dependencies from the project."""
-        for path in ("webui/dist",):
-            for data in os.scandir(path):
-                if data.is_file():
-                    pathlib.Path(data.path).unlink()
-                    print(f"Removing {data.path}")
+        for data in os.scandir("webui/dist"):
+            if data.is_file():
+                pathlib.Path(data.path).unlink()
+                print(f"Removing {data.path}")
         node_modules = "webui/node_modules"
         if os.path.exists(node_modules):
             shutil.rmtree(node_modules, ignore_errors=True)

@@ -1,5 +1,6 @@
 #include "services/DisplayService.h"
 
+#include "extensions/WebUiExtension.h"
 #include "fonts/KortlinjeFont.h"
 #include "handlers/TextHandler.h"
 #include "pio/vk1640.pio.h"
@@ -249,6 +250,7 @@ void DisplayService::flush()
             pio_sm_put_blocking(pio, stateMachine[chip], 1U);
         }
     }
+    WebUiExtension::render = true;
 }
 
 DisplayService::Brightness DisplayService::getBrightness() const { return brightness; }

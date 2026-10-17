@@ -5,7 +5,6 @@ import { Icon } from "../components/Icon";
 import {
     EXTENSION_MESSAGE,
     EXTENSION_MIRROR,
-    EXTENSION_OTA,
     EXTENSION_PLAYLIST,
 } from "../config/modules";
 import {
@@ -59,6 +58,9 @@ export const SidebarSecondary: Component = () => (
 
 export const MainThird: Component = () => (
     <Switch fallback={<WebUIMain />}>
+        <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionOtaName.toLowerCase()}`}>
+            <ExtensionOtaThird />
+        </Match>
         {EXTENSION_MESSAGE && (
             <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMessageName.toLowerCase()}`}>
                 <ExtensionMessageThird />
@@ -67,11 +69,6 @@ export const MainThird: Component = () => (
         {EXTENSION_MIRROR && (
             <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMirrorName.toLowerCase()}`}>
                 <ExtensionMirrorThird />
-            </Match>
-        )}
-        {EXTENSION_OTA && (
-            <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionOtaName.toLowerCase()}`}>
-                <ExtensionOtaThird />
             </Match>
         )}
         {EXTENSION_PLAYLIST && (
@@ -84,9 +81,9 @@ export const MainThird: Component = () => (
 
 export const SidebarThird: Component = () => (
     <SidebarSectionSecondary title={name}>
+        <ExtensionOtaLink />
         {EXTENSION_MESSAGE && <ExtensionMessageLink />}
         {EXTENSION_MIRROR && <ExtensionMirrorLink />}
-        {EXTENSION_OTA && <ExtensionOtaLink />}
         {EXTENSION_PLAYLIST && <ExtensionPlaylistLink />}
     </SidebarSectionSecondary>
 );

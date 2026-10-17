@@ -29,7 +29,6 @@
         "@tailwindcss/vite": "4.3.3",
         "@types/js-cookie": "3.0.6",
         "vite": "8.3.4",
-        "vite-plugin-singlefile": "2.3.3",
         "vite-plugin-solid": "2.11.14"
     },
     "private": true

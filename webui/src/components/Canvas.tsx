@@ -5,14 +5,14 @@ import { WebUISidebar } from "../extensions/WebUI";
 
 export const Canvas: Component<{
     disabled?: boolean;
-    pixels: number[];
-    onFrame?: (data: number[]) => void;
-    onPixel?: (x: number, y: number, value: number) => void;
+    pixels: boolean[];
+    onFrame?: (data: boolean[]) => void;
+    onPixel?: (x: number, y: number, lit: boolean) => void;
 }> = (props) => {
     let canvasRef: HTMLCanvasElement | undefined;
     let divRef: HTMLDivElement | undefined;
     let isDrawing: boolean = false;
-    let strength: number = 2 ** 8 - 1;
+    let lit: boolean = true;
 
     onMount(() => {
         if (canvasRef) {
@@ -69,42 +69,18 @@ export const Canvas: Component<{
         ctx.globalAlpha = 1;
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvasRef.width, canvasRef.height);
-        //ctx.globalAlpha = 0.8;
-        if (Device.LED_GEOMETRY === "circular") {
-            for (let x = 0; x < Device.GRID_COLUMNS; ++x) {
-                for (let y = 0; y < Device.GRID_ROWS; ++y) {
-                    ctx.fillStyle = toColor(props.pixels[x + y * Device.GRID_COLUMNS]);
-                    ctx.beginPath();
-                    ctx.arc(
-                        offsetX + x * columnWidth + pixelWidth / 2,
-                        offsetY + y * rowHeight + pixelHeight / 2,
-                        Math.min(pixelHeight, pixelWidth) / 2,
-                        0,
-                        2 * Math.PI,
-                    );
-                    ctx.fill();
-                }
-            }
-        } else if (Device.LED_GEOMETRY === "rectangular") {
-            for (let x = 0; x < Device.GRID_COLUMNS; ++x) {
-                for (let y = 0; y < Device.GRID_ROWS; ++y) {
-                    ctx.fillStyle = toColor(props.pixels[x + y * Device.GRID_COLUMNS]);
-                    ctx.fillRect(offsetX + x * columnWidth, offsetY + y * rowHeight, pixelWidth, pixelHeight);
-                }
+        for (let x = 0; x < Device.GRID_COLUMNS; ++x) {
+            for (let y = 0; y < Device.GRID_ROWS; ++y) {
+                ctx.fillStyle = toColor(props.pixels[x + y * Device.GRID_COLUMNS]);
+                ctx.fillRect(offsetX + x * columnWidth, offsetY + y * rowHeight, pixelWidth, pixelHeight);
             }
         }
         ctx.restore();
     };
 
-    const toColor = (brightness: number) => {
-        const value =
-            brightness === 0
-                ? Device.LED_BASE_TONE
-                : ((brightness - 1) / (2 ** 8 - 2)) * (2 ** 8 - 2 - Device.LED_BASE_BRIGHTNESS) +
-                1 +
-                Device.LED_BASE_BRIGHTNESS;
-        const factor = value / 0xff;
-        return `rgb(${factor * 0xf6},${factor * 0xf8},${factor * 0xfa})`;
+    const toColor = (lit: boolean) => {
+        const factor = (lit ? 0xFF : Device.LED_BASE_TONE) / 0xFF;
+        return `rgb(${factor * 0xF4},${factor * 0xEB},${factor * 0xDC})`;
     };
 
     const handleEvent = (e: PointerEvent) => {
@@ -135,9 +111,9 @@ export const Canvas: Component<{
             return;
         }
         isDrawing = true;
-        strength = props.pixels[position.i] === 0 ? 2 ** 8 - 1 : 0;
-        props.onPixel?.(position.x, position.y, strength);
-        const newState = props.pixels.map((value, index) => (index === position.i ? strength : value));
+        lit = !props.pixels[position.i];
+        props.onPixel?.(position.x, position.y, lit);
+        const newState = props.pixels.map((state, index) => (index === position.i ? lit : state));
         props.onFrame?.(newState);
     };
 
@@ -150,10 +126,10 @@ export const Canvas: Component<{
         if (!position) {
             return;
         }
-        if (props.pixels[position.i] !== strength) {
-            props.onPixel?.(position.x, position.y, strength);
+        if (props.pixels[position.i] !== lit) {
+            props.onPixel?.(position.x, position.y, lit);
 
-            const newState = props.pixels.map((value, index) => (index === position.i ? strength : value));
+            const newState = props.pixels.map((state, index) => (index === position.i ? lit : state));
             props.onFrame?.(newState);
         }
     };

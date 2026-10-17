@@ -7,15 +7,7 @@ import { ToastProvider } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
 import { HOSTNAME, NAME } from "../config/constants";
 import { Device } from "../config/devices";
-import { EXTENSION_OTA } from "../config/modules";
 import { VERSION } from "../config/version";
-import {
-    name as ConnectivityName,
-    SidebarSecondaryComponent as ConnectivitySecondarySidebarComponent,
-    MainThird as ConnectivityThird,
-    SidebarThird as ConnectivityThirdSidebar,
-} from "../services/Connectivity";
-import { SidebarSecondaryComponent as DeviceSecondarySidebarComponent, DeviceVersion } from "../services/Device";
 import {
     Main as DisplayMain,
     DisplayPower,
@@ -36,12 +28,11 @@ import {
     MainThird as ModesThird,
     SidebarThird as ModesThirdSidebar,
 } from "../services/Modes";
-import { MainComponent as ExtensionOtaComponent } from "./Ota";
 import { WebSocketmessages, WebSocketState, WebSocketWS } from "./WebSocket";
 
 export const name = "Web UI";
 
-const [getFrame, setFrame] = createSignal<number[]>();
+const [getFrame, setFrame] = createSignal<boolean[]>();
 const [getHash, setHash] = createSignal<string>(location.hash);
 const [getSidebar, setSidebar] = createSignal<boolean>(true);
 
@@ -56,8 +47,16 @@ createEffect(() => {
     }
 });
 
+const unpackFrame = (bytes: number[]): boolean[] => {
+    const pixels = new Array<boolean>(Device.GRID_COLUMNS * Device.GRID_ROWS);
+    for (let idx = 0; idx < Device.GRID_COLUMNS * Device.GRID_ROWS; ++idx) {
+        pixels[idx] = ((bytes[idx >> 3] >> (idx & 7)) & 1) === 1;
+    }
+    return pixels;
+};
+
 export const receiver = (json: { frame?: number[] }) => {
-    json?.frame !== undefined && setFrame(json.frame);
+    json?.frame !== undefined && setFrame(unpackFrame(json.frame));
 };
 
 onMount(() => {
@@ -83,9 +82,6 @@ export const WebUI: Component = () => (
             >
                 <Match when={WebSocketState() !== WebSocketWS.OPEN}>
                     <MainSecondary />
-                </Match>
-                <Match when={VERSION !== DeviceVersion()}>
-                    <Third />
                 </Match>
             </Switch>
         </ToastProvider>
@@ -115,9 +111,6 @@ const Secondary: Component = () => (
     <Layout
         main={
             <Switch fallback={<MainSecondary />}>
-                <Match when={WebUIPath().startsWith(`/${ConnectivityName.toLowerCase()}`)}>
-                    <ConnectivityThird />
-                </Match>
                 <Match when={WebUIPath().startsWith(`/${ExtensionsName.toLowerCase()}`)}>
                     <ExtensionsThird />
                 </Match>
@@ -131,20 +124,11 @@ const Secondary: Component = () => (
                 <Switch
                     fallback={
                         <>
-                            <SidebarSectionSecondary title={Device.MODEL}>
-                                <div class="space-y-3">
-                                    <ConnectivitySecondarySidebarComponent />
-                                    <DeviceSecondarySidebarComponent />
-                                </div>
-                            </SidebarSectionSecondary>
                             <ExtensionsSecondarySidebar />
                             <ModesSecondarySidebar />
                         </>
                     }
                 >
-                    <Match when={WebUIPath().startsWith(`/${ConnectivityName.toLowerCase()}`)}>
-                        <ConnectivityThirdSidebar />
-                    </Match>
                     <Match when={WebUIPath().startsWith(`/${ExtensionsName.toLowerCase()}`)}>
                         <ExtensionsThirdSidebar />
                     </Match>
@@ -156,36 +140,6 @@ const Secondary: Component = () => (
             </>
         }
     />
-);
-
-export const Third: Component = () => (
-    <div class="main">
-        <div class="space-y-3 p-5">
-            <h2>Kortlinje</h2>
-            <div class="box">
-                <div class="space-y-3">
-                    <h3>Version conflict</h3>
-                    <div class="text-sm">
-                        Firmware: {DeviceVersion()}
-                        <br />
-                        Filesystem: {VERSION}
-                    </div>
-                    <div class="text-sm">Flash or upload matching versions to restore compatibility.</div>
-                    <div class="hr" />
-                    <div class="hover:underline text-sm tracking-wide">
-                        <a
-                            href="https://github.com/VIPnytt/Kortlinje/releases/latest"
-                            rel="noopener"
-                            target="_blank"
-                        >
-                            Download latest stable release
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {EXTENSION_OTA && <ExtensionOtaComponent />}
-    </div>
 );
 
 export const Main: Component = () => (

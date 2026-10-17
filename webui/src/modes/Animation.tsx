@@ -28,7 +28,7 @@ import { MainComponent as ModesMainComponent } from "../services/Modes";
 
 export const name = "Animation";
 
-type Frame = number[];
+type Frame = boolean[];
 type FrameSignal = [
     () => Frame,
     (v: Frame) => void,
@@ -204,7 +204,7 @@ export const Sidebar: Component = () => {
             frames.forEach((frame) => {
                 setFramesDraft((signals) => [
                     ...signals,
-                    handleNew(frame) as unknown as ReturnType<typeof createSignal<number[]>>,
+                    handleNew(frame) as unknown as ReturnType<typeof createSignal<boolean[]>>,
                 ]);
             });
             setSaved(false);
@@ -235,7 +235,7 @@ export const Sidebar: Component = () => {
                         class={`w-full ${getPreview() ? "action-negative not-hover:bg-neutral-light dark:not-hover:bg-neutral-dark not-hover:enabled:text-interactive-light dark:not-hover:enabled:text-content-dark" : ""}`}
                         disabled={
                             getFramesDraft().length < 2 ||
-                            !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel > 0))
+                            !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel))
                         }
                         onclick={handlePreview}
                         type="button"
@@ -262,7 +262,7 @@ export const Sidebar: Component = () => {
                         class="action-neutral w-full"
                         disabled={
                             getFramesDraft().length < 2 ||
-                            !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel > 0)) ||
+                            !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel)) ||
                             getSaved()
                         }
                         onclick={handleSave}
@@ -290,7 +290,7 @@ export const Sidebar: Component = () => {
                         class="w-full"
                         disabled={
                             getFramesDraft().length < 2 ||
-                            !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel > 0))
+                            !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel))
                         }
                         onclick={handleDownload}
                         type="button"
@@ -409,8 +409,8 @@ export const Main: Component = () => {
                                                     class="canvas-action-negative"
                                                     disabled={
                                                         !getFramesDraft()
-                                                            [index()][0]?.()
-                                                            .some((pixel) => pixel > 0)
+                                                        [index()][0]?.()
+                                                            .some((pixel) => pixel)
                                                     }
                                                     onclick={() => handleClear(index())}
                                                     type="button"

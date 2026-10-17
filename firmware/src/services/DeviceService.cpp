@@ -40,7 +40,6 @@ void DeviceService::begin1()
 
 void DeviceService::handle0()
 {
-    WebServer.handle();
     Extensions.handle();
     Display.handle();
     if (Display.getPower())
@@ -124,7 +123,10 @@ void DeviceService::transmit(JsonObjectConst payload, std::string_view source, b
     }
     if (operational)
     {
-        WebServer.onTransmit(payload, source);
+        for (ExtensionModule *extension : Extensions.getAll())
+        {
+            extension->onTransmit(payload, source);
+        }
     }
 }
 

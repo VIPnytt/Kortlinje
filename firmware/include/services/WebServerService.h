@@ -3,6 +3,7 @@
 #include "modules/ServiceModule.h"
 
 #include <ESPAsyncWebServer.h>
+#include <array>
 #include <span>
 
 class WebServerService final : public ServiceModule
@@ -10,26 +11,7 @@ class WebServerService final : public ServiceModule
 public:
     static constexpr std::string_view name{"Web server"};
 
-    static inline bool render{false};
-
-    void begin();
-    void handle();
-    void onTransmit(JsonObjectConst payload, std::string_view source);
-
-    static void onEmpty(AsyncWebServerRequest *request);
-
-    static WebServerService &getInstance();
-
-private:
-    static constexpr uint8_t INDEX_HTML[] = {
-#embed "../../../webui/dist/index.html.gz"
-    };
-
-    static constexpr std::span<const uint8_t> INDEX_HTML_VIEW{INDEX_HTML};
-
-    static constexpr size_t length{sizeof(INDEX_HTML)};
-
-    static constexpr uint32_t calculateHash(std::span<const uint8_t> data)
+    static consteval std::array<char, 11U> etag(std::span<const uint8_t> data)
     {
         uint32_t hash{2'166'136'261U};
         for (const uint8_t byte : data)
@@ -37,23 +19,31 @@ private:
             hash ^= byte;
             hash *= 16'777'619U;
         }
-        return hash;
+        std::array<char, 11U> out{{'"', '0', '0', '0', '0', '0', '0', '0', '0', '"', '\0'}};
+        for (size_t idx{1U}; idx < 9U; ++idx)
+        {
+            const uint8_t nibble{static_cast<uint8_t>((hash >> ((8U - idx) * 4U)) & 0xFU)};
+            out[idx] = static_cast<char>(nibble < 10U ? ('0' + nibble) : ('A' + (nibble - 10U)));
+        }
+        return out;
+    }
+
+    template <std::size_t N> [[nodiscard]] static consteval auto embed(const unsigned char (&&raw)[N])
+    {
+        return std::to_array(raw);
     }
 
     AsyncWebServer http{80U};
 
-    AsyncWebSocket *socket{new AsyncWebSocket("/ws")};
+    void begin();
 
-    static inline std::array<char, 11U> etag{"\"00000000\""};
+    static void onEmpty(AsyncWebServerRequest *request);
 
-    static inline std::vector<uint8_t> buffer{};
+    static WebServerService &getInstance();
 
+private:
     explicit WebServerService() : ServiceModule(name) {};
 
-    static void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg,
-                        const uint8_t *data, size_t len);
-    static void onGetRoot(AsyncWebServerRequest *request);
-    static void onHeadRoot(AsyncWebServerRequest *request);
     static void onNotFound(AsyncWebServerRequest *request);
 };
 

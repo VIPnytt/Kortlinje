@@ -8,18 +8,14 @@ import {
     EXTENSION_MIRROR,
     EXTENSION_PLAYLIST,
     EXTENSION_SIGNAL,
-    MODE_CLOCK,
     MODE_DRAW,
     MODE_STREAM,
     MODE_WEATHER,
 } from "../config/modules";
-import { name as ModeClockName, receiver as ModeClockReceiver } from "../modes/Clock";
 import { name as ModeDrawName, receiver as ModeDrawReceiver } from "../modes/Draw";
 import { name as ModeStreamName, receiver as ModeStreamReceiver } from "../modes/Stream";
 import { name as ModeTickerName, receiver as ModeTickerReceiver } from "../modes/Ticker";
 import { name as ModeWeatherName, receiver as ModeWeatherReceiver } from "../modes/Weather";
-import { name as ConnectivityName, receiver as ConnectivityReceiver } from "../services/Connectivity";
-import { name as DeviceName, receiver as DeviceReceiver } from "../services/Device";
 import { name as DisplayName, receiver as DisplayReceiver } from "../services/Display";
 import { name as FontsName, receiver as FontsReceiver } from "../services/Fonts";
 import { name as ModesName, receiver as ModesReceiver } from "../services/Modes";
@@ -54,8 +50,6 @@ export const WebSocketmessages: ParentComponent = (props) => {
     createEffect(() => {
         const json = JSON.parse(event()?.data || "{}");
         batch(() => {
-            json[ConnectivityName] && ConnectivityReceiver(json[ConnectivityName]);
-            json[DeviceName] && DeviceReceiver(json[DeviceName]);
             json[DisplayName] && DisplayReceiver(json[DisplayName]);
             json[FontsName] && FontsReceiver(json[FontsName]);
             json[ModesName] && ModesReceiver(json[ModesName]);
@@ -65,7 +59,6 @@ export const WebSocketmessages: ParentComponent = (props) => {
             EXTENSION_MIRROR && json[ExtensionMirrorName] && ExtensionMirrorReceiver(json[ExtensionMirrorName]);
             EXTENSION_PLAYLIST && json[ExtensionPlaylistName] && ExtensionPlaylistReceiver(json[ExtensionPlaylistName]);
             EXTENSION_SIGNAL && json[ExtensionSignalName] && ExtensionSignalReceiver(json[ExtensionSignalName]);
-            MODE_CLOCK && json[ModeClockName] && ModeClockReceiver(json[ModeClockName]);
             MODE_DRAW && json[ModeDrawName] && ModeDrawReceiver(json[ModeDrawName]);
             MODE_STREAM && json[ModeStreamName] && ModeStreamReceiver(json[ModeStreamName]);
             MODE_WEATHER && json[ModeWeatherName] && ModeWeatherReceiver(json[ModeWeatherName]);

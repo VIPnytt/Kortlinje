@@ -7,7 +7,7 @@ import { WebSocketWS } from "../extensions/WebSocket";
 
 export const name = "Flies";
 
-const [getFrame, setFrame] = createSignal<number[]>();
+const [getFrame, setFrame] = createSignal<boolean[]>();
 
 export const Main: Component = () => {
     const _id: number = parseInt(Cookies.get(`${name}.id`) ?? Math.round(Math.random() * (2 ** 8 - 1)).toString(), 10);
@@ -15,13 +15,13 @@ export const Main: Component = () => {
         expires: 1,
     });
 
-    const handleFrame = (data: number[]) => {
+    const handleFrame = (data: boolean[]) => {
         setFrame([
             ...data,
         ]);
     };
 
-    const handlePixel = (_x: number, _y: number, _value: number) => {
+    const handlePixel = (_x: number, _y: number, _lit: boolean) => {
         setFrame(new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0));
         WebSocketWS.send(
             JSON.stringify({

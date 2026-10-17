@@ -12,6 +12,8 @@ void ExtensionsService::begin()
 
 EnvironmentExtension &ExtensionsService::Environment() { return extensionEnvironment; }
 
+WebSocketExtension &ExtensionsService::WebSocket() { return extensionWebSocket; }
+
 std::span<ExtensionModule *const> ExtensionsService::getAll() { return modules; }
 
 void ExtensionsService::handle()

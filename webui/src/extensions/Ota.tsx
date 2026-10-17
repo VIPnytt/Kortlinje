@@ -33,7 +33,7 @@ export const MainThird: Component = () => (
  * Renders PlatformIO espota setup instructions for the configured board and hostname.
  * Includes an authentication flag with a placeholder password when OTA_KEY is enabled.
  */
-export const MainComponent: Component = () => (
+const MainComponent: Component = () => (
     <div class="space-y-3 p-5">
         <h2>{name}</h2>
         <div class="box">

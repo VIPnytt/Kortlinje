@@ -6,6 +6,8 @@
 #include "extensions/EnvironmentExtension.h"
 #include "extensions/OtaExtension.h"
 #include "extensions/PhotocellExtension.h"
+#include "extensions/WebSocketExtension.h"
+#include "extensions/WebUiExtension.h"
 #include "modules/ExtensionModule.h"
 #include "modules/ServiceModule.h"
 
@@ -25,14 +27,18 @@ private:
     EnvironmentExtension extensionEnvironment{};
     OtaExtension extensionOta{};
     PhotocellExtension extensionPhotocell{};
+    WebSocketExtension extensionWebSocket{};
+    WebUiExtension extensionWebUi{};
 
-    const std::array<ExtensionModule *, 6U> modules{
+    const std::array<ExtensionModule *, 8U> modules{
         &extensionBattery,
         &extensionButtonsRear,
         &extensionButtonsTop,
         &extensionEnvironment,
         &extensionOta,
         &extensionPhotocell,
+        &extensionWebSocket,
+        &extensionWebUi,
     };
 
 public:
@@ -40,6 +46,8 @@ public:
     void handle();
 
     EnvironmentExtension &Environment();
+
+    WebSocketExtension &WebSocket();
 
     [[nodiscard]] std::span<ExtensionModule *const> getAll();
 
