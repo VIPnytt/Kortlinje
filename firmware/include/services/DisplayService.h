@@ -81,14 +81,20 @@ private:
 
     std::array<int, chips> stateMachine{};
 
-    std::array<pin_size_t, chips> sda{PIN_DA1, PIN_DA2, PIN_DA3};
-    std::array<pin_size_t, chips> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
+    std::array<uint, chips> channel{};
 
-    std::array<std::array<uint8_t, 16U>, chips> buffer{};
+    std::array<pin_size_t, chips> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
+    std::array<pin_size_t, chips> sda{PIN_DA1, PIN_DA2, PIN_DA3};
+
+    std::array<std::array<uint8_t, 16U>, chips> vkBuffer{};
+
+    alignas(4U) std::array<std::array<uint32_t, 32U>, chips> txBuffer{};
 
     Brightness brightness{Brightness::DUTY16_14};
 
     PIO pio{pio0};
+
+    void vkCommand(uint8_t command);
 };
 
 extern DisplayService &Display;

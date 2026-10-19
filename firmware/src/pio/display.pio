@@ -1,4 +1,4 @@
-.program vk1640
+.program display
 .side_set 1
 .wrap_target
 idle:

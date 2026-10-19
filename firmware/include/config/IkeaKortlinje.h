@@ -1,6 +1,5 @@
 #pragma once
 
-#define CLK_PULSE_WIDTH 400U // ns
 #define GRID_COLUMNS 42U     // px
 #define GRID_ROWS 9U         // px
 #define LED_MAP                                                                                                        \
