@@ -21,7 +21,7 @@ void HumidityMode::handle()
     else if (millis() - lastMillis > 0b1U << 14U)
     {
         lastMillis = millis();
-        Extensions.Environment().queue();
+        Extensions.Climate().sample();
     }
 }
 

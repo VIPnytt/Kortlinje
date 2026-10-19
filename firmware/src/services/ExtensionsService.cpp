@@ -10,7 +10,7 @@ void ExtensionsService::begin()
     }
 }
 
-EnvironmentExtension &ExtensionsService::Environment() { return extensionEnvironment; }
+ClimateExtension &ExtensionsService::Climate() { return extensionClimate; }
 
 WebSocketExtension &ExtensionsService::WebSocket() { return extensionWebSocket; }
 

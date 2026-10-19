@@ -1,0 +1,36 @@
+.program climate
+.wrap_target
+idle:
+    set pins, 0
+    pull block
+    set pins, 1
+wait_sync:
+    wait 1 pin 0
+    wait 0 pin 0
+    set x, 19
+sync_loop:
+    jmp pin wait_sync
+    jmp x-- sync_loop [1]
+    wait 1 pin 0
+    set y, 31
+read_word0:
+    wait 0 pin 0
+    set x, 10
+delay0:
+    jmp x-- delay0 [1]
+    in pins, 1
+    wait 1 pin 0
+    jmp y-- read_word0
+    set y, 7
+read_word1:
+    wait 0 pin 0
+    set x, 10
+delay1:
+    jmp x-- delay1 [1]
+    in pins, 1
+    wait 1 pin 0
+    jmp y-- read_word1
+    push block
+    set pins, 0
+    irq set 0
+.wrap

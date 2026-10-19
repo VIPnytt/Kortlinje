@@ -3,7 +3,7 @@
 #include "extensions/BatteryExtension.h"
 #include "extensions/ButtonsRearExtension.h"
 #include "extensions/ButtonsTopExtension.h"
-#include "extensions/EnvironmentExtension.h"
+#include "extensions/ClimateExtension.h"
 #include "extensions/OtaExtension.h"
 #include "extensions/PhotocellExtension.h"
 #include "extensions/WebSocketExtension.h"
@@ -24,7 +24,7 @@ private:
     BatteryExtension extensionBattery{};
     ButtonsRearExtension extensionButtonsRear{};
     ButtonsTopExtension extensionButtonsTop{};
-    EnvironmentExtension extensionEnvironment{};
+    ClimateExtension extensionClimate{};
     OtaExtension extensionOta{};
     PhotocellExtension extensionPhotocell{};
     WebSocketExtension extensionWebSocket{};
@@ -34,7 +34,7 @@ private:
         &extensionBattery,
         &extensionButtonsRear,
         &extensionButtonsTop,
-        &extensionEnvironment,
+        &extensionClimate,
         &extensionOta,
         &extensionPhotocell,
         &extensionWebSocket,
@@ -45,7 +45,7 @@ public:
     void begin();
     void handle();
 
-    EnvironmentExtension &Environment();
+    ClimateExtension &Climate();
 
     WebSocketExtension &WebSocket();
 
