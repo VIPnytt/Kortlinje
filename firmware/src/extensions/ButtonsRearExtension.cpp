@@ -1,10 +1,28 @@
 #include "extensions/ButtonsRearExtension.h"
 
 #include "config/secrets.h"
+#include "hardware/adc.h"
+#include "hardware/dma.h"
 #include "services/DisplayService.h"
 #include "services/ModesService.h"
 
-void ButtonsRearExtension::begin() { pinMode(PIN_REAR, PinMode::INPUT); }
+void ButtonsRearExtension::begin()
+{
+    pinMode(PIN_REAR, PinMode::INPUT);
+    adc_init();
+    adc_gpio_init(PIN_REAR);
+    adc_select_input(PIN_REAR - __FIRSTANALOGGPIO);
+    adc_fifo_setup(true, true, 1U, false, false);
+    adc_set_clkdiv(static_cast<float>(0xFFFFU));
+    channel = static_cast<uint>(dma_claim_unused_channel(true));
+    dma_channel_config config{dma_channel_get_default_config(channel)};
+    channel_config_set_transfer_data_size(&config, dma_channel_transfer_size::DMA_SIZE_16);
+    channel_config_set_read_increment(&config, false);
+    channel_config_set_write_increment(&config, false);
+    channel_config_set_dreq(&config, dreq_num_rp2350::DREQ_ADC);
+    dma_channel_configure(channel, &config, &raw, &adc_hw->fifo, UINT32_MAX, true);
+    adc_run(true);
+}
 
 void ButtonsRearExtension::handle()
 {
@@ -13,9 +31,15 @@ void ButtonsRearExtension::handle()
         return;
     }
     lastMillis = millis();
+    if (!dma_channel_is_busy(channel))
+    {
+        dma_channel_set_trans_count(channel, UINT32_MAX, true);
+        state = Button::UNKNOWN;
+        return;
+    }
     const Button _state{state};
-    const int raw{analogRead(PIN_REAR)};
-    if (raw >= idle - margin && raw <= idle)
+    const uint16_t _raw{raw};
+    if (_raw >= idle - margin && _raw <= idle)
     {
         state = Button::NONE;
         if (state == _state)
@@ -23,7 +47,7 @@ void ButtonsRearExtension::handle()
             pressed = false;
         }
     }
-    else if (raw >= high - margin && raw <= high + margin)
+    else if (_raw >= high - margin && _raw <= high + margin)
     {
         state = Button::MINUS;
         if (!pressed && state == _state)
@@ -32,7 +56,7 @@ void ButtonsRearExtension::handle()
             minus();
         }
     }
-    else if (raw >= medium - margin && raw <= medium + margin)
+    else if (_raw >= medium - margin && _raw <= medium + margin)
     {
         state = Button::PLUS;
         if (!pressed && state == _state)
@@ -41,7 +65,7 @@ void ButtonsRearExtension::handle()
             plus();
         }
     }
-    else if (raw >= low - margin && raw <= low + margin)
+    else if (_raw >= low - margin && _raw <= low + margin)
     {
         state = Button::ALARM;
         if (!pressed && state == _state)
@@ -50,7 +74,7 @@ void ButtonsRearExtension::handle()
             alarm();
         }
     }
-    else if (raw <= margin)
+    else if (_raw <= margin)
     {
         state = Button::CONFIG;
         if (!pressed && state == _state)
@@ -62,9 +86,9 @@ void ButtonsRearExtension::handle()
     else
     {
         state = Button::UNKNOWN;
-        if (raw > idle)
+        if (_raw > idle)
         {
-            idle = raw;
+            idle = _raw;
             high = idle * 3U / 4U;
             medium = idle * 2U / 3U;
             low = idle / 2U;

@@ -28,9 +28,13 @@ private:
     uint16_t medium{0U};
     uint16_t idle{0U};
 
+    uint channel{0U};
+
     unsigned long lastMillis{0UL};
 
     Button state{Button::UNKNOWN};
+
+    volatile uint16_t raw{0U};
 
     void brightness();
     void cycle();
