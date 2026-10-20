@@ -28,6 +28,7 @@ void ClimateExtension::begin()
     pio_sm_init(pio, stateMachine, offset, &config);
     pio_sm_set_enabled(pio, stateMachine, true);
     lastMillis = millis();
+    processing = true;
     pio_sm_put(pio, stateMachine, 1U);
 }
 
@@ -38,9 +39,20 @@ void ClimateExtension::handle()
         pending = false;
         transmit();
     }
-    else if (millis() - lastMillis > 0b1U << 16U)
+    else if (!processing && millis() - lastMillis > 0b1U << 16U)
     {
         sample();
+    }
+    else if (processing && millis() - lastMillis > 0b1U << 10U)
+    {
+        pio_sm_set_enabled(pio, stateMachine, false);
+        pio_sm_clear_fifos(pio, stateMachine);
+        pio_sm_restart(pio, stateMachine);
+        pio_sm_clkdiv_restart(pio, stateMachine);
+        pio_sm_exec(pio, stateMachine, pio_encode_jmp(offset));
+        pio_sm_set_enabled(pio, stateMachine, true);
+        lastMillis = millis();
+        processing = false;
     }
 }
 
@@ -50,9 +62,10 @@ float ClimateExtension::getTemperature() const { return temperature; }
 
 void ClimateExtension::sample()
 {
-    if (millis() - lastMillis > 0b1U << 10U)
+    if (!processing)
     {
         lastMillis = millis();
+        processing = true;
         pio_sm_clear_fifos(pio, stateMachine);
         pio_sm_put(pio, stateMachine, 1U);
     }
@@ -73,7 +86,7 @@ void __attribute__((section(".time_critical.ClimateExtension::onInterrupt"))) Cl
     pio_interrupt_clear(pio, 0U);
     const uint32_t payload{~pio_sm_get(pio, stateMachine)};
     const uint8_t checksum{static_cast<uint8_t>(~pio_sm_get(pio, stateMachine))};
-    if ((payload >> 24U) == 0xA5U)
+    if (payload >> 24U == 0xA5U)
     {
         const uint8_t lsb{static_cast<uint8_t>(payload >> 16U)};
         const uint8_t msb{static_cast<uint8_t>(payload >> 8U)};
@@ -81,8 +94,15 @@ void __attribute__((section(".time_critical.ClimateExtension::onInterrupt"))) Cl
         if (static_cast<uint8_t>(0xA5U + lsb + msb + _humidity) == checksum)
         {
             humidity = _humidity;
-            temperature = static_cast<float>((msb << 8U) | lsb) / 10.0F;
+#if TEMPERATURE_FAHRENHEIT
+            temperature = (static_cast<int16_t>((msb << 8U) | lsb) * 0.18F) + 32.0F;
+#elif TEMPERATURE_KELVIN
+            temperature = (static_cast<int16_t>((msb << 8U) | lsb) * 0.1F) + 273.15F;
+#else
+            temperature = static_cast<int16_t>((msb << 8U) | lsb) * 0.1F;
+#endif // TEMPERATURE_FAHRENHEIT
             pending = true;
         }
     }
+    processing = false;
 }

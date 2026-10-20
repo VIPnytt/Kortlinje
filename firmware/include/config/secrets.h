@@ -1,7 +1,5 @@
 #pragma once
 
-#define TIME_ZONE_POSIX "UTC0"
-
 #define WIFI_SSID "name"
 #define WIFI_KEY "password"
 

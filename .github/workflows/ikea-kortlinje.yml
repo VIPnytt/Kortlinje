@@ -24,8 +24,6 @@ jobs:
     strategy:
       matrix:
         environment: ${{ fromJSON(needs.context.outputs.pio-environments) }}
-        exclude:
-          - environment: attiny841
 
     steps:
       - name: Checkout
@@ -50,6 +48,13 @@ jobs:
         env:
           PIO_ENVIRONMENT: ${{ matrix.environment }}
         run: |
+          cat <<'EOL' > .env
+          HOSTNAME='kortlinje'
+          NAME='Kortlinje'
+          OTA_KEY='redacted'
+          TEMPERATURE_UNIT='K'
+          TIME_ZONE='Etc/Universal'
+          EOL
           cat <<'EOL' > firmware/include/config/secrets.h
           #pragma once
           #define PIN_BUZ 1

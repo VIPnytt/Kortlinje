@@ -18,7 +18,13 @@ void TemperatureMode::handle()
         pending = false;
         Display.fillFrame(false);
         KortlinjeFont font{};
-        TextHandler(std::format("{:.1f}", temperature).append("°C"), font).draw();
+#if TEMPERATURE_FAHRENHEIT
+        TextHandler(std::format("{:.0f}°F", temperature), font).draw();
+#elif TEMPERATURE_KELVIN
+        TextHandler(std::format("{:.0f}K", temperature), font).draw();
+#else
+        TextHandler(std::format("{:.1f}°C", temperature), font).draw();
+#endif // TEMPERATURE_FAHRENHEIT
     }
     else if (millis() - lastMillis > 0b1U << 14U)
     {

@@ -49,12 +49,12 @@ class Firmware:
                 )
                 if option == "TEMPERATURE_UNIT":
                     _option = {
+                        "K": "TEMPERATURE_KELVIN",
                         "°C": "TEMPERATURE_CELSIUS",
                         "°F": "TEMPERATURE_FAHRENHEIT",
-                        "°K": "TEMPERATURE_KELVIN",
                     }.get(value)
                     if _option is None:
-                        logging.warning("%s %r is unsupported. Valid values are '°C', '°F' and '°K'.", option, value)
+                        logging.warning("%s %r is unsupported. Valid values are '°C', '°F' and 'K'.", option, value)
                     else:
                         self.project.env.Append(
                             CPPDEFINES=[

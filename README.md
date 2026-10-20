@@ -16,7 +16,7 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 | **Display** | Operational | Fully solved driver with 8-step brightness control. |
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
 | **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
-| **Sensors** | Operational | Temperature and humidity coprocessor protocol is fully decoded and active; live readings are piped to the display. Ambient light sensor is operational. |
+| **Sensors** | Operational | Temperature and humidity live readings are piped to the display. Ambient light sensor is operational. |
 | **Web UI** | Work in Progress | Functional with live display-preview, pending tighter device integration. |
 | **Build Environment** | Experimental | Python build automation initialized, integration and configuration options pending. |
 
