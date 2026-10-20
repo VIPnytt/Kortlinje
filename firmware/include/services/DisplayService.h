@@ -73,8 +73,8 @@ private:
 
     static constexpr size_t chips{pixels.size() >> 7U};
 
-    bool pending{false};
-    bool power{false};
+    bool pending{true};
+    bool power{true};
     bool render{false};
 
     std::array<bool, pixels.size()> frame{};
@@ -93,8 +93,6 @@ private:
     Brightness brightness{Brightness::DUTY16_14};
 
     PIO pio{pio0};
-
-    void vkCommand(uint8_t command);
 };
 
 extern DisplayService &Display;

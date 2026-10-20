@@ -11,7 +11,7 @@ interface Parameters {
 const IkeaKortlinjeParameters: Parameters = {
     GRID_COLUMNS: 42, // px
     GRID_ROWS: 9, // px
-    LED_BASE_TONE: 2 ** 3,
+    LED_BASE_TONE: 2 ** 2,
     LED_SIZE_HORIZONTAL: 2.54, // mm
     LED_SIZE_VERTICAL: 2.54, // mm
     PITCH_HORIZONTAL: 3.3, // mm

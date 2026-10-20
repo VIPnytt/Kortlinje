@@ -1,6 +1,7 @@
 import decimal
 import logging
 import numbers
+import os
 import pathlib
 import typing
 
@@ -92,3 +93,11 @@ class Firmware:
                         (option.replace(".", "__").upper(), _value),
                     ]
                 )
+
+    @staticmethod
+    def clean() -> None:
+        """Remove generated PIO files from the project."""
+        for data in os.scandir("firmware/src/pio"):
+            if data.is_file() and pathlib.Path(data.path).suffix == ".h":
+                pathlib.Path(data.path).unlink()
+                print(f"Removing {data.path}")

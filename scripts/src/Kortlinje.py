@@ -97,6 +97,7 @@ class Kortlinje:
     @staticmethod
     def clean() -> None:
         """Remove generated files and directories from the project workspace."""
+        Firmware.clean()
         WebUI.clean()
         for path in (
             "logs",

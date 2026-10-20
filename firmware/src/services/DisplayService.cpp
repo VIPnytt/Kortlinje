@@ -14,7 +14,7 @@ void DisplayService::begin()
     pinMode(PIN_LED, PinMode::OUTPUT_2MA);
 #endif // PIN_LED
     const uint offset{static_cast<uint>(pio_add_program(pio, &display_program))};
-    const float divider{static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 2'000'000.0F};
+    const float divider{static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 4'000'000.0F};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
         stateMachine[chip] = pio_claim_unused_sm(pio, true);
@@ -31,20 +31,21 @@ void DisplayService::begin()
         pio_sm_set_consecutive_pindirs(pio, stateMachine[chip], sda[chip], 1U, true);
         pio_sm_init(pio, stateMachine[chip], offset, &pioConfig);
         pio_sm_set_enabled(pio, stateMachine[chip], true);
-        txBuffer[chip][1U] = 0xC0U << 1U;
-        txBuffer[chip][18U] = 1U;
         channel[chip] = static_cast<uint>(dma_claim_unused_channel(true));
         dma_channel_config dmaConfig{dma_channel_get_default_config(channel[chip])};
         channel_config_set_transfer_data_size(&dmaConfig, dma_channel_transfer_size::DMA_SIZE_32);
         channel_config_set_read_increment(&dmaConfig, true);
         channel_config_set_write_increment(&dmaConfig, false);
         channel_config_set_dreq(&dmaConfig, pio_get_dreq(pio, stateMachine[chip], true));
+        txBuffer[chip][1U] = 0xC0U << 1U;
+        txBuffer[chip][18U] = 1U;
+        txBuffer[chip][20U] = static_cast<uint32_t>(brightness) << 1U;
+        txBuffer[chip][21U] = 1U;
         dma_channel_configure(
-            channel[chip], &dmaConfig, &pio->txf[stateMachine[chip]], txBuffer[chip].data(), 19U, true);
+            channel[chip], &dmaConfig, &pio->txf[stateMachine[chip]], txBuffer[chip].data(), 22U, true);
     }
     KortlinjeFont font{};
     TextHandler("Hej ♥", font).draw();
-    setBrightness(Brightness::DUTY16_14);
 }
 
 void DisplayService::handle()
@@ -224,13 +225,13 @@ void DisplayService::flush()
         {
             continue;
         }
+        vkBuffer[chip] = buffer[chip];
+        size_t idx{0U};
+        bool active{false};
         while (dma_channel_is_busy(channel[chip]))
         {
             tight_loop_contents();
         }
-        vkBuffer[chip] = buffer[chip];
-        size_t idx{0U};
-        bool active{false};
         for (uint8_t grid{0U}; grid < 16U; ++grid)
         {
             if (dirtyGrids & (1U << grid))
@@ -311,7 +312,17 @@ void DisplayService::setBrightness(Brightness _brightness)
     }
     brightness = _brightness;
     power = true;
-    vkCommand(static_cast<uint8_t>(brightness));
+    for (size_t chip{0U}; chip < chips; ++chip)
+    {
+        while (dma_channel_is_busy(channel[chip]))
+        {
+            tight_loop_contents();
+        }
+        txBuffer[chip][0U] = 0U;
+        txBuffer[chip][1U] = static_cast<uint32_t>(brightness) << 1U;
+        txBuffer[chip][2U] = 1U;
+        dma_channel_transfer_from_buffer_now(channel[chip], txBuffer[chip].data(), 3U);
+    }
     pending = true;
 }
 
@@ -358,7 +369,17 @@ void DisplayService::setPower(bool _power)
     else
     {
         power = false;
-        vkCommand(0b1000'0000U);
+        for (size_t chip{0U}; chip < chips; ++chip)
+        {
+            while (dma_channel_is_busy(channel[chip]))
+            {
+                tight_loop_contents();
+            }
+            txBuffer[chip][0U] = 0U;
+            txBuffer[chip][1U] = 0b1000'0000U << 1U;
+            txBuffer[chip][2U] = 1U;
+            dma_channel_transfer_from_buffer_now(channel[chip], txBuffer[chip].data(), 3U);
+        }
         pending = true;
     }
 }
@@ -369,21 +390,6 @@ void DisplayService::transmit()
     doc["brightness"].set(static_cast<uint8_t>(brightness) + 1U - static_cast<uint8_t>(Brightness::DUTY16_1));
     doc["power"].set(power);
     Device.transmit(doc.as<JsonObjectConst>(), name);
-}
-
-void DisplayService::vkCommand(uint8_t command)
-{
-    for (size_t chip{0U}; chip < chips; ++chip)
-    {
-        while (dma_channel_is_busy(channel[chip]))
-        {
-            tight_loop_contents();
-        }
-        txBuffer[chip][0U] = 0U;
-        txBuffer[chip][1U] = static_cast<uint32_t>(command) << 1U;
-        txBuffer[chip][2U] = 1U;
-        dma_channel_transfer_from_buffer_now(channel[chip], txBuffer[chip].data(), 3U);
-    }
 }
 
 DisplayService &DisplayService::getInstance()

@@ -69,7 +69,7 @@ export const Sidebar: Component = () => {
                     >
                         <Icon path={mdiPower} />
                     </button>
-                    <Tooltip text={`Brightness ${Math.round((([1, 2, 4, 10, 11, 12, 13, 14][getBrightness() - 1] - 1) / 13) * 100)} %`}>
+                    <Tooltip text={`Brightness ${Math.floor((([1, 2, 4, 10, 11, 12, 13, 14][getBrightness() - 1] - 1) / 13) * 99) + 1} %`}>
                         <input
                             class="w-full"
                             max="8"
