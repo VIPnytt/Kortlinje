@@ -42,6 +42,8 @@ public:
     void begin();
     void handle();
 
+    ButtonExtension &button();
+
     ClimateExtension &Climate();
 
     WebSocketExtension &WebSocket();

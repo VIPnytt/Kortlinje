@@ -10,11 +10,13 @@
 #include "services/WebServerService.h"
 
 #include <WiFi.h>
+#include <hardware/adc.h>
+#include <pico/cyw43_arch.h>
 #include <time.h>
 
 void DeviceService::begin0()
 {
-    Serial.begin(115'200U);
+    Serial.begin();
     WiFi.setHostname(HOSTNAME);
     WiFi.begin(WIFI_SSID, WIFI_KEY);
     NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
@@ -32,7 +34,6 @@ void DeviceService::begin0()
 void DeviceService::begin1()
 {
     analogReadResolution(static_cast<int>(ADC_RESOLUTION));
-    pinMode(A3, INPUT);
     pinMode(PIN_BUZ, PinMode::OUTPUT_2MA);
     Display.begin();
     transmit();
@@ -54,8 +55,37 @@ void DeviceService::handle1()
     {
         Display.flush();
     }
-    if (millis() - lastMillis > UINT16_MAX)
+    if (millis() - lastMillis > 0xFFFFUL)
     {
+        lastMillis = millis();
+        Extensions.button().suspend();
+        adc_set_temp_sensor_enabled(true);
+        adc_set_clkdiv(.0F);
+        adc_select_input(__GPIOCNT - __FIRSTANALOGGPIO);
+        uint16_t _temperature{0U};
+        for (uint8_t idx{0U}; idx < adcSamples; ++idx)
+        {
+            _temperature += adc_read();
+        }
+        adc_set_temp_sensor_enabled(false);
+#ifdef PICO_CYW43_SUPPORTED
+        cyw43_thread_enter();
+#endif // PICO_CYW43_SUPPORTED
+        adc_gpio_init(A3);
+        adc_select_input(A3 - __FIRSTANALOGGPIO);
+        uint16_t _vsys{0U};
+        for (uint8_t idx{0U}; idx < adcSamples; ++idx)
+        {
+            _vsys += adc_read();
+        }
+#ifdef PICO_CYW43_SUPPORTED
+        cyw43_thread_exit();
+#endif // PICO_CYW43_SUPPORTED
+        Extensions.button().resume();
+        temperature =
+            27.0F - (((3.3F * static_cast<float>(_temperature) / static_cast<float>(adcSamples) / 4095.0F) - 0.706F) /
+                     0.001721F);
+        voltage = 9.9F * static_cast<float>(_vsys) / static_cast<float>(adcSamples) / 4095.0F;
         transmit();
     }
 }
@@ -110,8 +140,9 @@ void DeviceService::transmit()
     JsonDocument doc{};
     doc["name"].set(NAME);
     doc["repository"].set("https://github.com/VIPnytt/Kortlinje");
+    doc["temperature"].set(temperature);
     doc["version"].set(VERSION);
-    lastMillis = millis();
+    doc["voltage"].set(voltage);
     transmit(doc.as<JsonObjectConst>(), name);
 }
 

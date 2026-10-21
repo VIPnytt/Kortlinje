@@ -23,13 +23,15 @@ public:
     static DeviceService &getInstance();
 
 private:
+    static constexpr uint8_t adcSamples{(0b1U << 16U) / (0b1U << ADC_RESOLUTION)};
+
     explicit DeviceService() : ServiceModule(name) {};
 
     bool operational{false};
 
     float temperature{.0F};
 
-    uint16_t voltage{0U};
+    float voltage{.0F};
 
     unsigned long lastMillis{0UL};
 

@@ -10,6 +10,10 @@ class ButtonExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"Buttons"};
 
+    static constexpr uint32_t count{0b1U << 3U};
+
+    static constexpr float divider{static_cast<float>(0xFFFFU)};
+
     enum Button : uint8_t
     {
         NONE,
@@ -41,6 +45,8 @@ private:
         uint16_t medium;
     };
 
+    bool state{true};
+
     static inline volatile uint16_t raw{0U};
 
     static inline uint channel{0U};
@@ -66,4 +72,6 @@ public:
 
     void begin() override;
     void handle() override;
+    void resume();
+    void suspend();
 };

@@ -1,11 +1,12 @@
 #include "extensions/ButtonExtension.h"
 
 #include "config/secrets.h"
-#include "hardware/adc.h"
-#include "hardware/dma.h"
-#include "hardware/irq.h"
 #include "services/DisplayService.h"
 #include "services/ModesService.h"
+
+#include <hardware/adc.h>
+#include <hardware/dma.h>
+#include <hardware/irq.h>
 
 void ButtonExtension::begin()
 {
@@ -14,7 +15,7 @@ void ButtonExtension::begin()
     adc_gpio_init(PIN_TOP);
     adc_select_input(PIN_REAR - __FIRSTANALOGGPIO);
     adc_fifo_setup(true, true, 1U, false, false);
-    adc_set_clkdiv(static_cast<float>(0xFFFFU));
+    adc_set_clkdiv(divider);
     channel = static_cast<uint>(dma_claim_unused_channel(true));
     dma_channel_config config{dma_channel_get_default_config(channel)};
     channel_config_set_read_increment(&config, false);
@@ -24,7 +25,7 @@ void ButtonExtension::begin()
     irq_set_exclusive_handler(irq_num_rp2350::DMA_IRQ_0, &onInterrupt);
     irq_set_enabled(irq_num_rp2350::DMA_IRQ_0, true);
     dma_channel_set_irq0_enabled(channel, true);
-    dma_channel_configure(channel, &config, &raw, &adc_hw->fifo, 0b1U << 3U, true);
+    dma_channel_configure(channel, &config, &raw, &adc_hw->fifo, count, true);
     adc_run(true);
 }
 
@@ -72,6 +73,31 @@ void ButtonExtension::process(Button button)
         break;
     default:
         break;
+    }
+}
+
+void ButtonExtension::resume()
+{
+    if (!state)
+    {
+        state = true;
+        adc_gpio_init(active->pin);
+        adc_select_input(active->pin - __FIRSTANALOGGPIO);
+        adc_fifo_drain();
+        adc_set_clkdiv(divider);
+        dma_channel_set_trans_count(channel, count, true);
+        adc_run(true);
+    }
+}
+
+void ButtonExtension::suspend()
+{
+    if (state)
+    {
+        adc_run(false);
+        dma_channel_abort(channel);
+        adc_fifo_drain();
+        state = false;
     }
 }
 
@@ -139,7 +165,7 @@ void __attribute__((section(".time_critical.ButtonExtension::onInterrupt"))) But
     }
     active = (active == &rear) ? &top : &rear;
     adc_select_input(active->pin - __FIRSTANALOGGPIO);
-    dma_channel_set_trans_count(channel, 0b1U << 3U, true);
+    dma_channel_set_trans_count(channel, count, true);
 }
 
 void ButtonExtension::alarm()
