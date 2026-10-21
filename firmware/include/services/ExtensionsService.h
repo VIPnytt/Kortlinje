@@ -1,8 +1,7 @@
 #pragma once
 
 #include "extensions/BatteryExtension.h"
-#include "extensions/ButtonsRearExtension.h"
-#include "extensions/ButtonsTopExtension.h"
+#include "extensions/ButtonExtension.h"
 #include "extensions/ClimateExtension.h"
 #include "extensions/OtaExtension.h"
 #include "extensions/PhotocellExtension.h"
@@ -22,18 +21,16 @@ private:
     unsigned long lastMillis{0UL};
 
     BatteryExtension extensionBattery{};
-    ButtonsRearExtension extensionButtonsRear{};
-    ButtonsTopExtension extensionButtonsTop{};
+    ButtonExtension extensionButton{};
     ClimateExtension extensionClimate{};
     OtaExtension extensionOta{};
     PhotocellExtension extensionPhotocell{};
     WebSocketExtension extensionWebSocket{};
     WebUiExtension extensionWebUi{};
 
-    const std::array<ExtensionModule *, 8U> modules{
+    const std::array<ExtensionModule *, 7U> modules{
         &extensionBattery,
-        &extensionButtonsRear,
-        &extensionButtonsTop,
+        &extensionButton,
         &extensionClimate,
         &extensionOta,
         &extensionPhotocell,

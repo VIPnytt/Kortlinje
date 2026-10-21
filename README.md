@@ -12,7 +12,7 @@ This project is built upon the architecture of the [Frekvens](https://github.com
 | Subsystem | Status | Details |
 | :--- | :--- | :--- |
 | **Audio** | Partial | Buzzer driver verified with test beeps on alarm button; dedicated sound and alarm manager pending. |
-| **Buttons** | Operational | All buttons are mapped to available functionality; behavior currently remains constrained pending core features. |
+| **Buttons** | Operational | All buttons are mapped to available functionality; behavior currently constrained pending core features. |
 | **Display** | Operational | Fully solved driver with 8-step brightness control. |
 | **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
 | **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
