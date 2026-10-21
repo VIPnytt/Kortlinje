@@ -70,6 +70,7 @@ jobs:
           #define PIN_WAKE 11
           #define PIN_REAR 26
           #define PIN_TOP 27
+          #define RP2350_ERRATA_E9
           #define WIFI_KEY "redacted"
           #define WIFI_SSID "redacted"
           EOL
