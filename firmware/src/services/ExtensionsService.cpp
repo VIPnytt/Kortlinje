@@ -12,7 +12,7 @@ void ExtensionsService::begin()
 
 ButtonExtension &ExtensionsService::button() { return extensionButton; }
 
-ClimateExtension &ExtensionsService::Climate() { return extensionClimate; }
+ClimateExtension &ExtensionsService::climate() { return extensionClimate; }
 
 WebSocketExtension &ExtensionsService::WebSocket() { return extensionWebSocket; }
 

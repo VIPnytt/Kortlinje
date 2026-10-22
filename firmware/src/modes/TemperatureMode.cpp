@@ -29,7 +29,7 @@ void TemperatureMode::handle()
     else if (millis() - lastMillis > 0b1U << 14U)
     {
         lastMillis = millis();
-        Extensions.Climate().sample();
+        Extensions.climate().sample();
     }
 }
 

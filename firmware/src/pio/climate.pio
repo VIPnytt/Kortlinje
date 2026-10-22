@@ -3,6 +3,7 @@
 idle:
     set pins, 0
     pull block
+    mov y, osr
     set pins, 1
 wait_sync:
     wait 1 pin 0
@@ -12,25 +13,11 @@ sync_loop:
     jmp pin wait_sync
     jmp x-- sync_loop [1]
     wait 1 pin 0
-    set y, 31
-read_word0:
-    wait 0 pin 0
-    set x, 10
-delay0:
-    jmp x-- delay0 [1]
+bit_loop:
+    wait 0 pin 0 [22]
     in pins, 1
     wait 1 pin 0
-    jmp y-- read_word0
-    set y, 7
-read_word1:
-    wait 0 pin 0
-    set x, 10
-delay1:
-    jmp x-- delay1 [1]
-    in pins, 1
-    wait 1 pin 0
-    jmp y-- read_word1
+    jmp y-- bit_loop
     push block
-    set pins, 0
     irq set 0
 .wrap

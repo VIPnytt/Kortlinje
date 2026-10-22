@@ -24,7 +24,7 @@ private:
 
     static inline float temperature{.0F};
 
-    static inline PIO pio{pio1};
+    static inline PIO pio{pio0};
 
     void transmit();
 

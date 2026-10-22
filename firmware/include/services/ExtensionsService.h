@@ -44,7 +44,7 @@ public:
 
     ButtonExtension &button();
 
-    ClimateExtension &Climate();
+    ClimateExtension &climate();
 
     WebSocketExtension &WebSocket();
 

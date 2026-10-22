@@ -7,6 +7,8 @@
 #include "services/DeviceService.h"
 
 #include <algorithm>
+#include <hardware/clocks.h>
+#include <hardware/irq.h>
 
 void ClimateExtension::begin()
 {
@@ -14,22 +16,22 @@ void ClimateExtension::begin()
     stateMachine = pio_claim_unused_sm(pio, true);
     pio_sm_config config{climate_program_get_default_config(offset)};
     sm_config_set_set_pins(&config, PIN_EN, 1U);
-    pio_gpio_init(pio, PIN_EN);
-    pio_sm_set_consecutive_pindirs(pio, stateMachine, PIN_EN, 1U, true);
     sm_config_set_in_pins(&config, PIN_PDM);
     sm_config_set_jmp_pin(&config, PIN_PDM);
-    pio_gpio_init(pio, PIN_PDM);
-    pio_sm_set_consecutive_pindirs(pio, stateMachine, PIN_PDM, 1U, false);
     sm_config_set_in_shift(&config, false, true, 32U);
     sm_config_set_clkdiv(&config, static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 20'000.0F);
-    irq_set_exclusive_handler(irq_num_rp2350::PIO1_IRQ_0, &onInterrupt);
-    irq_set_enabled(irq_num_rp2350::PIO1_IRQ_0, true);
+    gpio_pull_down(PIN_PDM);
+    gpio_set_drive_strength(PIN_EN, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
+    pio_gpio_init(pio, PIN_EN);
+    pio_gpio_init(pio, PIN_PDM);
+    pio_sm_set_consecutive_pindirs(pio, stateMachine, PIN_EN, 1U, true);
+    pio_sm_set_consecutive_pindirs(pio, stateMachine, PIN_PDM, 1U, false);
+    irq_set_exclusive_handler(irq_num_rp2350::PIO0_IRQ_0, &onInterrupt);
+    irq_set_enabled(irq_num_rp2350::PIO0_IRQ_0, true);
     pio_set_irq0_source_enabled(pio, pio_interrupt_source::pis_interrupt0, true);
     pio_sm_init(pio, stateMachine, offset, &config);
     pio_sm_set_enabled(pio, stateMachine, true);
-    lastMillis = millis();
-    processing = true;
-    pio_sm_put(pio, stateMachine, 1U);
+    sample();
 }
 
 void ClimateExtension::handle()
@@ -67,7 +69,7 @@ void ClimateExtension::sample()
         lastMillis = millis();
         processing = true;
         pio_sm_clear_fifos(pio, stateMachine);
-        pio_sm_put(pio, stateMachine, 1U);
+        pio_sm_put(pio, stateMachine, 39U);
     }
 }
 
@@ -81,7 +83,7 @@ void ClimateExtension::transmit()
     Device.transmit(doc.as<JsonObjectConst>(), name);
 }
 
-void __attribute__((section(".time_critical.ClimateExtension::onInterrupt"))) ClimateExtension::onInterrupt()
+void __time_critical_func(ClimateExtension::onInterrupt)()
 {
     pio_interrupt_clear(pio, 0U);
     const uint32_t payload{~pio_sm_get(pio, stateMachine)};

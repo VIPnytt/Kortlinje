@@ -98,6 +98,6 @@ class Firmware:
     def clean() -> None:
         """Remove generated PIO files from the project."""
         for data in os.scandir("firmware/src/pio"):
-            if data.is_file() and pathlib.Path(data.path).suffix == ".h":
+            if data.is_file() and pathlib.Path(data.path).name.endswith(".pio.h"):
                 pathlib.Path(data.path).unlink()
                 print(f"Removing {data.path}")
