@@ -44,8 +44,6 @@ public:
 
     ButtonExtension &button();
 
-    ClimateExtension &climate();
-
     WebSocketExtension &WebSocket();
 
     [[nodiscard]] std::span<ExtensionModule *const> getAll();

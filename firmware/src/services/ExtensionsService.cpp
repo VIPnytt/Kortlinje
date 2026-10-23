@@ -12,8 +12,6 @@ void ExtensionsService::begin()
 
 ButtonExtension &ExtensionsService::button() { return extensionButton; }
 
-ClimateExtension &ExtensionsService::climate() { return extensionClimate; }
-
 WebSocketExtension &ExtensionsService::WebSocket() { return extensionWebSocket; }
 
 std::span<ExtensionModule *const> ExtensionsService::getAll() { return modules; }

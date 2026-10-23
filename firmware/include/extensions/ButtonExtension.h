@@ -4,11 +4,14 @@
 #include "modules/ExtensionModule.h"
 
 #include <Arduino.h>
+#include <hardware/dma.h>
 
 class ButtonExtension final : public ExtensionModule
 {
 private:
     static constexpr std::string_view name{"Buttons"};
+
+    static constexpr uint channel{NUM_DMA_CHANNELS - 1U};
 
     static constexpr uint32_t count{0b1U << 3U};
 
@@ -45,11 +48,9 @@ private:
         uint16_t medium;
     };
 
-    bool state{true};
+    bool enabled{true};
 
     static inline volatile uint16_t raw{0U};
-
-    static inline uint channel{0U};
 
     static inline Ladder rear{PIN_REAR, Button::DOWN, Button::ALARM, Button::UP, Button::SET};
     static inline Ladder top{PIN_TOP, Button::CYCLE, Button::DISMISS, Button::BRIGHTNESS, Button::SNOOZE};
@@ -68,10 +69,11 @@ private:
     static void onInterrupt();
 
 public:
-    explicit ButtonExtension() : ExtensionModule(name) {};
+    explicit ButtonExtension();
 
     void begin() override;
     void handle() override;
     void resume();
     void suspend();
+    void setEnabled(bool enable);
 };

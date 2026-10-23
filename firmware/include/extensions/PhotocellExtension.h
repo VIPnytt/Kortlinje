@@ -3,6 +3,7 @@
 #include "modules/ExtensionModule.h"
 
 #include <Arduino.h>
+#include <hardware/pio.h>
 #include <string_view>
 
 class PhotocellExtension final : public ExtensionModule
@@ -10,23 +11,24 @@ class PhotocellExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"Photocell"};
 
-    bool active{true};
     bool detected{false};
-    bool pending{true};
+    bool enabled{true};
+    static inline volatile bool pending{true};
+    static inline volatile bool state{false};
 
-    int8_t debounce{0};
-
-    unsigned long lastMillis{0UL};
+    static inline volatile unsigned long lastMillis{0UL};
 
     void transmit();
 
+    static void onInterrupt();
+
 public:
-    explicit PhotocellExtension() : ExtensionModule(name) {};
+    explicit PhotocellExtension();
 
     void begin() override;
     void handle() override;
-    void setActive(bool _active);
+    void setEnabled(bool enable);
 
-    [[nodiscard]] bool getActive() const;
+    [[nodiscard]] bool getEnabled() const;
     [[nodiscard]] bool getDetected() const;
 };

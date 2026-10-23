@@ -1,0 +1,49 @@
+.program photocell
+    mov osr, null
+    set x, 31
+.wrap_target
+delay_outer:
+    set y, 31
+delay_inner:
+    jmp y-- delay_inner [31]
+    jmp x-- delay_outer
+    mov isr, null
+    in pins, 1
+    mov y, isr
+    mov x, osr
+    jmp x!=y state_changed
+sample_done:
+    set x, 31
+.wrap
+state_changed:
+    mov osr, y
+    push noblock
+    irq 1
+    jmp sample_done
+
+.program photocell_e9
+    mov osr, null
+    set x, 31
+.wrap_target
+delay_outer:
+    set y, 31
+delay_inner:
+    jmp y-- delay_inner [31]
+    jmp x-- delay_outer
+    mov isr, null
+    in pins, 1
+    mov y, isr
+    mov x, osr
+    jmp x!=y state_changed
+sample_done:
+    set x, 31
+clamp:
+    set pins, 0
+    set pindirs, 1
+    set pindirs, 0
+.wrap
+state_changed:
+    mov osr, y
+    push noblock
+    irq 1
+    jmp sample_done

@@ -1,23 +1,47 @@
-.program climate
+.program climate_pacer
+is_hung:
+    irq 3
+.wrap_target
+    set x, 31
+outer_delay:
+    set y, 31
+inner_delay:
+    jmp y-- inner_delay [31]
+    jmp x-- outer_delay [31]
+    jmp pin is_hung
+    irq set 4
+.wrap
+
+.program climate_sampler
 .wrap_target
 idle:
-    set pins, 0
-    pull block
-    mov y, osr
+    wait 1 irq 4
     set pins, 1
 wait_sync:
     wait 1 pin 0
-    wait 0 pin 0
-    set x, 19
-sync_loop:
-    jmp pin wait_sync
-    jmp x-- sync_loop [1]
+    wait 0 pin 0 [15]
     wait 1 pin 0
-bit_loop:
-    wait 0 pin 0 [22]
+    set y, 31
+read_payload:
+    wait 0 pin 0 [10]
     in pins, 1
     wait 1 pin 0
-    jmp y-- bit_loop
-    push block
-    irq set 0
+    jmp y-- read_payload
+    mov y, isr
+    set x, 7
+read_chk:
+    wait 0 pin 0 [10]
+    in pins, 1
+    wait 1 pin 0
+    jmp x-- read_chk
+    set pins, 0
+    mov x, osr
+    jmp x!=y payload_changed
 .wrap
+payload_changed:
+    push noblock
+    mov isr, y
+    push noblock
+    mov osr, y
+    irq set 2
+    jmp idle

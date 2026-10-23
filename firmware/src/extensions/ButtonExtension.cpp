@@ -5,8 +5,9 @@
 #include "services/ModesService.h"
 
 #include <hardware/adc.h>
-#include <hardware/dma.h>
 #include <hardware/irq.h>
+
+ButtonExtension::ButtonExtension() : ExtensionModule(name) { dma_channel_claim(channel); }
 
 void ButtonExtension::begin()
 {
@@ -16,15 +17,14 @@ void ButtonExtension::begin()
     adc_select_input(PIN_REAR - __FIRSTANALOGGPIO);
     adc_fifo_setup(true, true, 1U, false, false);
     adc_set_clkdiv(divider);
-    channel = static_cast<uint>(dma_claim_unused_channel(true));
-    dma_channel_config config{dma_channel_get_default_config(channel)};
+    dma_channel_config_t config{dma_channel_get_default_config(channel)};
     channel_config_set_read_increment(&config, false);
     channel_config_set_write_increment(&config, false);
     channel_config_set_dreq(&config, dreq_num_rp2350::DREQ_ADC);
     channel_config_set_transfer_data_size(&config, dma_channel_transfer_size::DMA_SIZE_16);
-    irq_set_exclusive_handler(irq_num_rp2350::DMA_IRQ_0, &onInterrupt);
-    irq_set_enabled(irq_num_rp2350::DMA_IRQ_0, true);
-    dma_channel_set_irq0_enabled(channel, true);
+    irq_set_exclusive_handler(irq_num_rp2350::DMA_IRQ_1, &onInterrupt);
+    irq_set_enabled(irq_num_rp2350::DMA_IRQ_1, true);
+    dma_channel_set_irq1_enabled(channel, true);
     dma_channel_configure(channel, &config, &raw, &adc_hw->fifo, count, true);
     adc_run(true);
 }
@@ -76,32 +76,31 @@ void ButtonExtension::process(Button button)
     }
 }
 
-void ButtonExtension::resume()
+void ButtonExtension::setEnabled(bool enable)
 {
-    if (!state)
+    if (enable != enabled)
     {
-        state = true;
-        adc_gpio_init(active->pin);
-        adc_select_input(active->pin - __FIRSTANALOGGPIO);
-        adc_fifo_drain();
-        adc_set_clkdiv(divider);
-        dma_channel_set_trans_count(channel, count, true);
-        adc_run(true);
+        if (enable)
+        {
+            enabled = true;
+            adc_gpio_init(active->pin);
+            adc_select_input(active->pin - __FIRSTANALOGGPIO);
+            adc_fifo_drain();
+            adc_set_clkdiv(divider);
+            dma_channel_set_trans_count(channel, count, true);
+            adc_run(true);
+        }
+        else
+        {
+            adc_run(false);
+            dma_channel_abort(channel);
+            adc_fifo_drain();
+            enabled = false;
+        }
     }
 }
 
-void ButtonExtension::suspend()
-{
-    if (state)
-    {
-        adc_run(false);
-        dma_channel_abort(channel);
-        adc_fifo_drain();
-        state = false;
-    }
-}
-
-void __attribute__((section(".time_critical.ButtonExtension::onInterrupt"))) ButtonExtension::onInterrupt()
+void __time_critical_func(ButtonExtension::onInterrupt)()
 {
     dma_channel_acknowledge_irq0(channel);
     Ladder &ladder{*active};

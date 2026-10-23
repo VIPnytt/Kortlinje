@@ -26,16 +26,10 @@ void TemperatureMode::handle()
         TextHandler(std::format("{:.1f}°C", temperature), font).draw();
 #endif // TEMPERATURE_FAHRENHEIT
     }
-    else if (millis() - lastMillis > 0b1U << 14U)
-    {
-        lastMillis = millis();
-        Extensions.climate().sample();
-    }
 }
 
 void TemperatureMode::set(float _temperature)
 {
-    lastMillis = millis();
     if (_temperature != temperature)
     {
         temperature = _temperature;

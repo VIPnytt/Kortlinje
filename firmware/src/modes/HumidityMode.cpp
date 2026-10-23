@@ -18,16 +18,10 @@ void HumidityMode::handle()
         KortlinjeFont font{};
         TextHandler(std::to_string(humidity).append("%"), font).draw();
     }
-    else if (millis() - lastMillis > 0b1U << 14U)
-    {
-        lastMillis = millis();
-        Extensions.climate().sample();
-    }
 }
 
 void HumidityMode::set(uint8_t _humidity)
 {
-    lastMillis = millis();
     if (_humidity != humidity)
     {
         humidity = _humidity;

@@ -12,8 +12,6 @@ private:
 
     static inline float temperature{.0F};
 
-    static inline unsigned long lastMillis{0UL};
-
 public:
     static constexpr std::string_view name{"Temperature"};
 

@@ -55,10 +55,10 @@ void DeviceService::handle1()
     {
         Display.flush();
     }
-    if (millis() - lastMillis > 0xFFFFUL)
+    if (millis() - lastMillis > 0b1UL << 16U)
     {
         lastMillis = millis();
-        Extensions.button().suspend();
+        Extensions.button().setEnabled(false);
         adc_set_temp_sensor_enabled(true);
         adc_set_clkdiv(.0F);
         adc_select_input(__GPIOCNT - __FIRSTANALOGGPIO);
@@ -81,7 +81,7 @@ void DeviceService::handle1()
 #ifdef PICO_CYW43_SUPPORTED
         cyw43_thread_exit();
 #endif // PICO_CYW43_SUPPORTED
-        Extensions.button().resume();
+        Extensions.button().setEnabled(true);
         temperature =
             27.0F - (((3.3F * static_cast<float>(_temperature) / static_cast<float>(adcSamples) / 4095.0F) - 0.706F) /
                      0.001721F);

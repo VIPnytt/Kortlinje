@@ -10,28 +10,42 @@
 #include <hardware/clocks.h>
 #include <hardware/irq.h>
 
+ClimateExtension::ClimateExtension() : ExtensionModule(name)
+{
+    pio_add_program_at_offset(pio1, &climate_sampler_program, 0U);
+    pio_add_program_at_offset(pio1, &climate_pacer_program, climate_sampler_program.length);
+    pio_sm_claim(pio1, 0U);
+    pio_sm_claim(pio1, 1U);
+}
+
 void ClimateExtension::begin()
 {
-    offset = pio_add_program(pio, &climate_program);
-    stateMachine = pio_claim_unused_sm(pio, true);
-    pio_sm_config config{climate_program_get_default_config(offset)};
-    sm_config_set_set_pins(&config, PIN_EN, 1U);
-    sm_config_set_in_pins(&config, PIN_PDM);
-    sm_config_set_jmp_pin(&config, PIN_PDM);
-    sm_config_set_in_shift(&config, false, true, 32U);
-    sm_config_set_clkdiv(&config, static_cast<float>(clock_get_hz(clock_num_rp2350::clk_sys)) / 20'000.0F);
+    pio_sm_config pacer{climate_pacer_program_get_default_config(climate_sampler_program.length)};
+    pio_sm_config sampler{climate_sampler_program_get_default_config(0U)};
+    sm_config_set_set_pins(&sampler, PIN_EN, 1U);
+    sm_config_set_jmp_pin(&pacer, PIN_EN);
+    sm_config_set_in_pins(&sampler, PIN_PDM);
+    sm_config_set_in_shift(&sampler, false, false, 32U);
+    sm_config_set_clkdiv_int_frac8(&pacer, 0U, 0U);
+    sm_config_set_clkdiv_int_frac8(&sampler, static_cast<uint32_t>(F_CPU / 10'000L), 0U);
+    pio_gpio_init(pio1, PIN_EN);
+    pio_gpio_init(pio1, PIN_PDM);
     gpio_pull_down(PIN_PDM);
+    gpio_set_input_enabled(PIN_EN, true);
     gpio_set_drive_strength(PIN_EN, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
-    pio_gpio_init(pio, PIN_EN);
-    pio_gpio_init(pio, PIN_PDM);
-    pio_sm_set_consecutive_pindirs(pio, stateMachine, PIN_EN, 1U, true);
-    pio_sm_set_consecutive_pindirs(pio, stateMachine, PIN_PDM, 1U, false);
-    irq_set_exclusive_handler(irq_num_rp2350::PIO0_IRQ_0, &onInterrupt);
-    irq_set_enabled(irq_num_rp2350::PIO0_IRQ_0, true);
-    pio_set_irq0_source_enabled(pio, pio_interrupt_source::pis_interrupt0, true);
-    pio_sm_init(pio, stateMachine, offset, &config);
-    pio_sm_set_enabled(pio, stateMachine, true);
-    sample();
+    pio_sm_set_consecutive_pindirs(pio1, 0U, PIN_EN, 1U, true);
+    pio_sm_set_consecutive_pindirs(pio1, 0U, PIN_PDM, 1U, false);
+    irq_set_exclusive_handler(irq_num_rp2350::PIO1_IRQ_0, &onSampler);
+    irq_set_exclusive_handler(irq_num_rp2350::PIO1_IRQ_1, &onPacer);
+    irq_set_enabled(irq_num_rp2350::PIO1_IRQ_0, true);
+    irq_set_enabled(irq_num_rp2350::PIO1_IRQ_1, true);
+    pio_set_irq0_source_enabled(pio1, pio_interrupt_source::pis_interrupt2, true);
+    pio_set_irq1_source_enabled(pio1, pio_interrupt_source::pis_interrupt3, true);
+    pio_sm_init(pio1, 0U, 0U, &sampler);
+    pio_sm_init(pio1, 1U, climate_sampler_program.length + 1U, &pacer);
+    pio_sm_set_enabled(pio1, 0U, true);
+    pio_sm_set_enabled(pio1, 1U, true);
+    pio1->irq_force = 1U << 4U;
 }
 
 void ClimateExtension::handle()
@@ -39,55 +53,29 @@ void ClimateExtension::handle()
     if (pending)
     {
         pending = false;
+        HumidityMode::set(humidity);
+        TemperatureMode::set(temperature);
         transmit();
     }
-    else if (!processing && millis() - lastMillis > 0b1U << 16U)
-    {
-        sample();
-    }
-    else if (processing && millis() - lastMillis > 0b1U << 10U)
-    {
-        pio_sm_set_enabled(pio, stateMachine, false);
-        pio_sm_clear_fifos(pio, stateMachine);
-        pio_sm_restart(pio, stateMachine);
-        pio_sm_clkdiv_restart(pio, stateMachine);
-        pio_sm_exec(pio, stateMachine, pio_encode_jmp(offset));
-        pio_sm_set_enabled(pio, stateMachine, true);
-        lastMillis = millis();
-        processing = false;
-    }
 }
 
-uint8_t ClimateExtension::getHumidity() const { return humidity; }
-
-float ClimateExtension::getTemperature() const { return temperature; }
-
-void ClimateExtension::sample()
+void __time_critical_func(ClimateExtension::onPacer)()
 {
-    if (!processing)
-    {
-        lastMillis = millis();
-        processing = true;
-        pio_sm_clear_fifos(pio, stateMachine);
-        pio_sm_put(pio, stateMachine, 39U);
-    }
+    pio_interrupt_clear(pio1, 3U);
+    pio_sm_set_enabled(pio1, 0U, false);
+    pio_sm_clear_fifos(pio1, 0U);
+    pio_sm_restart(pio1, 0U);
+    pio_sm_clkdiv_restart(pio1, 0U);
+    pio_sm_exec(pio1, 0U, pio_encode_set(pio_src_dest::pio_pins, 0U));
+    pio_sm_exec(pio1, 0U, pio_encode_jmp(0U));
+    pio_sm_set_enabled(pio1, 0U, true);
 }
 
-void ClimateExtension::transmit()
+void __time_critical_func(ClimateExtension::onSampler)()
 {
-    HumidityMode::set(humidity);
-    TemperatureMode::set(temperature);
-    JsonDocument doc{};
-    doc["humidity"].set(humidity);
-    doc["temperature"].set(temperature);
-    Device.transmit(doc.as<JsonObjectConst>(), name);
-}
-
-void __time_critical_func(ClimateExtension::onInterrupt)()
-{
-    pio_interrupt_clear(pio, 0U);
-    const uint32_t payload{~pio_sm_get(pio, stateMachine)};
-    const uint8_t checksum{static_cast<uint8_t>(~pio_sm_get(pio, stateMachine))};
+    pio_interrupt_clear(pio1, 2U);
+    const uint8_t checksum{static_cast<uint8_t>(~pio_sm_get(pio1, 0U))};
+    const uint32_t payload{~pio_sm_get(pio1, 0U)};
     if (payload >> 24U == 0xA5U)
     {
         const uint8_t lsb{static_cast<uint8_t>(payload >> 16U)};
@@ -106,5 +94,12 @@ void __time_critical_func(ClimateExtension::onInterrupt)()
             pending = true;
         }
     }
-    processing = false;
+}
+
+void ClimateExtension::transmit()
+{
+    JsonDocument doc{};
+    doc["humidity"].set(humidity);
+    doc["temperature"].set(temperature);
+    Device.transmit(doc.as<JsonObjectConst>(), name);
 }
