@@ -6,6 +6,8 @@
 #include "services/ExtensionsService.h"
 #include "services/FontsService.h"
 
+TickerMode::~TickerMode() { stopTimer(); }
+
 void TickerMode::begin()
 {
     if (!font)
@@ -22,24 +24,29 @@ void TickerMode::handle()
         text = std::make_unique<TextHandler>(message, *font);
         offsetX = GRID_COLUMNS;
         offsetY = (GRID_ROWS - text->getHeight()) / 2U;
-        width = text->getWidth();
+        width = static_cast<int16_t>(text->getWidth());
         transmit();
         pending = false;
+        (text && width > 0) ? startTimer() : stopTimer();
     }
-    else if (text && millis() - lastMillis > INT8_MAX)
+    else if (tick && text)
     {
+        tick = false;
         if (width + offsetX < 0)
         {
             offsetX = GRID_COLUMNS;
         }
-        lastMillis = millis();
         Display.fillFrame(false);
         text->draw(offsetX, offsetY);
         --offsetX;
     }
 }
 
-void TickerMode::end() { text.reset(); }
+void TickerMode::end()
+{
+    stopTimer();
+    text.reset();
+}
 
 void TickerMode::onReceive(JsonObjectConst payload, std::string_view source)
 {
@@ -53,6 +60,13 @@ void TickerMode::onReceive(JsonObjectConst payload, std::string_view source)
     {
         setMessage(payload["message"].as<std::string_view>());
     }
+}
+
+bool __time_critical_func(TickerMode::onTimer)(repeating_timer *rt)
+{
+    static_cast<void>(rt);
+    tick = true;
+    return true;
 }
 
 void TickerMode::setFont(std::string_view fontName)
@@ -70,6 +84,24 @@ void TickerMode::setMessage(std::string_view _message)
     {
         message = _message;
         pending = true;
+    }
+}
+
+void TickerMode::startTimer()
+{
+    if (!timerRunning)
+    {
+        timerRunning = add_repeating_timer_ms(-(0b1L << 7U), &onTimer, nullptr, &timer);
+    }
+}
+
+void TickerMode::stopTimer()
+{
+    if (timerRunning)
+    {
+        cancel_repeating_timer(&timer);
+        timerRunning = false;
+        tick = false;
     }
 }
 

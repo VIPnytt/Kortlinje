@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <hardware/pio.h>
+#include <pico/time.h>
 #include <string_view>
 
 class PhotocellExtension final : public ExtensionModule
@@ -11,16 +12,18 @@ class PhotocellExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"Photocell"};
 
-    bool detected{false};
-    bool enabled{true};
+    static inline volatile bool detected{false};
     static inline volatile bool pending{true};
-    static inline volatile bool state{false};
 
-    static inline volatile unsigned long lastMillis{0UL};
+    static inline volatile alarm_id_t alarm{0L};
+
+    bool enabled{true};
 
     void transmit();
+    static void cancelAlarm();
+    static void onPio();
 
-    static void onInterrupt();
+    static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
     explicit PhotocellExtension();

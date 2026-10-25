@@ -2,6 +2,8 @@
 
 #include "services/DisplayService.h"
 
+EqualizerMode::~EqualizerMode() { stopTimer(); }
+
 void EqualizerMode::begin()
 {
     for (uint8_t x{width}; x < GRID_COLUMNS; x += width + 1U)
@@ -11,13 +13,14 @@ void EqualizerMode::begin()
             Display.setPixel(x, y, false);
         }
     }
+    startTimer();
 }
 
 void EqualizerMode::handle()
 {
-    if (millis() - lastMillis > (0b1U << 4U))
+    if (tick)
     {
-        lastMillis = millis();
+        tick = false;
         uint8_t idx{0U};
         for (std::pair<uint8_t, uint8_t> &bar : bars)
         {
@@ -41,5 +44,31 @@ void EqualizerMode::handle()
             }
             ++idx;
         }
+    }
+}
+
+void EqualizerMode::end() { stopTimer(); }
+
+bool __time_critical_func(EqualizerMode::onTimer)(repeating_timer *rt)
+{
+    tick = true;
+    return true;
+}
+
+void EqualizerMode::startTimer()
+{
+    if (!timerRunning)
+    {
+        timerRunning = add_repeating_timer_ms(-(0b1L << 4U), &onTimer, nullptr, &timer);
+    }
+}
+
+void EqualizerMode::stopTimer()
+{
+    if (timerRunning)
+    {
+        cancel_repeating_timer(&timer);
+        timerRunning = false;
+        tick = false;
     }
 }

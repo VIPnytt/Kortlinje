@@ -6,32 +6,41 @@
 #include <algorithm>
 #include <array>
 
+SnakeMode::~SnakeMode() { stopTimer(); }
+
 void SnakeMode::begin()
 {
     Display.fillFrame(false);
     snakeClear();
     target = static_cast<size_t>(random(0L, static_cast<long>(GRID_COLUMNS * GRID_ROWS)));
     stage = Stage::READY;
+    startTimer();
 }
 
 void SnakeMode::handle()
 {
-    switch (stage)
+    if (tick)
     {
-    case Stage::READY:
-        idle();
-        break;
-    case Stage::MOVE:
-        move();
-        break;
-    case Stage::DEATH:
-        blink();
-        break;
-    case Stage::REMOVE:
-        clean();
-        break;
+        tick = false;
+        switch (stage)
+        {
+        case Stage::READY:
+            idle();
+            break;
+        case Stage::MOVE:
+            move();
+            break;
+        case Stage::DEATH:
+            blink();
+            break;
+        case Stage::REMOVE:
+            clean();
+            break;
+        }
     }
 }
+
+void SnakeMode::end() { stopTimer(); }
 
 void SnakeMode::idle()
 {
@@ -141,67 +150,63 @@ std::optional<size_t> SnakeMode::findStepAvailable() const
 
 void SnakeMode::move()
 {
-    if (millis() - lastMillis > length + INT8_MAX)
+    const std::optional<size_t> step{findStepPath()};
+    if (step.has_value())
     {
-        const std::optional<size_t> step{findStepPath()};
-        if (step.has_value())
-        {
-            if (!snakePushBack(step.value()))
-            {
-                setDead();
-            }
-            else if (snake[head] == target)
-            {
-                Display.setPixel(target, true);
-                setTarget();
-            }
-            else
-            {
-                const uint8_t step{static_cast<uint8_t>(UINT8_MAX / length)};
-                for (size_t idx{0U}; idx < length; ++idx)
-                {
-                    Display.setPixel(snakeAt(idx), true);
-                }
-                Display.setPixel(snakePopFront(), false);
-            }
-        }
-        else
+        if (!snakePushBack(step.value()))
         {
             setDead();
         }
-        lastMillis = millis();
+        else if (snake[head] == target)
+        {
+            Display.setPixel(target, true);
+            setTarget();
+        }
+        else
+        {
+            for (size_t idx{0U}; idx < length; ++idx)
+            {
+                Display.setPixel(snakeAt(idx), true);
+            }
+            Display.setPixel(snakePopFront(), false);
+        }
+    }
+    else
+    {
+        setDead();
     }
 }
 
 void SnakeMode::blink()
 {
-    if (millis() - lastMillis > UINT8_MAX)
+    const bool lit{(blinkCount & 0b1U) != 0U};
+    for (size_t idx{0U}; idx < length; ++idx)
     {
-        const bool lit{(blinkCount & 0b1U) != 0U};
-        for (size_t idx{0U}; idx < length; ++idx)
-        {
-            Display.setPixel(snakeAt(idx), lit);
-        }
-        if (++blinkCount >= 6U)
-        {
-            stage = Stage::REMOVE;
-        }
-        lastMillis = millis();
+        Display.setPixel(snakeAt(idx), lit);
+    }
+    if (++blinkCount >= 6U)
+    {
+        stage = Stage::REMOVE;
     }
 }
 
 void SnakeMode::clean()
 {
-    if (millis() - lastMillis > INT8_MAX && length > 0U)
+    if (length != 0U)
     {
         Display.setPixel(snakePopFront(), false);
-        lastMillis = millis();
     }
-    else if (length == 0U)
+    else
     {
         Display.setPixel(target, false);
         stage = Stage::READY;
     }
+}
+
+bool __time_critical_func(SnakeMode::onTimer)(repeating_timer *rt)
+{
+    tick = true;
+    return true;
 }
 
 void SnakeMode::snakeReset(size_t start)
@@ -254,7 +259,6 @@ size_t SnakeMode::snakeAt(size_t index) const
 void SnakeMode::setDead()
 {
     blinkCount = 0U;
-    lastMillis = millis();
     stage = Stage::DEATH;
 }
 
@@ -276,4 +280,22 @@ void SnakeMode::setTarget()
     }
     target = available[static_cast<size_t>(random(static_cast<long>(count)))];
     Display.setPixel(target, true);
+}
+
+void SnakeMode::startTimer()
+{
+    if (!timerRunning)
+    {
+        timerRunning = add_repeating_timer_ms(-(0b1L << 7U), &onTimer, nullptr, &timer);
+    }
+}
+
+void SnakeMode::stopTimer()
+{
+    if (timerRunning)
+    {
+        cancel_repeating_timer(&timer);
+        timerRunning = false;
+        tick = false;
+    }
 }

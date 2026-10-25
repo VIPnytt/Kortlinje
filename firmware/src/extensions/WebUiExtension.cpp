@@ -17,10 +17,28 @@ void WebUiExtension::begin()
 
 void WebUiExtension::handle()
 {
-    if (render && millis() - lastMillis > 1'000U / 24U && Extensions.WebSocket().server->count() != 0U)
+    if (render && pending && Extensions.webSocket().server->count() != 0U)
     {
-        lastMillis = millis();
+        pending = false;
         transmit();
+        alarm = add_alarm_in_ms(interval, &onAlarm, nullptr, true);
+    }
+}
+
+int64_t WebUiExtension::onAlarm(alarm_id_t id, void *user_data)
+{
+    static_cast<void>(id);
+    static_cast<void>(user_data);
+    alarm = 0L;
+    pending = true;
+    return 0LL;
+}
+
+void WebUiExtension::throttle()
+{
+    if (interval != 0xFFU)
+    {
+        ++interval;
     }
 }
 

@@ -7,6 +7,7 @@
 #include <array>
 #include <bits/unique_ptr.h>
 #include <optional>
+#include <pico/time.h>
 
 class SnakeMode final : public ModeModule
 {
@@ -19,7 +20,8 @@ private:
         REMOVE,
     };
 
-    unsigned long lastMillis{0UL};
+    bool timerRunning{false};
+    static inline volatile bool tick{false};
 
     uint8_t blinkCount{0U};
 
@@ -27,8 +29,11 @@ private:
     size_t length{0U};
     size_t target{0U};
 
-    std::array<size_t, GRID_COLUMNS * GRID_ROWS> snake{};
+    repeating_timer timer{};
+
     std::array<bool, GRID_COLUMNS * GRID_ROWS> occupied{};
+
+    std::array<size_t, GRID_COLUMNS * GRID_ROWS> snake{};
 
     Stage stage{Stage::READY};
 
@@ -40,6 +45,10 @@ private:
     void setTarget();
     void snakeReset(size_t start);
     void snakeClear();
+    void startTimer();
+    void stopTimer();
+
+    static bool onTimer(repeating_timer *rt);
 
     [[nodiscard]] bool snakePushBack(size_t pixel);
 
@@ -53,7 +62,9 @@ public:
     static constexpr std::string_view name{"Snake"};
 
     explicit SnakeMode() : ModeModule(name) {};
+    ~SnakeMode() override;
 
     void begin() override;
     void handle() override;
+    void end() override;
 };

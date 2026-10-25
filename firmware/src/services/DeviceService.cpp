@@ -3,6 +3,7 @@
 #include "config/IkeaKortlinje.h"
 #include "config/secrets.h"
 #include "config/version.h"
+#include "extensions/ButtonExtension.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
 #include "services/FontsService.h"
@@ -51,43 +52,54 @@ void DeviceService::handle0()
 
 void DeviceService::handle1()
 {
-    if (Display.getPower())
+    if (!ButtonExtension::isEnabled())
     {
-        Display.flush();
-    }
-    if (millis() - lastMillis > 0b1UL << 16U)
-    {
-        lastMillis = millis();
-        Extensions.button().setEnabled(false);
-        adc_set_temp_sensor_enabled(true);
         adc_set_clkdiv(.0F);
+        adc_fifo_setup(true, false, 0U, false, false);
+        adc_set_temp_sensor_enabled(true);
         adc_select_input(__GPIOCNT - __FIRSTANALOGGPIO);
-        uint16_t _temperature{0U};
-        for (uint8_t idx{0U}; idx < adcSamples; ++idx)
-        {
-            _temperature += adc_read();
-        }
+        const uint16_t sumTemperature{getSamples()};
         adc_set_temp_sensor_enabled(false);
 #ifdef PICO_CYW43_SUPPORTED
         cyw43_thread_enter();
 #endif // PICO_CYW43_SUPPORTED
         adc_gpio_init(A3);
         adc_select_input(A3 - __FIRSTANALOGGPIO);
-        uint16_t _vsys{0U};
-        for (uint8_t idx{0U}; idx < adcSamples; ++idx)
-        {
-            _vsys += adc_read();
-        }
+        const uint16_t sumVsys{getSamples()};
 #ifdef PICO_CYW43_SUPPORTED
         cyw43_thread_exit();
 #endif // PICO_CYW43_SUPPORTED
-        Extensions.button().setEnabled(true);
-        temperature =
-            27.0F - (((3.3F * static_cast<float>(_temperature) / static_cast<float>(adcSamples) / 4095.0F) - 0.706F) /
-                     0.001721F);
-        voltage = 9.9F * static_cast<float>(_vsys) / static_cast<float>(adcSamples) / 4095.0F;
+        ButtonExtension::enable();
+        const float _temperature{static_cast<float>(sumTemperature) /
+                                 static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)) * 3.3F};
+#if TEMPERATURE_FAHRENHEIT
+        temperature = 80.6F - ((_temperature - .706F) * (1.8F / .001721F));
+#elif TEMPERATURE_KELVIN
+        temperature = 300.15F - ((_temperature - .706F) * (1.0F / .001721F));
+#else
+        temperature = 27.0F - ((_temperature - .706F) * (1.0F / .001721F));
+#endif // TEMPERATURE_FAHRENHEIT
+        voltage = static_cast<float>(sumVsys) / static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)) * 9.9F;
         transmit();
     }
+    else if (Display.getPower())
+    {
+        Display.flush();
+    }
+}
+
+uint16_t DeviceService::getSamples()
+{
+    adc_fifo_drain();
+    sleep_us(0b1U << 4U);
+    adc_run(true);
+    uint16_t sum{0U};
+    for (uint8_t idx{0U}; idx < samples; ++idx)
+    {
+        sum += adc_fifo_get_blocking();
+    }
+    adc_run(false);
+    return sum;
 }
 
 JsonObjectConst DeviceService::getTransmits() const { return transmits.as<JsonObjectConst>(); }
@@ -140,9 +152,12 @@ void DeviceService::transmit()
     JsonDocument doc{};
     doc["name"].set(NAME);
     doc["repository"].set("https://github.com/VIPnytt/Kortlinje");
-    doc["temperature"].set(temperature);
     doc["version"].set(VERSION);
-    doc["voltage"].set(voltage);
+    if (temperature != .0F || voltage != .0F)
+    {
+        doc["temperature"].set(temperature);
+        doc["voltage"].set(voltage);
+    }
     transmit(doc.as<JsonObjectConst>(), name);
 }
 

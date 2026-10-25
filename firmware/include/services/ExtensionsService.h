@@ -44,7 +44,7 @@ public:
 
     ButtonExtension &button();
 
-    WebSocketExtension &WebSocket();
+    WebSocketExtension &webSocket();
 
     [[nodiscard]] std::span<ExtensionModule *const> getAll();
 

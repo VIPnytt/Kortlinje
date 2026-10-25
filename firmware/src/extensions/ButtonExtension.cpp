@@ -43,6 +43,19 @@ void ButtonExtension::handle()
     }
 }
 
+void ButtonExtension::enable()
+{
+    enabled = true;
+    adc_select_input(active->pin - __FIRSTANALOGGPIO);
+    adc_fifo_setup(true, true, 1U, false, false);
+    adc_fifo_drain();
+    adc_set_clkdiv(divider);
+    dma_channel_set_trans_count(channel, count, true);
+    adc_run(true);
+}
+
+bool ButtonExtension::isEnabled() { return enabled; }
+
 void ButtonExtension::process(Button button)
 {
     switch (button)
@@ -76,33 +89,9 @@ void ButtonExtension::process(Button button)
     }
 }
 
-void ButtonExtension::setEnabled(bool enable)
-{
-    if (enable != enabled)
-    {
-        if (enable)
-        {
-            enabled = true;
-            adc_gpio_init(active->pin);
-            adc_select_input(active->pin - __FIRSTANALOGGPIO);
-            adc_fifo_drain();
-            adc_set_clkdiv(divider);
-            dma_channel_set_trans_count(channel, count, true);
-            adc_run(true);
-        }
-        else
-        {
-            adc_run(false);
-            dma_channel_abort(channel);
-            adc_fifo_drain();
-            enabled = false;
-        }
-    }
-}
-
 void __time_critical_func(ButtonExtension::onInterrupt)()
 {
-    dma_channel_acknowledge_irq0(channel);
+    dma_channel_acknowledge_irq1(channel);
     Ladder &ladder{*active};
     const Button _state{ladder.state};
     const uint16_t _raw{raw};
@@ -163,8 +152,17 @@ void __time_critical_func(ButtonExtension::onInterrupt)()
         }
     }
     active = (active == &rear) ? &top : &rear;
-    adc_select_input(active->pin - __FIRSTANALOGGPIO);
-    dma_channel_set_trans_count(channel, count, true);
+    if (!rear.pressed && !top.pressed && rear.state == Button::NONE && top.state == Button::NONE &&
+        ++bursts == 0b1U << 13U)
+    {
+        adc_run(false);
+        enabled = false;
+    }
+    else
+    {
+        adc_select_input(active->pin - __FIRSTANALOGGPIO);
+        dma_channel_set_trans_count(channel, count, true);
+    }
 }
 
 void ButtonExtension::alarm()

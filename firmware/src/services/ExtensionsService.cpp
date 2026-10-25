@@ -12,7 +12,7 @@ void ExtensionsService::begin()
 
 ButtonExtension &ExtensionsService::button() { return extensionButton; }
 
-WebSocketExtension &ExtensionsService::WebSocket() { return extensionWebSocket; }
+WebSocketExtension &ExtensionsService::webSocket() { return extensionWebSocket; }
 
 std::span<ExtensionModule *const> ExtensionsService::getAll() { return modules; }
 

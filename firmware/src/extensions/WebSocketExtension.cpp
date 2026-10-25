@@ -75,5 +75,8 @@ void WebSocketExtension::onTransmit(JsonObjectConst payload, std::string_view so
     const size_t length{measureJson(doc)};
     std::vector<char> message(length + 1U);
     serializeJson(doc, message.data(), length + 1U);
-    server->textAll(message.data(), length);
+    if (server->textAll(message.data(), length) == AsyncWebSocket::SendStatus::DISCARDED)
+    {
+        WebUiExtension::throttle();
+    }
 }

@@ -48,12 +48,26 @@ private:
         uint16_t medium;
     };
 
-    bool enabled{true};
+    static inline volatile bool enabled{true};
 
+    static inline uint16_t bursts{0U};
     static inline volatile uint16_t raw{0U};
 
-    static inline Ladder rear{PIN_REAR, Button::DOWN, Button::ALARM, Button::UP, Button::SET};
-    static inline Ladder top{PIN_TOP, Button::CYCLE, Button::DISMISS, Button::BRIGHTNESS, Button::SNOOZE};
+    static inline Ladder rear{
+        PIN_REAR, Button::DOWN, Button::ALARM, Button::UP, Button::SET, Button::NONE, false, false, 0U, 0U, 0U, 0U, 0U};
+    static inline Ladder top{PIN_TOP,
+                             Button::CYCLE,
+                             Button::DISMISS,
+                             Button::BRIGHTNESS,
+                             Button::SNOOZE,
+                             Button::NONE,
+                             false,
+                             false,
+                             0U,
+                             0U,
+                             0U,
+                             0U,
+                             0U};
     static inline Ladder *active{&rear};
 
     void alarm();
@@ -73,7 +87,8 @@ public:
 
     void begin() override;
     void handle() override;
-    void resume();
-    void suspend();
-    void setEnabled(bool enable);
+
+    static void enable();
+
+    [[nodiscard]] static bool isEnabled();
 };

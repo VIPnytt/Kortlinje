@@ -5,6 +5,8 @@
 
 #include <ESPAsyncWebServer.h>
 #include <array>
+#include <pico/time.h>
+#include <string_view>
 
 class WebUiExtension final : public ExtensionModule
 {
@@ -29,7 +31,11 @@ private:
     static constexpr std::array<char, 11U> javascriptEtag{WebServerService::etag(javascript)};
     static constexpr std::array<char, 11U> svgEtag{WebServerService::etag(svg)};
 
-    unsigned long lastMillis{0UL};
+    static inline volatile bool pending{true};
+
+    static inline uint8_t interval{0b1U << 5U};
+
+    static inline alarm_id_t alarm{0L};
 
     void transmit();
 
@@ -39,6 +45,8 @@ private:
     static void onGetSvg(AsyncWebServerRequest *request);
     static void onHeadRoot(AsyncWebServerRequest *request);
 
+    static int64_t onAlarm(alarm_id_t alarmIdentifier, void *userData);
+
 public:
     explicit WebUiExtension() : ExtensionModule(name) {};
 
@@ -46,4 +54,6 @@ public:
 
     void begin() override;
     void handle() override;
+
+    static void throttle();
 };

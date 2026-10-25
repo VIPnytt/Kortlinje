@@ -23,7 +23,7 @@ public:
     static DeviceService &getInstance();
 
 private:
-    static constexpr uint8_t adcSamples{(0b1U << 16U) / (0b1U << ADC_RESOLUTION)};
+    static constexpr uint8_t samples{(0b1U << 16U) / (0b1U << ADC_RESOLUTION)};
 
     explicit DeviceService() : ServiceModule(name) {};
 
@@ -33,12 +33,12 @@ private:
 
     float voltage{.0F};
 
-    unsigned long lastMillis{0UL};
-
     JsonDocument transmits{};
 
     void onReceive(JsonObjectConst payload, std::string_view source) override;
     void transmit();
+
+    static uint16_t getSamples();
 };
 
 extern DeviceService &Device;
