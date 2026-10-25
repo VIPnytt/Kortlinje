@@ -47,16 +47,12 @@ createEffect(() => {
     }
 });
 
-const unpackFrame = (bytes: number[]): boolean[] => {
+export const receiver = (bytes: Uint8Array) => {
     const pixels = new Array<boolean>(Device.GRID_COLUMNS * Device.GRID_ROWS);
     for (let idx = 0; idx < Device.GRID_COLUMNS * Device.GRID_ROWS; ++idx) {
         pixels[idx] = ((bytes[idx >> 3] >> (idx & 7)) & 1) === 1;
     }
-    return pixels;
-};
-
-export const receiver = (json: { frame?: number[] }) => {
-    json?.frame !== undefined && setFrame(unpackFrame(json.frame));
+    setFrame(pixels);
 };
 
 onMount(() => {
@@ -147,7 +143,7 @@ export const Main: Component = () => (
         <div class="shrink-0 snap-center">
             <Canvas
                 disabled={true}
-                pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0)}
+                pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false)}
             />
         </div>
     </div>

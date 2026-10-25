@@ -33,11 +33,9 @@ private:
 
     static inline volatile bool pending{true};
 
-    static inline uint8_t interval{0b1U << 5U};
+    static inline uint8_t interval{0U};
 
     static inline alarm_id_t alarm{0L};
-
-    void transmit();
 
     static void onGetCss(AsyncWebServerRequest *request);
     static void onGetHtml(AsyncWebServerRequest *request);
@@ -54,6 +52,4 @@ public:
 
     void begin() override;
     void handle() override;
-
-    static void throttle();
 };

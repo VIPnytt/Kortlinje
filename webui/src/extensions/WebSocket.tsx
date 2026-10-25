@@ -24,7 +24,6 @@ import { name as ExtensionMirrorName, receiver as ExtensionMirrorReceiver } from
 import { name as ExtensionPlaylistName, receiver as ExtensionPlaylistReceiver } from "./Playlist";
 import { name as ExtensionSignalName, receiver as ExtensionSignalReceiver } from "./Signal";
 import {
-    name as ExtensionWebUIName,
     receiver as ExtensionWebUIReceiver,
     Canonical as WebUICanonical,
 } from "./WebUI";
@@ -48,12 +47,18 @@ export const WebSocketmessages: ParentComponent = (props) => {
         message: MessageEvent;
     }>(WebSocketWS, "message");
     createEffect(() => {
-        const json = JSON.parse(event()?.data || "{}");
+        const raw = event().data;
+        if (raw instanceof Blob) {
+            raw.arrayBuffer().then((buffer) => {
+                ExtensionWebUIReceiver(new Uint8Array(buffer));
+            });
+            return;
+        }
+        const json = JSON.parse(raw);
         batch(() => {
             json[DisplayName] && DisplayReceiver(json[DisplayName]);
             json[FontsName] && FontsReceiver(json[FontsName]);
             json[ModesName] && ModesReceiver(json[ModesName]);
-            json[ExtensionWebUIName] && ExtensionWebUIReceiver(json[ExtensionWebUIName]);
             json[ModeTickerName] && ModeTickerReceiver(json[ModeTickerName]);
             EXTENSION_MESSAGE && json[ExtensionMessageName] && ExtensionMessageReceiver(json[ExtensionMessageName]);
             EXTENSION_MIRROR && json[ExtensionMirrorName] && ExtensionMirrorReceiver(json[ExtensionMirrorName]);

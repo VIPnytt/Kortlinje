@@ -48,7 +48,6 @@ public:
     void fillRow(uint8_t y, bool lit);
     void fillRows(size_t minY, size_t rows, bool lit);
     void flush();
-    void getFrame(std::span<bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> _frame) const;
     void invertFrame();
     void onReceive(JsonObjectConst payload, std::string_view source) override;
     void setBrightness(Brightness _brightness);
@@ -63,6 +62,8 @@ public:
     [[nodiscard]] bool getPixel(uint8_t x, uint8_t y) const;
     [[nodiscard]] bool getPixel(Symbol symbol) const;
     [[nodiscard]] bool getPower() const;
+
+    [[nodiscard]] std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> getFrame() const;
 
     [[nodiscard]] Brightness getBrightness() const;
 

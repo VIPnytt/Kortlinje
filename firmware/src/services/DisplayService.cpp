@@ -277,10 +277,7 @@ void DisplayService::flush()
 
 DisplayService::Brightness DisplayService::getBrightness() const { return brightness; }
 
-void DisplayService::getFrame(std::span<bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> _frame) const
-{
-    std::ranges::copy(frame, _frame.begin());
-}
+std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> DisplayService::getFrame() const { return frame; }
 
 bool DisplayService::getPixel(size_t idx) const { return frame[idx]; }
 

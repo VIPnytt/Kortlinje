@@ -20,7 +20,25 @@ void WebUiExtension::handle()
     if (render && pending && Extensions.webSocket().server->count() != 0U)
     {
         pending = false;
-        transmit();
+        if (interval != 0xFFU && !Extensions.webSocket().server->availableForWriteAll())
+        {
+            alarm = add_alarm_in_ms(++interval, &onAlarm, nullptr, true);
+            return;
+        }
+        const std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> frame{Display.getFrame()};
+        render = false;
+        std::array<uint8_t, ((frame.size() + 7U) >> 3U)> bytes{};
+        for (size_t idx{0U}; idx < bytes.size(); ++idx)
+        {
+            const size_t offset{idx << 3U};
+            uint8_t byte{0U};
+            for (uint8_t bit{0U}; bit < 8U; ++bit)
+            {
+                byte |= static_cast<uint8_t>(frame[offset + bit]) << bit;
+            }
+            bytes[idx] = byte;
+        }
+        Extensions.webSocket().server->binaryAll(bytes.data(), bytes.size());
         alarm = add_alarm_in_ms(interval, &onAlarm, nullptr, true);
     }
 }
@@ -32,36 +50,6 @@ int64_t WebUiExtension::onAlarm(alarm_id_t id, void *user_data)
     alarm = 0L;
     pending = true;
     return 0LL;
-}
-
-void WebUiExtension::throttle()
-{
-    if (interval != 0xFFU)
-    {
-        ++interval;
-    }
-}
-
-void WebUiExtension::transmit()
-{
-    std::array<bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> frame{};
-    Display.getFrame(frame);
-    render = false;
-    std::array<uint8_t, (frame.size() >> 3U)> bytes{};
-    for (size_t idx{0U}; idx < frame.size(); ++idx)
-    {
-        if (frame[idx])
-        {
-            bytes[idx >> 3U] |= static_cast<uint8_t>(1U << (idx & 7U));
-        }
-    }
-    JsonDocument doc{};
-    JsonArray _frame{doc["frame"].to<JsonArray>()};
-    for (const uint8_t byte : bytes)
-    {
-        _frame.add(byte);
-    }
-    Device.transmit(doc.as<JsonObjectConst>(), name, false);
 }
 
 void WebUiExtension::onGetCss(AsyncWebServerRequest *request)
