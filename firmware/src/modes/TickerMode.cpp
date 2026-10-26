@@ -1,6 +1,7 @@
 #include "modes/TickerMode.h"
 
 #include "fonts/SmallFont.h"
+#include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
@@ -10,6 +11,12 @@ TickerMode::~TickerMode() { stopTimer(); }
 
 void TickerMode::begin()
 {
+    ConfigHandler::get(name, "message", message);
+    std::string fontName{};
+    if (ConfigHandler::get(name, "font", fontName))
+    {
+        setFont(fontName);
+    }
     if (!font)
     {
         setFont(SmallFont::name);
@@ -74,6 +81,7 @@ void TickerMode::setFont(std::string_view fontName)
     if (std::ranges::find(FontsService::names, fontName) != FontsService::names.end())
     {
         font = Fonts.get(fontName);
+        ConfigHandler::set(name, "font", fontName);
         pending = true;
     }
 }
@@ -83,6 +91,7 @@ void TickerMode::setMessage(std::string_view _message)
     if (_message.length())
     {
         message = _message;
+        ConfigHandler::set(name, "message", message);
         pending = true;
     }
 }

@@ -34,6 +34,7 @@ void DeviceService::begin0()
 
 void DeviceService::begin1()
 {
+    LittleFS.begin();
     analogReadResolution(static_cast<int>(ADC_RESOLUTION));
     pinMode(PIN_BUZ, PinMode::OUTPUT_2MA);
     Display.begin();

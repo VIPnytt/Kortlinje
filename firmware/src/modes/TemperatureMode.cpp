@@ -1,6 +1,7 @@
 #include "modes/TemperatureMode.h"
 
 #include "fonts/KortlinjeFont.h"
+#include "handlers/ConfigHandler.h"
 #include "handlers/TextHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
@@ -9,7 +10,11 @@
 
 #include <format>
 
-void TemperatureMode::begin() { pending = true; }
+void TemperatureMode::begin()
+{
+    ConfigHandler::get(name, "temperature", temperature);
+    pending = true;
+}
 
 void TemperatureMode::handle()
 {
@@ -33,6 +38,7 @@ void TemperatureMode::set(float _temperature)
     if (_temperature != temperature)
     {
         temperature = _temperature;
+        ConfigHandler::set(name, "temperature", temperature);
         pending = true;
     }
 }

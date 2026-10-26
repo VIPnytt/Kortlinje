@@ -2,6 +2,7 @@
 
 #include "extensions/WebUiExtension.h"
 #include "fonts/KortlinjeFont.h"
+#include "handlers/ConfigHandler.h"
 #include "handlers/TextHandler.h"
 #include "pio/display.pio.h"
 #include "services/DeviceService.h"
@@ -23,6 +24,7 @@ void DisplayService::begin()
 #ifdef PIN_LED
     pinMode(PIN_LED, PinMode::OUTPUT_2MA);
 #endif // PIN_LED
+    ConfigHandler::get<Brightness>(name, "brightness", brightness);
     for (size_t chip{0U}; chip < chips; ++chip)
     {
         pio_sm_config pio{display_program_get_default_config(0U)};
@@ -333,6 +335,7 @@ void DisplayService::setBrightness(Brightness _brightness)
         txBuffer[chip][2U] = 1U;
         dma_channel_transfer_from_buffer_now(static_cast<uint>(chip), txBuffer[chip].data(), 3U);
     }
+    ConfigHandler::set<Brightness>(name, "brightness", brightness);
     pending = true;
 }
 

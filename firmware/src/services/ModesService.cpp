@@ -1,5 +1,6 @@
 #include "services/ModesService.h"
 
+#include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 
@@ -7,6 +8,11 @@
 
 void ModesService::begin()
 {
+    std::string _name{};
+    if (ConfigHandler::get(name, "mode", _name))
+    {
+        setMode(_name);
+    }
     if (mode == nullptr)
     {
         setMode(names[random(names.size())]);
@@ -77,6 +83,7 @@ void ModesService::setMode(std::string_view modeName, bool power)
             Display.setPower(true);
         }
         mode->begin();
+        ConfigHandler::set(name, "mode", modeName);
         transmit();
     }
 }
