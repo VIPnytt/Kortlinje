@@ -1,5 +1,6 @@
 #include "extensions/WebUiExtension.h"
 
+#include "extensions/WebSocketExtension.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
@@ -17,14 +18,9 @@ void WebUiExtension::begin()
 
 void WebUiExtension::handle()
 {
-    if (render && pending && Extensions.webSocket().server->count() != 0U)
+    if (render && pending && WebSocketExtension::server().count() != 0U)
     {
         pending = false;
-        if (interval != 0xFFU && !Extensions.webSocket().server->availableForWriteAll())
-        {
-            alarm = add_alarm_in_ms(++interval, &onAlarm, nullptr, true);
-            return;
-        }
         const std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> frame{Display.getFrame()};
         render = false;
         std::array<uint8_t, ((frame.size() + 7U) >> 3U)> bytes{};
@@ -38,7 +34,10 @@ void WebUiExtension::handle()
             }
             bytes[idx] = byte;
         }
-        Extensions.webSocket().server->binaryAll(bytes.data(), bytes.size());
+        if (WebSocketExtension::server().binaryAll(bytes.data(), bytes.size()) == AsyncWebSocket::SendStatus::DISCARDED)
+        {
+            ++interval;
+        }
         alarm = add_alarm_in_ms(interval, &onAlarm, nullptr, true);
     }
 }

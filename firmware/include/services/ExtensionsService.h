@@ -42,10 +42,6 @@ public:
     void begin();
     void handle();
 
-    ButtonExtension &button();
-
-    WebSocketExtension &webSocket();
-
     [[nodiscard]] std::span<ExtensionModule *const> getAll();
 
     static ExtensionsService &getInstance();

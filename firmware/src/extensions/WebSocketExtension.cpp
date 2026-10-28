@@ -6,11 +6,11 @@
 
 void WebSocketExtension::begin()
 {
-    server->onEvent(&onEvent);
-    WebServer.http.addHandler(server);
+    socket.onEvent(&onEvent);
+    WebServer.http.addHandler(&socket);
 }
 
-void WebSocketExtension::handle() { server->cleanupClients(); }
+void WebSocketExtension::handle() { socket.cleanupClients(); }
 
 void WebSocketExtension::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg,
                                  const uint8_t *data, size_t len)
@@ -75,5 +75,7 @@ void WebSocketExtension::onTransmit(JsonObjectConst payload, std::string_view so
     const size_t length{measureJson(doc)};
     std::vector<char> message(length + 1U);
     serializeJson(doc, message.data(), length + 1U);
-    server->textAll(message.data(), length);
+    socket.textAll(message.data(), length);
 }
+
+AsyncWebSocket &WebSocketExtension::server() { return socket; }

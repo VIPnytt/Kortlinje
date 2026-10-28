@@ -11,7 +11,11 @@
 
 DisplayService::DisplayService() : ServiceModule(name)
 {
+#ifdef VK1640_CLK_1M25
+    pio_add_program_at_offset(pio0, &display_1m25_program, 0U);
+#else
     pio_add_program_at_offset(pio0, &display_program, 0U);
+#endif // VK1640_CLK_1M25
     for (uint chip{0U}; chip < chips; ++chip)
     {
         pio_sm_claim(pio0, chip);
@@ -24,39 +28,48 @@ void DisplayService::begin()
 #ifdef PIN_LED
     pinMode(PIN_LED, PinMode::OUTPUT_2MA);
 #endif // PIN_LED
-    ConfigHandler::get<Brightness>(name, "brightness", brightness);
+    ConfigHandler::get(name, "brightness", brightness);
     for (size_t chip{0U}; chip < chips; ++chip)
     {
+#ifdef VK1640_CLK_1M25
+        pio_sm_config pio{display_1m25_program_get_default_config(0U)};
+#else
         pio_sm_config pio{display_program_get_default_config(0U)};
+#endif // VK1640_CLK_1M25
         sm_config_set_sideset_pins(&pio, sclk[chip]);
         sm_config_set_out_pins(&pio, sda[chip], 1U);
         sm_config_set_set_pins(&pio, sda[chip], 1U);
         sm_config_set_out_shift(&pio, true, false, 32U);
         sm_config_set_fifo_join(&pio, pio_fifo_join::PIO_FIFO_JOIN_TX);
-        sm_config_set_clkdiv_int_frac8(&pio, static_cast<uint32_t>(F_CPU / 4'000'000L), 0U);
+#ifdef VK1640_CLK_1M25
+        sm_config_set_clkdiv_int_frac8(&pio, static_cast<uint32_t>(F_CPU) / 5'000'000UL, 0U);
+#else
+        sm_config_set_clkdiv_int_frac8(&pio, static_cast<uint32_t>(F_CPU) / 4'000'000UL, 0U);
+#endif // VK1640_CLK_1M25
         pio_gpio_init(pio0, sclk[chip]);
         pio_gpio_init(pio0, sda[chip]);
         gpio_set_drive_strength(sclk[chip], gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
         gpio_set_drive_strength(sda[chip], gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
-        pio_sm_set_consecutive_pindirs(pio0, static_cast<uint>(chip), sclk[chip], 1U, true);
-        pio_sm_set_consecutive_pindirs(pio0, static_cast<uint>(chip), sda[chip], 1U, true);
-        pio_sm_set_pins_with_mask(pio0,
-                                  static_cast<uint>(chip),
-                                  (0b1U << sda[chip]) | (0b1U << sclk[chip]),
-                                  (0b1U << sda[chip]) | (0b1U << sclk[chip]));
-        pio_sm_init(pio0, static_cast<uint>(chip), 0U, &pio);
-        pio_sm_set_enabled(pio0, static_cast<uint>(chip), true);
-        dma_channel_config_t dma{dma_channel_get_default_config(static_cast<uint>(chip))};
+        pio_sm_set_consecutive_pindirs(pio0, chip, sclk[chip], 1U, true);
+        pio_sm_set_consecutive_pindirs(pio0, chip, sda[chip], 1U, true);
+        pio_sm_set_pins_with_mask(
+            pio0, chip, (0b1UL << sda[chip]) | (0b1UL << sclk[chip]), (0b1UL << sda[chip]) | (0b1UL << sclk[chip]));
+#ifdef VK1640_CLK_1M25
+        pio_sm_init(pio0, chip, display_1m25_offset_idle, &pio);
+#else
+        pio_sm_init(pio0, chip, display_offset_idle, &pio);
+#endif // VK1640_CLK_1M25
+        pio_sm_set_enabled(pio0, chip, true);
+        dma_channel_config_t dma{dma_channel_get_default_config(chip)};
         channel_config_set_transfer_data_size(&dma, dma_channel_transfer_size::DMA_SIZE_32);
         channel_config_set_read_increment(&dma, true);
         channel_config_set_write_increment(&dma, false);
-        channel_config_set_dreq(&dma, pio_get_dreq(pio0, static_cast<uint>(chip), true));
+        channel_config_set_dreq(&dma, pio_get_dreq(pio0, chip, true));
         txBuffer[chip][1U] = 0xC0U << 1U;
         txBuffer[chip][18U] = 1U;
         txBuffer[chip][20U] = static_cast<uint32_t>(brightness) << 1U;
         txBuffer[chip][21U] = 1U;
-        dma_channel_configure(
-            static_cast<uint>(chip), &dma, &pio0->txf[static_cast<uint>(chip)], txBuffer[chip].data(), 22U, true);
+        dma_channel_configure(chip, &dma, &pio0->txf[chip], txBuffer[chip].data(), 22U, true);
     }
     KortlinjeFont font{};
     TextHandler("Hej ♥", font).draw();
@@ -217,7 +230,7 @@ void DisplayService::flush()
         return;
     }
     render = false;
-    std::array<std::array<uint8_t, 16U>, chips> buffer{};
+    alignas(4U) std::array<std::array<uint8_t, 16U>, chips> buffer{};
     for (size_t idx{0U}; idx < pixels.size(); ++idx)
     {
         if (frame[idx])
@@ -239,39 +252,40 @@ void DisplayService::flush()
         {
             continue;
         }
-        vkBuffer[chip] = buffer[chip];
+        alignas(4U) std::array<uint32_t, 32U> staging{};
         size_t idx{0U};
         bool active{false};
-        while (dma_channel_is_busy(static_cast<uint>(chip)))
-        {
-            tight_loop_contents();
-        }
         for (uint8_t grid{0U}; grid < 16U; ++grid)
         {
             if (dirtyGrids & (1U << grid))
             {
                 if (!active)
                 {
-                    txBuffer[chip][idx++] = 0U;
-                    txBuffer[chip][idx++] = (0xC0U | grid) << 1U;
+                    staging[idx++] = 0U;
+                    staging[idx++] = (0xC0U | grid) << 1U;
                     active = true;
                 }
-                txBuffer[chip][idx++] = static_cast<uint32_t>(vkBuffer[chip][grid]) << 1U;
+                staging[idx++] = static_cast<uint32_t>(buffer[chip][grid]) << 1U;
             }
             else if (active)
             {
-                txBuffer[chip][idx++] = 1U;
+                staging[idx++] = 1U;
                 active = false;
             }
         }
         if (active)
         {
-            txBuffer[chip][idx++] = 1U;
+            staging[idx++] = 1U;
         }
         if (idx != 0U)
         {
-            dma_channel_transfer_from_buffer_now(
-                static_cast<uint>(chip), txBuffer[chip].data(), static_cast<uint32_t>(idx));
+            while (dma_channel_is_busy(chip))
+            {
+                tight_loop_contents();
+            }
+            std::ranges::copy(std::span{staging}.first(idx), txBuffer[chip].begin());
+            dma_channel_transfer_from_buffer_now(chip, txBuffer[chip].data(), idx);
+            vkBuffer[chip] = buffer[chip];
         }
     }
     WebUiExtension::render = true;
@@ -303,13 +317,11 @@ void DisplayService::invertFrame()
 
 void DisplayService::onReceive(JsonObjectConst payload, std::string_view source)
 {
-    // Brightness
     if (payload["brightness"].is<uint8_t>())
     {
         setBrightness(static_cast<Brightness>((payload["brightness"].as<uint8_t>()) +
                                               static_cast<uint8_t>(Brightness::DUTY16_1) - 1U));
     }
-    // Power
     if (payload["power"].is<bool>())
     {
         setPower(payload["power"].as<bool>());
@@ -324,18 +336,19 @@ void DisplayService::setBrightness(Brightness _brightness)
     }
     brightness = _brightness;
     power = true;
+    const uint32_t command{static_cast<uint32_t>(brightness) << 1U};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
-        while (dma_channel_is_busy(static_cast<uint>(chip)))
+        while (dma_channel_is_busy(chip))
         {
             tight_loop_contents();
         }
         txBuffer[chip][0U] = 0U;
-        txBuffer[chip][1U] = static_cast<uint32_t>(brightness) << 1U;
+        txBuffer[chip][1U] = command;
         txBuffer[chip][2U] = 1U;
-        dma_channel_transfer_from_buffer_now(static_cast<uint>(chip), txBuffer[chip].data(), 3U);
+        dma_channel_transfer_from_buffer_now(chip, txBuffer[chip].data(), 3U);
     }
-    ConfigHandler::set<Brightness>(name, "brightness", brightness);
+    ConfigHandler::set(name, "brightness", brightness);
     pending = true;
 }
 
@@ -364,7 +377,7 @@ void DisplayService::setPixel(Symbol symbol, bool lit)
 #ifdef PIN_LED
     if (symbol == Symbol::STATUS)
     {
-        digitalWrite(PIN_LED, lit);
+        digitalWrite(PIN_LED, lit ? PinStatus::HIGH : PinStatus::LOW);
     }
 #endif // PIN_LED
 }
@@ -384,14 +397,14 @@ void DisplayService::setPower(bool _power)
         power = false;
         for (size_t chip{0U}; chip < chips; ++chip)
         {
-            while (dma_channel_is_busy(static_cast<uint>(chip)))
+            while (dma_channel_is_busy(chip))
             {
                 tight_loop_contents();
             }
             txBuffer[chip][0U] = 0U;
             txBuffer[chip][1U] = 0b1000'0000U << 1U;
             txBuffer[chip][2U] = 1U;
-            dma_channel_transfer_from_buffer_now(static_cast<uint>(chip), txBuffer[chip].data(), 3U);
+            dma_channel_transfer_from_buffer_now(chip, txBuffer[chip].data(), 3U);
         }
         pending = true;
     }

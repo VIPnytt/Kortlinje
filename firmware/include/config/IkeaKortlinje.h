@@ -1,7 +1,7 @@
 #pragma once
 
-#define GRID_COLUMNS 42U     // px
-#define GRID_ROWS 9U         // px
+#define GRID_COLUMNS 42U // px
+#define GRID_ROWS 9U     // px
 #define LED_MAP                                                                                                        \
     {                                                                                                                  \
         0x0U,                                                                                                          \

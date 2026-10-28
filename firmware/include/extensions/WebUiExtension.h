@@ -33,7 +33,7 @@ private:
 
     static inline volatile bool pending{true};
 
-    static inline uint8_t interval{0U};
+    static inline uint32_t interval{0b1U << 6U};
 
     static inline alarm_id_t alarm{0L};
 

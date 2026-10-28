@@ -10,15 +10,11 @@ void ExtensionsService::begin()
     }
 }
 
-ButtonExtension &ExtensionsService::button() { return extensionButton; }
-
-WebSocketExtension &ExtensionsService::webSocket() { return extensionWebSocket; }
-
 std::span<ExtensionModule *const> ExtensionsService::getAll() { return modules; }
 
 void ExtensionsService::handle()
 {
-    for (ExtensionModule *extension : Extensions.getAll())
+    for (ExtensionModule *extension : modules)
     {
         extension->handle();
     }
