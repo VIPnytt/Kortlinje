@@ -4,8 +4,6 @@
 #include "hardware/pio.h"
 #include "modules/ExtensionModule.h"
 
-#include <Arduino.h>
-
 class ClimateExtension final : public ExtensionModule
 {
 private:
@@ -23,8 +21,9 @@ private:
     static void onSampler();
 
 public:
-    explicit ClimateExtension();
+    explicit ClimateExtension() : ExtensionModule(name) {};
 
+    void configure() override;
     void begin() override;
     void handle() override;
 

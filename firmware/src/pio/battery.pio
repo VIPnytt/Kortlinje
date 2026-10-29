@@ -1,16 +1,13 @@
 .program battery_e9
 .wrap_target
-wait_usb:
-    wait 1 pin 0
-monitor_loop:
-    set x, 31
+    set    x, 31
 settle:
-    jmp x-- settle [1]
-    jmp pin clamp
-    irq 3
-    jmp wait_usb
+    jmp    x--, settle            [1]
+    jmp    pin, clamp
+    irq    nowait 3
+public vbus:
+    wait   1 pin, 0
 clamp:
-    set pins, 0
-    set pindirs, 1
-    set pindirs, 0
+    set    pindirs, 1
+    set    pindirs, 0
 .wrap

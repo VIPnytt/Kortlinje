@@ -1,47 +1,44 @@
-.program climate_pacer
-is_hung:
-    irq 3
+.program climate_sampler
+change:
+    push   noblock
+    mov    isr, y
+    push   noblock
+    mov    osr, y
+    irq    nowait 2
 .wrap_target
-    set x, 31
-outer_delay:
-    set y, 31
-inner_delay:
-    jmp y-- inner_delay [31]
-    jmp x-- outer_delay [31]
-    jmp pin is_hung
-    irq set 4
+    wait   1 irq, 4
+    set    pins, 1
+    wait   1 pin, 0
+    wait   0 pin, 0               [31]
+    wait   1 pin, 0
+    set    y, 31
+payload:
+    wait   0 pin, 0               [15]
+    in     pins, 1
+    wait   1 pin, 0
+    jmp    y--, payload
+    mov    y, isr
+    set    x, 7
+check:
+    wait   0 pin, 0               [15]
+    in     pins, 1
+    wait   1 pin, 0
+    jmp    x--, check
+    set    pins, 0
+    mov    x, osr
+    jmp    x != y, change
 .wrap
 
-.program climate_sampler
+.program climate_pacer
+hung:
+    irq    nowait 3
 .wrap_target
-idle:
-    wait 1 irq 4
-    set pins, 1
-wait_sync:
-    wait 1 pin 0
-    wait 0 pin 0 [15]
-    wait 1 pin 0
-    set y, 31
-read_payload:
-    wait 0 pin 0 [10]
-    in pins, 1
-    wait 1 pin 0
-    jmp y-- read_payload
-    mov y, isr
-    set x, 7
-read_chk:
-    wait 0 pin 0 [10]
-    in pins, 1
-    wait 1 pin 0
-    jmp x-- read_chk
-    set pins, 0
-    mov x, osr
-    jmp x!=y payload_changed
+    set    x, 31
+outer:
+    set    y, 31
+inner:
+    jmp    y--, inner             [31]
+    jmp    x--, outer             [31]
+    jmp    pin, hung
+    irq    nowait 4
 .wrap
-payload_changed:
-    push noblock
-    mov isr, y
-    push noblock
-    mov osr, y
-    irq set 2
-    jmp idle

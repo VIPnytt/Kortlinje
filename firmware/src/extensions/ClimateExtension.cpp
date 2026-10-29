@@ -10,7 +10,7 @@
 #include <hardware/clocks.h>
 #include <hardware/irq.h>
 
-ClimateExtension::ClimateExtension() : ExtensionModule(name)
+void ClimateExtension::configure()
 {
     pio_add_program_at_offset(pio1, &climate_sampler_program, 0U);
     pio_add_program_at_offset(pio1, &climate_pacer_program, climate_sampler_program.length);
@@ -20,14 +20,14 @@ ClimateExtension::ClimateExtension() : ExtensionModule(name)
 
 void ClimateExtension::begin()
 {
-    pio_sm_config pacer{climate_pacer_program_get_default_config(climate_sampler_program.length)};
     pio_sm_config sampler{climate_sampler_program_get_default_config(0U)};
+    pio_sm_config pacer{climate_pacer_program_get_default_config(climate_sampler_program.length)};
     sm_config_set_set_pins(&sampler, PIN_EN, 1U);
-    sm_config_set_jmp_pin(&pacer, PIN_EN);
     sm_config_set_in_pins(&sampler, PIN_PDM);
     sm_config_set_in_shift(&sampler, false, false, 32U);
-    sm_config_set_clkdiv_int_frac8(&pacer, 0U, 0U);
-    sm_config_set_clkdiv_int_frac8(&sampler, static_cast<uint32_t>(F_CPU / 10'000L), 0U);
+    sm_config_set_clkdiv_int_frac8(&sampler, static_cast<uint32_t>(F_CPU) / 14'547UL, 0U);
+    sm_config_set_jmp_pin(&pacer, PIN_EN);
+    sm_config_set_clkdiv_int_frac8(&pacer, 0UL, 0U);
     pio_gpio_init(pio1, PIN_EN);
     pio_gpio_init(pio1, PIN_PDM);
     gpio_pull_down(PIN_PDM);
@@ -37,15 +37,17 @@ void ClimateExtension::begin()
     pio_sm_set_consecutive_pindirs(pio1, 0U, PIN_PDM, 1U, false);
     irq_set_exclusive_handler(irq_num_rp2350::PIO1_IRQ_0, &onSampler);
     irq_set_exclusive_handler(irq_num_rp2350::PIO1_IRQ_1, &onPacer);
-    irq_set_enabled(irq_num_rp2350::PIO1_IRQ_0, true);
-    irq_set_enabled(irq_num_rp2350::PIO1_IRQ_1, true);
+    pio_interrupt_clear(pio1, 2U);
+    pio_interrupt_clear(pio1, 3U);
+    pio_interrupt_clear(pio1, 4U);
     pio_set_irq0_source_enabled(pio1, pio_interrupt_source::pis_interrupt2, true);
     pio_set_irq1_source_enabled(pio1, pio_interrupt_source::pis_interrupt3, true);
-    pio_sm_init(pio1, 0U, 0U, &sampler);
-    pio_sm_init(pio1, 1U, climate_sampler_program.length + 1U, &pacer);
-    pio_sm_set_enabled(pio1, 0U, true);
-    pio_sm_set_enabled(pio1, 1U, true);
-    pio1->irq_force = 1U << 4U;
+    irq_set_enabled(irq_num_rp2350::PIO1_IRQ_0, true);
+    irq_set_enabled(irq_num_rp2350::PIO1_IRQ_1, true);
+    pio_sm_init(pio1, 0U, climate_sampler_wrap_target, &sampler);
+    pio_sm_init(pio1, 1U, climate_sampler_program.length + climate_pacer_wrap_target, &pacer);
+    pio_enable_sm_mask_in_sync(pio1, (0b1UL << 0U) | (0b1UL << 1U));
+    pio1->irq_force = 0b1UL << 4U;
 }
 
 void ClimateExtension::handle()
@@ -85,11 +87,11 @@ void __time_critical_func(ClimateExtension::onSampler)()
         {
             humidity = _humidity;
 #if TEMPERATURE_FAHRENHEIT
-            temperature = (static_cast<int16_t>((msb << 8U) | lsb) * 0.18F) + 32.0F;
+            temperature = (static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .18F) + 32.0F;
 #elif TEMPERATURE_KELVIN
-            temperature = (static_cast<int16_t>((msb << 8U) | lsb) * 0.1F) + 273.15F;
+            temperature = (static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .1F) + 273.15F;
 #else
-            temperature = static_cast<int16_t>((msb << 8U) | lsb) * 0.1F;
+            temperature = static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .1F;
 #endif // TEMPERATURE_FAHRENHEIT
             pending = true;
         }
