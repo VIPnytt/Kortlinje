@@ -45,7 +45,7 @@ FontModule::Symbol KortlinjeFont::getChar(char32_t character) const
     switch (character)
     {
     case ' ': // U+0020 SPACE
-        return whitespace(4U);
+        return whitespace(3U);
     case '!': // U+0021 EXCLAMATION MARK
         return toSymbol(exclamationMark);
     case '%': // U+0025 PERCENT SIGN

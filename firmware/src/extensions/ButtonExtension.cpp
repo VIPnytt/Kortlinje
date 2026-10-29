@@ -219,28 +219,19 @@ void ButtonExtension::config()
     }
 }
 
-void ButtonExtension::cycle()
-{
-    if (Display.getPower())
-    {
-        Modes.setModeNext();
-    }
-    else
-    {
-        Display.setPower(true);
-    }
-}
+void ButtonExtension::cycle() { Display.getPower() ? Modes.setModeNext() : Display.setPower(true); }
 
 void ButtonExtension::dismiss() { tone(PIN_BUZ, 0b1U << 12U, 0b1UL << 7U); }
 
 void ButtonExtension::minus()
 {
-    const DisplayService::Brightness _brightness{Display.getBrightness()};
     if (!Display.getPower())
     {
         Display.setPower(true);
+        return;
     }
-    else if (_brightness != DisplayService::Brightness::DUTY16_1)
+    const DisplayService::Brightness _brightness{Display.getBrightness()};
+    if (_brightness != DisplayService::Brightness::DUTY1)
     {
         Display.setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) - 1U));
     }
@@ -248,12 +239,13 @@ void ButtonExtension::minus()
 
 void ButtonExtension::plus()
 {
-    const DisplayService::Brightness _brightness{Display.getBrightness()};
     if (!Display.getPower())
     {
         Display.setPower(true);
+        return;
     }
-    else if (_brightness != DisplayService::Brightness::DUTY16_14)
+    const DisplayService::Brightness _brightness{Display.getBrightness()};
+    if (_brightness != DisplayService::Brightness::DUTY14)
     {
         Display.setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) + 1U));
     }

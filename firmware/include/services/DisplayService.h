@@ -4,7 +4,6 @@
 #include "config/secrets.h"
 #include "modules/ServiceModule.h"
 
-#include <Arduino.h>
 #include <array>
 #include <span>
 
@@ -15,14 +14,14 @@ public:
 
     enum class Brightness : uint8_t
     {
-        DUTY16_1 = 0b1000'1000U,
-        DUTY16_2 = 0b1000'1001U,
-        DUTY16_4 = 0b1000'1010U,
-        DUTY16_10 = 0b1000'1011U,
-        DUTY16_11 = 0b1000'1100U,
-        DUTY16_12 = 0b1000'1101U,
-        DUTY16_13 = 0b1000'1110U,
-        DUTY16_14 = 0b1000'1111U,
+        DUTY1 = 0b1000'1000U,
+        DUTY2 = 0b1000'1001U,
+        DUTY4 = 0b1000'1010U,
+        DUTY10 = 0b1000'1011U,
+        DUTY11 = 0b1000'1100U,
+        DUTY12 = 0b1000'1101U,
+        DUTY13 = 0b1000'1110U,
+        DUTY14 = 0b1000'1111U,
     };
 
     enum class Symbol : uint8_t
@@ -70,14 +69,14 @@ public:
     static DisplayService &getInstance();
 
 private:
-    explicit DisplayService();
+    explicit DisplayService() : ServiceModule(name) {};
 
     static constexpr std::array<uint16_t, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> pixels{LED_MAP};
 
     static constexpr size_t chips{pixels.size() >> 7U};
 
-    bool pending{true};
-    bool power{true};
+    bool pending{false};
+    bool power{false};
     bool render{false};
 
     std::array<bool, pixels.size()> frame{};
@@ -87,9 +86,9 @@ private:
 
     alignas(4U) std::array<std::array<uint8_t, 16U>, chips> vkBuffer{};
 
-    alignas(4U) std::array<std::array<uint32_t, 32U>, chips> txBuffer{};
+    alignas(4U) std::array<std::array<uint32_t, 19U>, chips> txBuffer{};
 
-    Brightness brightness{Brightness::DUTY16_14};
+    Brightness brightness{Brightness::DUTY14};
 };
 
 extern DisplayService &Display;
