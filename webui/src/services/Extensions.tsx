@@ -19,6 +19,12 @@ import {
     MainThird as ExtensionMirrorThird,
 } from "../extensions/Mirror";
 import { Link as ExtensionOtaLink, name as ExtensionOtaName, MainThird as ExtensionOtaThird } from "../extensions/Ota";
+import { 
+    Actions as ExtensionPhotocellActions,
+    Link as ExtensionPhotocellLink,
+    name as ExtensionPhotocellName,
+    MainThird as ExtensionPhotocellThird
+} from "../extensions/Photocell";
 import {
     Actions as ExtensionPlaylistActions,
     Link as ExtensionPlaylistLink,
@@ -40,6 +46,7 @@ export const Footer: Component = () => (
 export const SidebarSecondary: Component = () => (
     <SidebarSectionSecondary title={name}>
         <div class="space-y-3">
+            <ExtensionPhotocellActions />
             {EXTENSION_MIRROR && <ExtensionMirrorActions />}
             {EXTENSION_PLAYLIST && <ExtensionPlaylistActions />}
             <a
@@ -60,6 +67,9 @@ export const MainThird: Component = () => (
     <Switch fallback={<WebUIMain />}>
         <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionOtaName.toLowerCase()}`}>
             <ExtensionOtaThird />
+        </Match>
+        <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionPhotocellName.toLowerCase()}`}>
+            <ExtensionPhotocellThird />
         </Match>
         {EXTENSION_MESSAGE && (
             <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMessageName.toLowerCase()}`}>
@@ -82,6 +92,7 @@ export const MainThird: Component = () => (
 export const SidebarThird: Component = () => (
     <SidebarSectionSecondary title={name}>
         <ExtensionOtaLink />
+        <ExtensionPhotocellLink />
         {EXTENSION_MESSAGE && <ExtensionMessageLink />}
         {EXTENSION_MIRROR && <ExtensionMirrorLink />}
         {EXTENSION_PLAYLIST && <ExtensionPlaylistLink />}

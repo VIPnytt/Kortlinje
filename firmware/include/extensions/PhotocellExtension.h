@@ -2,7 +2,6 @@
 
 #include "modules/ExtensionModule.h"
 
-#include <Arduino.h>
 #include <hardware/pio.h>
 #include <pico/time.h>
 #include <string_view>
@@ -23,13 +22,15 @@ private:
     static void cancelAlarm();
     static void onPio();
 
-    static int64_t onAlarm(alarm_id_t id, void *user_data);
+    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
-    explicit PhotocellExtension();
+    explicit PhotocellExtension() : ExtensionModule(name) {};
 
+    void configure() override;
     void begin() override;
     void handle() override;
+    void onReceive(JsonObjectConst payload, std::string_view source) override;
     void setEnabled(bool enable);
 
     [[nodiscard]] bool getEnabled() const;

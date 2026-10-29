@@ -21,6 +21,7 @@ import { name as FontsName, receiver as FontsReceiver } from "../services/Fonts"
 import { name as ModesName, receiver as ModesReceiver } from "../services/Modes";
 import { name as ExtensionMessageName, receiver as ExtensionMessageReceiver } from "./Message";
 import { name as ExtensionMirrorName, receiver as ExtensionMirrorReceiver } from "./Mirror";
+import { name as ExtensionPhotocellName, receiver as ExtensionPhotocellReceiver } from "./Photocell";
 import { name as ExtensionPlaylistName, receiver as ExtensionPlaylistReceiver } from "./Playlist";
 import { name as ExtensionSignalName, receiver as ExtensionSignalReceiver } from "./Signal";
 import {
@@ -57,6 +58,7 @@ export const WebSocketmessages: ParentComponent = (props) => {
         const json = JSON.parse(raw);
         batch(() => {
             json[DisplayName] && DisplayReceiver(json[DisplayName]);
+            json[ExtensionPhotocellName] && ExtensionPhotocellReceiver(json[ExtensionPhotocellName]);
             json[FontsName] && FontsReceiver(json[FontsName]);
             json[ModesName] && ModesReceiver(json[ModesName]);
             json[ModeTickerName] && ModeTickerReceiver(json[ModeTickerName]);
