@@ -7,7 +7,11 @@
 #include <hardware/adc.h>
 #include <hardware/irq.h>
 
-ButtonExtension::ButtonExtension() : ExtensionModule(name) { dma_channel_claim(channel); }
+void ButtonExtension::configure()
+{
+    analogReadResolution(static_cast<int>(ADC_RESOLUTION));
+    dma_channel_claim(channel);
+}
 
 void ButtonExtension::begin()
 {

@@ -40,6 +40,7 @@ private:
 
 public:
     void begin();
+    void configure();
     void handle();
 
     [[nodiscard]] std::span<ExtensionModule *const> getAll();

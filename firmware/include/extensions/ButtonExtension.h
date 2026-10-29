@@ -3,7 +3,6 @@
 #include "config/secrets.h"
 #include "modules/ExtensionModule.h"
 
-#include <Arduino.h>
 #include <hardware/dma.h>
 
 class ButtonExtension final : public ExtensionModule
@@ -83,8 +82,9 @@ private:
     static void onInterrupt();
 
 public:
-    explicit ButtonExtension();
+    explicit ButtonExtension() : ExtensionModule(name) {};
 
+    void configure() override;
     void begin() override;
     void handle() override;
 

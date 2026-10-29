@@ -73,6 +73,7 @@ void DisplayService::begin()
     }
     KortlinjeFont font{};
     TextHandler("Hej ♥", font).draw();
+    flush();
 }
 
 void DisplayService::handle()

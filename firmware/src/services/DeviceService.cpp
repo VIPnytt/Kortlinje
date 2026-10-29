@@ -17,42 +17,29 @@
 
 void DeviceService::begin0()
 {
-    Serial.begin();
+    Extensions.configure();
     WiFi.setHostname(HOSTNAME);
     WiFi.begin(WIFI_SSID, WIFI_KEY);
     NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
-#ifdef TIME_ZONE_POSIX
     setenv("TZ", TIME_ZONE_POSIX, 1);
     tzset();
-#endif // TIME_ZONE_POSIX
     WebServer.begin();
-    Fonts.begin();
     Extensions.begin();
-    Modes.begin();
-    operational = true;
+    rp2040.fifo.push(1UL);
 }
 
 void DeviceService::begin1()
 {
     LittleFS.begin();
-    analogReadResolution(static_cast<int>(ADC_RESOLUTION));
-    pinMode(PIN_BUZ, PinMode::OUTPUT_2MA);
     Display.begin();
-    transmit();
+    Fonts.begin();
+    (void)rp2040.fifo.pop();
+    Modes.begin();
 }
 
 void DeviceService::handle0()
 {
     Extensions.handle();
-    Display.handle();
-    if (Display.getPower())
-    {
-        Modes.handle();
-    }
-}
-
-void DeviceService::handle1()
-{
     if (!ButtonExtension::isEnabled())
     {
         adc_set_clkdiv(.0F);
@@ -71,8 +58,8 @@ void DeviceService::handle1()
         cyw43_thread_exit();
 #endif // PICO_CYW43_SUPPORTED
         ButtonExtension::enable();
-        const float _temperature{static_cast<float>(sumTemperature) /
-                                 static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)) * 3.3F};
+        const float _temperature{static_cast<float>(sumTemperature) *
+                                 (3.3F / static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)))};
 #if TEMPERATURE_FAHRENHEIT
         temperature = 80.6F - ((_temperature - .706F) * (1.8F / .001721F));
 #elif TEMPERATURE_KELVIN
@@ -80,11 +67,17 @@ void DeviceService::handle1()
 #else
         temperature = 27.0F - ((_temperature - .706F) * (1.0F / .001721F));
 #endif // TEMPERATURE_FAHRENHEIT
-        voltage = static_cast<float>(sumVsys) / static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)) * 9.9F;
+        voltage = static_cast<float>(sumVsys) * (9.9F / static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)));
         transmit();
     }
-    else if (Display.getPower())
+    Display.handle();
+}
+
+void DeviceService::handle1()
+{
+    if (Display.getPower())
     {
+        Modes.handle();
         Display.flush();
     }
 }
@@ -109,42 +102,39 @@ void DeviceService::onReceive(JsonObjectConst payload, std::string_view source) 
 
 void DeviceService::receive(JsonObjectConst payload, std::string_view source, std::string_view destination) const
 {
-    if (operational)
+    if (Device.name == destination)
     {
-        if (Device.name == destination)
+        Device.onReceive(payload, source);
+        return;
+    }
+    if (Display.name == destination)
+    {
+        Display.onReceive(payload, source);
+        return;
+    }
+    if (Modes.name == destination)
+    {
+        Modes.onReceive(payload, source);
+        return;
+    }
+    for (ExtensionModule *extension : Extensions.getAll())
+    {
+        if (extension->name == destination)
         {
-            Device.onReceive(payload, source);
+            extension->onReceive(payload, source);
             return;
         }
-        if (Display.name == destination)
-        {
-            Display.onReceive(payload, source);
-            return;
-        }
-        if (Modes.name == destination)
-        {
-            Modes.onReceive(payload, source);
-            return;
-        }
-        for (ExtensionModule *extension : Extensions.getAll())
-        {
-            if (extension->name == destination)
-            {
-                extension->onReceive(payload, source);
-                return;
-            }
-        }
-        ModeModule *mode{Modes.getMode()};
-        if (mode != nullptr && mode->name == destination)
-        {
-            mode->onReceive(payload, source);
-            return;
-        }
-        std::unique_ptr<ModeModule> _mode{Modes.getMode(destination)};
-        if (_mode != nullptr)
-        {
-            _mode->onReceive(payload, source);
-        }
+    }
+    ModeModule *mode{Modes.getMode()};
+    if (mode != nullptr && mode->name == destination)
+    {
+        mode->onReceive(payload, source);
+        return;
+    }
+    std::unique_ptr<ModeModule> _mode{Modes.getMode(destination)};
+    if (_mode != nullptr)
+    {
+        _mode->onReceive(payload, source);
     }
 }
 
@@ -153,12 +143,9 @@ void DeviceService::transmit()
     JsonDocument doc{};
     doc["name"].set(NAME);
     doc["repository"].set("https://github.com/VIPnytt/Kortlinje");
+    doc["temperature"].set(temperature);
     doc["version"].set(VERSION);
-    if (temperature != .0F || voltage != .0F)
-    {
-        doc["temperature"].set(temperature);
-        doc["voltage"].set(voltage);
-    }
+    doc["voltage"].set(voltage);
     transmit(doc.as<JsonObjectConst>(), name);
 }
 
@@ -168,12 +155,9 @@ void DeviceService::transmit(JsonObjectConst payload, std::string_view source, b
     {
         transmits[source].set(payload);
     }
-    if (operational)
+    for (ExtensionModule *extension : Extensions.getAll())
     {
-        for (ExtensionModule *extension : Extensions.getAll())
-        {
-            extension->onTransmit(payload, source);
-        }
+        extension->onTransmit(payload, source);
     }
 }
 

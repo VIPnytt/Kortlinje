@@ -10,6 +10,14 @@ void ExtensionsService::begin()
     }
 }
 
+void ExtensionsService::configure()
+{
+    for (ExtensionModule *extension : modules)
+    {
+        extension->configure();
+    }
+}
+
 std::span<ExtensionModule *const> ExtensionsService::getAll() { return modules; }
 
 void ExtensionsService::handle()

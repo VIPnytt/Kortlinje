@@ -2,7 +2,6 @@
 
 #include "modules/ServiceModule.h"
 
-#include <Arduino.h>
 #include <ArduinoJson.h> // NOLINT(misc-include-cleaner)
 
 class DeviceService final : public ServiceModule
@@ -26,8 +25,6 @@ private:
     static constexpr uint8_t samples{(0b1U << 16U) / (0b1U << ADC_RESOLUTION)};
 
     explicit DeviceService() : ServiceModule(name) {};
-
-    bool operational{false};
 
     float temperature{.0F};
 

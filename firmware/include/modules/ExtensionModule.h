@@ -19,6 +19,7 @@ public:
     const std::string_view name{};
 
     virtual void begin();
+    virtual void configure();
     virtual void handle();
     virtual void onReceive(JsonObjectConst payload, std::string_view source);
     virtual void onTransmit(JsonObjectConst payload, std::string_view source);
