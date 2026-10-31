@@ -6,7 +6,6 @@ import { HOSTNAME } from "../config/constants";
 import {
     EXTENSION_MESSAGE,
     EXTENSION_MIRROR,
-    EXTENSION_PLAYLIST,
     EXTENSION_SIGNAL,
     MODE_DRAW,
     MODE_STREAM,
@@ -61,12 +60,12 @@ export const WebSocketmessages: ParentComponent = (props) => {
             json[DisplayName] && DisplayReceiver(json[DisplayName]);
             json[ExtensionAlarmName] && ExtensionAlarmReceiver(json[ExtensionAlarmName]);
             json[ExtensionPhotocellName] && ExtensionPhotocellReceiver(json[ExtensionPhotocellName]);
+            json[ExtensionPlaylistName] && ExtensionPlaylistReceiver(json[ExtensionPlaylistName]);
             json[FontsName] && FontsReceiver(json[FontsName]);
             json[ModesName] && ModesReceiver(json[ModesName]);
             json[ModeTickerName] && ModeTickerReceiver(json[ModeTickerName]);
             EXTENSION_MESSAGE && json[ExtensionMessageName] && ExtensionMessageReceiver(json[ExtensionMessageName]);
             EXTENSION_MIRROR && json[ExtensionMirrorName] && ExtensionMirrorReceiver(json[ExtensionMirrorName]);
-            EXTENSION_PLAYLIST && json[ExtensionPlaylistName] && ExtensionPlaylistReceiver(json[ExtensionPlaylistName]);
             EXTENSION_SIGNAL && json[ExtensionSignalName] && ExtensionSignalReceiver(json[ExtensionSignalName]);
             MODE_DRAW && json[ModeDrawName] && ModeDrawReceiver(json[ModeDrawName]);
             MODE_STREAM && json[ModeStreamName] && ModeStreamReceiver(json[ModeStreamName]);

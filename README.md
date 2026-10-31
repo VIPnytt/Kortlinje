@@ -4,8 +4,8 @@ An open-source firmware port for the IKEA Kortlinje LED display alarm clock.
 
 This project is built upon the architecture of the [Frekvens](https://github.com/VIPnytt/Frekvens) framework. With the hardware interface and communication protocols fully solved, core subsystems, graphics pipelines, and connectivity modules are being incrementally ported over to bring up the custom firmware.
 
-> [!WARNING]
-> **Developer Early Access / Experimental State:** All hardware interfaces are now solved and operational, and an initial [hardware modding guide](https://github.com/VIPnytt/Kortlinje/wiki) is available for early contributors and makers. However, the firmware remains in an active experimental stage with core features pending.
+> [!NOTE]
+> **Early Access:** An initial [hardware modding guide](https://github.com/VIPnytt/Kortlinje/wiki) is available for makers. However, the firmware remains in an active development stage.
 
 ## Subsystem Status
 

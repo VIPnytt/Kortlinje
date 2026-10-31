@@ -15,24 +15,24 @@ interface Item {
     mode: string;
 }
 
-const [getActive, setActive] = createSignal<boolean>(false);
 const [getDuration, setDuration] = createSignal<number>(parseInt(Cookies.get(`${name}.duration`) || "60", 10));
-const [getPlaylist, setPlaylist] = createSignal<Item[]>([]);
+const [getEnabled, setEnabled] = createSignal<boolean>(false);
+const [getSchedule, setSchedule] = createSignal<Item[]>([]);
 
-export const PlaylistActive = getActive;
+export const PlaylistActive = getEnabled;
 
-export const receiver = (json: { active?: boolean; playlist?: Item[] }) => {
-    json?.active !== undefined && setActive(json.active);
-    json?.playlist !== undefined && setPlaylist(json.playlist);
+export const receiver = (json: { enabled?: boolean; schedule?: Item[] }) => {
+    json?.enabled !== undefined && setEnabled(json.enabled);
+    json?.schedule !== undefined && setSchedule(json.schedule);
 };
 
 const handleActive = () => {
-    setActive(!getActive());
+    setEnabled(!getEnabled());
     WebSocketWS.send(
         JSON.stringify({
             [name]: {
-                active: getActive(),
-                playlist: getPlaylist(),
+                enabled: getEnabled(),
+                schedule: getSchedule(),
             },
         }),
     );
@@ -47,14 +47,14 @@ export const Actions: Component = () => (
             />
             {name}
         </a>
-        <Tooltip text={`${getActive() ? "Stop" : "Play"} ${name.toLowerCase()}`}>
+        <Tooltip text={`${getEnabled() ? "Stop" : "Play"} ${name.toLowerCase()}`}>
             <button
-                class={`w-full ${getActive() ? "action-activated" : "action-deactivated"}`}
-                disabled={!getPlaylist().length}
+                class={`w-full ${getEnabled() ? "action-activated" : "action-deactivated"}`}
+                disabled={!getSchedule().length}
                 onclick={handleActive}
                 type="button"
             >
-                <Icon path={getActive() ? mdiStop : mdiPlay} />
+                <Icon path={getEnabled() ? mdiStop : mdiPlay} />
             </button>
         </Tooltip>
     </div>
@@ -75,26 +75,24 @@ export const Link: Component = () => (
 
 export const MainThird: Component = () => {
     const handleAdd = () => {
-        do {
-            setPlaylist([
-                ...getPlaylist(),
-                {
-                    duration: getDuration(),
-                    mode: ModesList()[Math.round(Math.random() * (ModesList().length - 1))],
-                },
-            ]);
-        } while (getPlaylist().length < 2);
+        setSchedule([
+            ...getSchedule(),
+            {
+                duration: getDuration(),
+                mode: ModesList()[Math.round(Math.random() * (ModesList().length - 1))],
+            },
+        ]);
     };
 
     const handleDuration = (index: number, duration: number) => {
         setDuration(duration);
-        setPlaylist(
-            getPlaylist().map((item, i) =>
+        setSchedule(
+            getSchedule().map((item, i) =>
                 i === index
                     ? {
-                          ...item,
-                          duration,
-                      }
+                        ...item,
+                        duration,
+                    }
                     : item,
             ),
         );
@@ -104,20 +102,20 @@ export const MainThird: Component = () => {
     };
 
     const handleMode = (index: number, name: string) => {
-        setPlaylist(
-            getPlaylist().map((item, i) =>
+        setSchedule(
+            getSchedule().map((item, i) =>
                 i === index
                     ? {
-                          ...item,
-                          mode: name,
-                      }
+                        ...item,
+                        mode: name,
+                    }
                     : item,
             ),
         );
     };
 
     const handleRemove = (index: number) => {
-        setPlaylist(getPlaylist().filter((_, i) => i !== index));
+        setSchedule(getSchedule().filter((_, i) => i !== index));
     };
 
     return (
@@ -126,15 +124,15 @@ export const MainThird: Component = () => {
                 <h2>{name}</h2>
                 <div class="box">
                     <div class="space-y-3">
-                        {getPlaylist().length && (
+                        {getSchedule().length && (
                             <>
                                 <h3>{ModesName}</h3>
-                                <Index each={getPlaylist()}>
+                                <Index each={getSchedule()}>
                                     {(item, index) => (
                                         <div class="flex items-center gap-3">
                                             <select
                                                 class="w-full"
-                                                disabled={getActive()}
+                                                disabled={getEnabled()}
                                                 onChange={(e) => handleMode(index, e.currentTarget.value)}
                                                 value={item().mode}
                                             >
@@ -143,9 +141,9 @@ export const MainThird: Component = () => {
                                             <div class="relative">
                                                 <input
                                                     class="text-right pr-6 w-24"
-                                                    disabled={getActive()}
+                                                    disabled={getEnabled()}
                                                     max={2 ** 16 - 1}
-                                                    min="10"
+                                                    min="5"
                                                     onInput={(e) =>
                                                         handleDuration(index, e.currentTarget.valueAsNumber)
                                                     }
@@ -160,7 +158,7 @@ export const MainThird: Component = () => {
                                             <div class="flex-none">
                                                 <button
                                                     class="action-negative"
-                                                    disabled={getActive()}
+                                                    disabled={getEnabled() || getSchedule().length <= 2}
                                                     onclick={() => handleRemove(index)}
                                                     type="button"
                                                 >
@@ -175,22 +173,22 @@ export const MainThird: Component = () => {
                         <div class="grid grid-cols-2 gap-3 mt-3">
                             <Tooltip text="Add mode">
                                 <button
-                                    class={`action-neutral w-full ${getPlaylist().length < 2 ? `bg-neutral-light dark:enabled:bg-neutral-dark text-interactive-light dark:text-content-dark` : ""}`}
-                                    disabled={getActive() || getPlaylist().length >= 2 ** 8 - 1}
+                                    class={`action-neutral w-full ${getSchedule().length < 2 ? `bg-neutral-light dark:enabled:bg-neutral-dark text-interactive-light dark:text-content-dark` : ""}`}
+                                    disabled={getEnabled()}
                                     onclick={handleAdd}
                                     type="button"
                                 >
                                     <Icon path={mdiPlus} />
                                 </button>
                             </Tooltip>
-                            <Tooltip text={`${getActive() ? "Stop" : "Play"} ${name.toLowerCase()}`}>
+                            <Tooltip text={`${getEnabled() ? "Stop" : "Play"} ${name.toLowerCase()}`}>
                                 <button
-                                    class={`w-full ${getActive() ? "action-activated" : "action-positive"}`}
-                                    disabled={getPlaylist().length < 2}
+                                    class={`w-full ${getEnabled() ? "action-activated" : "action-positive"}`}
+                                    disabled={getSchedule().length < 2}
                                     onclick={handleActive}
                                     type="button"
                                 >
-                                    <Icon path={getActive() ? mdiStop : mdiPlay} />
+                                    <Icon path={getEnabled() ? mdiStop : mdiPlay} />
                                 </button>
                             </Tooltip>
                         </div>

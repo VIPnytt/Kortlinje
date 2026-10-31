@@ -5,7 +5,6 @@ import { Icon } from "../components/Icon";
 import {
     EXTENSION_MESSAGE,
     EXTENSION_MIRROR,
-    EXTENSION_PLAYLIST,
 } from "../config/modules";
 import {
     Actions as ExtensionAlarmActions,
@@ -54,8 +53,8 @@ export const SidebarSecondary: Component = () => (
         <div class="space-y-3">
             <ExtensionAlarmActions />
             <ExtensionPhotocellActions />
+            <ExtensionPlaylistActions />
             {EXTENSION_MIRROR && <ExtensionMirrorActions />}
-            {EXTENSION_PLAYLIST && <ExtensionPlaylistActions />}
             <a
                 class="link"
                 href={`#/${name.toLowerCase()}`}
@@ -81,6 +80,9 @@ export const MainThird: Component = () => (
         <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionPhotocellName.toLowerCase()}`}>
             <ExtensionPhotocellThird />
         </Match>
+        <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionPlaylistName.toLowerCase()}`}>
+            <ExtensionPlaylistThird />
+        </Match>
         {EXTENSION_MESSAGE && (
             <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMessageName.toLowerCase()}`}>
                 <ExtensionMessageThird />
@@ -91,11 +93,6 @@ export const MainThird: Component = () => (
                 <ExtensionMirrorThird />
             </Match>
         )}
-        {EXTENSION_PLAYLIST && (
-            <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionPlaylistName.toLowerCase()}`}>
-                <ExtensionPlaylistThird />
-            </Match>
-        )}
     </Switch>
 );
 
@@ -104,8 +101,8 @@ export const SidebarThird: Component = () => (
         <ExtensionAlarmLink />
         <ExtensionOtaLink />
         <ExtensionPhotocellLink />
+        <ExtensionPlaylistLink />
         {EXTENSION_MESSAGE && <ExtensionMessageLink />}
         {EXTENSION_MIRROR && <ExtensionMirrorLink />}
-        {EXTENSION_PLAYLIST && <ExtensionPlaylistLink />}
     </SidebarSectionSecondary>
 );

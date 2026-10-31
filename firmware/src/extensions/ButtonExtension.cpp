@@ -2,6 +2,7 @@
 
 #include "config/secrets.h"
 #include "extensions/AlarmExtension.h"
+#include "extensions/PlaylistExtension.h"
 #include "services/DisplayService.h"
 #include "services/ModesService.h"
 
@@ -220,7 +221,10 @@ void ButtonExtension::config()
     }
 }
 
-void ButtonExtension::cycle() { Display.getPower() ? Modes.setModeNext() : Display.setPower(true); }
+void ButtonExtension::cycle()
+{
+    Display.getPower() ? PlaylistExtension::setEnabled(!PlaylistExtension::getEnabled()) : Display.setPower(true);
+}
 
 void ButtonExtension::dismiss() { AlarmExtension::dismiss(); }
 
