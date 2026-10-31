@@ -34,9 +34,10 @@ void WebUiExtension::handle()
             }
             bytes[idx] = byte;
         }
-        if (WebSocketExtension::server().binaryAll(bytes.data(), bytes.size()) == AsyncWebSocket::SendStatus::DISCARDED)
+        if (WebSocketExtension::server().binaryAll(bytes.data(), bytes.size()) != AsyncWebSocket::SendStatus::ENQUEUED)
         {
             ++interval;
+            render = true;
         }
         alarm = add_alarm_in_ms(interval, &onAlarm, nullptr, true);
     }

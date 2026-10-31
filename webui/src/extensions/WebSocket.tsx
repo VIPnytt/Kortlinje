@@ -19,6 +19,7 @@ import { name as ModeWeatherName, receiver as ModeWeatherReceiver } from "../mod
 import { name as DisplayName, receiver as DisplayReceiver } from "../services/Display";
 import { name as FontsName, receiver as FontsReceiver } from "../services/Fonts";
 import { name as ModesName, receiver as ModesReceiver } from "../services/Modes";
+import { name as ExtensionAlarmName, receiver as ExtensionAlarmReceiver } from "./Alarm";
 import { name as ExtensionMessageName, receiver as ExtensionMessageReceiver } from "./Message";
 import { name as ExtensionMirrorName, receiver as ExtensionMirrorReceiver } from "./Mirror";
 import { name as ExtensionPhotocellName, receiver as ExtensionPhotocellReceiver } from "./Photocell";
@@ -58,6 +59,7 @@ export const WebSocketmessages: ParentComponent = (props) => {
         const json = JSON.parse(raw);
         batch(() => {
             json[DisplayName] && DisplayReceiver(json[DisplayName]);
+            json[ExtensionAlarmName] && ExtensionAlarmReceiver(json[ExtensionAlarmName]);
             json[ExtensionPhotocellName] && ExtensionPhotocellReceiver(json[ExtensionPhotocellName]);
             json[FontsName] && FontsReceiver(json[FontsName]);
             json[ModesName] && ModesReceiver(json[ModesName]);

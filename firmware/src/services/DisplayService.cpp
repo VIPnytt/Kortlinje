@@ -378,7 +378,12 @@ void DisplayService::setPixel(uint8_t x, uint8_t y, bool lit)
 
 void DisplayService::setPixel(Symbol symbol, bool lit)
 {
-    frame[static_cast<size_t>(symbol) + static_cast<size_t>(GRID_COLUMNS * GRID_ROWS)] = lit;
+    const size_t idx{static_cast<size_t>(symbol) + static_cast<size_t>(GRID_COLUMNS * GRID_ROWS)};
+    if (frame[idx] == lit)
+    {
+        return;
+    }
+    frame[idx] = lit;
     render = true;
 #ifdef PIN_LED
     if (symbol == Symbol::STATUS)

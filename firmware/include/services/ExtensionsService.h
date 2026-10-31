@@ -1,5 +1,6 @@
 #pragma once
 
+#include "extensions/AlarmExtension.h"
 #include "extensions/BatteryExtension.h"
 #include "extensions/ButtonExtension.h"
 #include "extensions/ClimateExtension.h"
@@ -20,6 +21,7 @@ private:
 
     unsigned long lastMillis{0UL};
 
+    AlarmExtension extensionAlarm{};
     BatteryExtension extensionBattery{};
     ButtonExtension extensionButton{};
     ClimateExtension extensionClimate{};
@@ -28,7 +30,8 @@ private:
     WebSocketExtension extensionWebSocket{};
     WebUiExtension extensionWebUi{};
 
-    const std::array<ExtensionModule *, 7U> modules{
+    const std::array<ExtensionModule *, 8U> modules{
+        &extensionAlarm,
         &extensionBattery,
         &extensionButton,
         &extensionClimate,

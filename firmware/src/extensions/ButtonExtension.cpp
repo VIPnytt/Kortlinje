@@ -1,6 +1,7 @@
 #include "extensions/ButtonExtension.h"
 
 #include "config/secrets.h"
+#include "extensions/AlarmExtension.h"
 #include "services/DisplayService.h"
 #include "services/ModesService.h"
 
@@ -171,25 +172,25 @@ void __time_critical_func(ButtonExtension::onInterrupt)()
 
 void ButtonExtension::alarm()
 {
-    const bool alarm1{Display.getPixel(DisplayService::Symbol::ALARM1)};
-    const bool alarm2{Display.getPixel(DisplayService::Symbol::ALARM2)};
+    const bool alarm1{AlarmExtension::getAlarm1()};
+    const bool alarm2{AlarmExtension::getAlarm2()};
     if (alarm1 && alarm2)
     {
-        Display.setPixel(DisplayService::Symbol::ALARM1, false);
-        Display.setPixel(DisplayService::Symbol::ALARM2, false);
+        AlarmExtension::setAlarm1(false);
+        AlarmExtension::setAlarm2(false);
     }
     else if (alarm1)
     {
-        Display.setPixel(DisplayService::Symbol::ALARM1, false);
-        Display.setPixel(DisplayService::Symbol::ALARM2, true);
+        AlarmExtension::setAlarm1(false);
+        AlarmExtension::setAlarm2(true);
     }
     else if (alarm2)
     {
-        Display.setPixel(DisplayService::Symbol::ALARM1, true);
+        AlarmExtension::setAlarm1(true);
     }
     else
     {
-        Display.setPixel(DisplayService::Symbol::ALARM1, true);
+        AlarmExtension::setAlarm1(true);
     }
 }
 
@@ -221,7 +222,7 @@ void ButtonExtension::config()
 
 void ButtonExtension::cycle() { Display.getPower() ? Modes.setModeNext() : Display.setPower(true); }
 
-void ButtonExtension::dismiss() { tone(PIN_BUZ, 0b1U << 12U, 0b1UL << 7U); }
+void ButtonExtension::dismiss() { AlarmExtension::dismiss(); }
 
 void ButtonExtension::minus()
 {
@@ -251,7 +252,4 @@ void ButtonExtension::plus()
     }
 }
 
-void ButtonExtension::snooze()
-{
-    Display.setPixel(DisplayService::Symbol::SNOOZE, !Display.getPixel(DisplayService::Symbol::SNOOZE));
-}
+void ButtonExtension::snooze() { AlarmExtension::snooze(); }

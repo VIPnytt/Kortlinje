@@ -43,7 +43,7 @@ private:
     static void onGetSvg(AsyncWebServerRequest *request);
     static void onHeadRoot(AsyncWebServerRequest *request);
 
-    static int64_t onAlarm(alarm_id_t alarmIdentifier, void *userData);
+    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
     explicit WebUiExtension() : ExtensionModule(name) {};

@@ -3,6 +3,7 @@
 #include "config/IkeaKortlinje.h"
 #include "config/secrets.h"
 #include "config/version.h"
+#include "extensions/AlarmExtension.h"
 #include "extensions/ButtonExtension.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
@@ -25,6 +26,7 @@ void DeviceService::begin0()
     tzset();
     WebServer.begin();
     Extensions.begin();
+    NTP.waitSet(&onWaitSet);
     rp2040.fifo.push(1UL);
 }
 
@@ -33,7 +35,7 @@ void DeviceService::begin1()
     LittleFS.begin();
     Display.begin();
     Fonts.begin();
-    (void)rp2040.fifo.pop();
+    static_cast<void>(rp2040.fifo.pop());
     Modes.begin();
 }
 
@@ -99,6 +101,8 @@ uint16_t DeviceService::getSamples()
 JsonObjectConst DeviceService::getTransmits() const { return transmits.as<JsonObjectConst>(); }
 
 void DeviceService::onReceive(JsonObjectConst payload, std::string_view source) {}
+
+void DeviceService::onWaitSet() { AlarmExtension::reschedule(); }
 
 void DeviceService::receive(JsonObjectConst payload, std::string_view source, std::string_view destination) const
 {

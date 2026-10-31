@@ -103,12 +103,11 @@ Green ┼─ USB CC
 │   GP ├─ DA1
 │   GP ├─ DA2
 │   GP ├─ DA3
+│   GP ├─ Buzzer
 │   GP ├─ CdS
 │   GP ├─ Enable
 │   GP ├─ PDM
 │   GP ├─ Wake
-│      │
-│  PWM ├─ Buzzer
 └──────┘              
 ```
 
@@ -148,11 +147,11 @@ Wire up everything in accordance with diagrams. The CdS ambient light sensor and
 | `DA1`        | Digital output | `PIN_DA1`    |
 | `DA2`        | Digital output | `PIN_DA2`    |
 | `DA3`        | Digital output | `PIN_DA3`    |
+| Buzzer       | Digital output | `PIN_BUZ`    |
 | Enable       | Digital output | `PIN_EN`     |
-| Buzzer       | PWM output     | `PIN_BUZ`    |
+| `PDM`        | Digital input  | `PIN_PDM`    |
 | CdS          | Digital input  | `PIN_CDS`    |
 | Wake         | Digital input  | `PIN_WAKE`   |
-| `PDM`        | Digital input  | `PIN_PDM`    |
 | Buttons top  | Analog input   | `PIN_TOP`    |
 | Buttons rear | Analog input   | `PIN_REAR`   |
 
@@ -188,6 +187,16 @@ Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware
 #define PIN_DA3 6
 ```
 
+### Buzzer
+
+Optional to connect. Any GPIO pin can be used for control signals to the buzzer.
+
+Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+
+```h
+#define PIN_BUZ 7
+```
+
 ### Environment sensor enable
 
 Any GPIO pin can be used to activate the `U6` chip.
@@ -195,17 +204,17 @@ Any GPIO pin can be used to activate the `U6` chip.
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_EN 7
+#define PIN_EN 8
 ```
 
-### Buzzer
+### Environment sensor PDM
 
-Optional to connect. Any PWM pin can be used for control signals to the buzzer.
+Any 5 V tolerant GPIO pin can be used to read temperature and humidity data from the `U6` chip.
 
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_BUZ 8
+#define PIN_PDM 9
 ```
 
 ### CdS ambient light sensor
@@ -215,7 +224,7 @@ Optional to connect. Any 5 V tolerant GPIO pin can be used to detect ambient lig
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_CDS 9
+#define PIN_CDS 10
 ```
 
 ### Wake-up and sleep
@@ -229,17 +238,7 @@ Any 5 V tolerant GPIO pin can be used to detect the presence of USB power.
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_WAKE 10
-```
-
-### Environment sensor PDM
-
-Any 5 V tolerant GPIO pin can be used to read temperature and humidity data from the `U6` chip.
-
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
-
-```h
-#define PIN_PDM 11
+#define PIN_WAKE 11
 ```
 
 ### Snooze, brightness, cycle and alarm buttons

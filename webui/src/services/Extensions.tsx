@@ -8,6 +8,12 @@ import {
     EXTENSION_PLAYLIST,
 } from "../config/modules";
 import {
+    Actions as ExtensionAlarmActions,
+    Link as ExtensionAlarmLink,
+    name as ExtensionAlarmName,
+    MainThird as ExtensionAlarmThird
+} from "../extensions/Alarm";
+import {
     Link as ExtensionMessageLink,
     name as ExtensionMessageName,
     MainThird as ExtensionMessageThird,
@@ -19,7 +25,7 @@ import {
     MainThird as ExtensionMirrorThird,
 } from "../extensions/Mirror";
 import { Link as ExtensionOtaLink, name as ExtensionOtaName, MainThird as ExtensionOtaThird } from "../extensions/Ota";
-import { 
+import {
     Actions as ExtensionPhotocellActions,
     Link as ExtensionPhotocellLink,
     name as ExtensionPhotocellName,
@@ -38,14 +44,15 @@ export const name = "Extensions";
 
 export const Footer: Component = () => (
     <>
-        {EXTENSION_MESSAGE ? <div class="hr mt-auto mb-3" /> : <div class="mt-auto" />}
-        {EXTENSION_MESSAGE && <ExtensionMessageLink />}
+        <div class="hr mt-auto mb-3" />
+        <ExtensionAlarmActions />
     </>
 );
 
 export const SidebarSecondary: Component = () => (
     <SidebarSectionSecondary title={name}>
         <div class="space-y-3">
+            <ExtensionAlarmActions />
             <ExtensionPhotocellActions />
             {EXTENSION_MIRROR && <ExtensionMirrorActions />}
             {EXTENSION_PLAYLIST && <ExtensionPlaylistActions />}
@@ -65,6 +72,9 @@ export const SidebarSecondary: Component = () => (
 
 export const MainThird: Component = () => (
     <Switch fallback={<WebUIMain />}>
+        <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionAlarmName.toLowerCase()}`}>
+            <ExtensionAlarmThird />
+        </Match>
         <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionOtaName.toLowerCase()}`}>
             <ExtensionOtaThird />
         </Match>
@@ -91,6 +101,7 @@ export const MainThird: Component = () => (
 
 export const SidebarThird: Component = () => (
     <SidebarSectionSecondary title={name}>
+        <ExtensionAlarmLink />
         <ExtensionOtaLink />
         <ExtensionPhotocellLink />
         {EXTENSION_MESSAGE && <ExtensionMessageLink />}

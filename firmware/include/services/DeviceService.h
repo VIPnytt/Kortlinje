@@ -35,6 +35,8 @@ private:
     void onReceive(JsonObjectConst payload, std::string_view source) override;
     void transmit();
 
+    static void onWaitSet();
+
     static uint16_t getSamples();
 };
 
