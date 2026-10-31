@@ -4,7 +4,7 @@
 
 void FontsService::begin() { transmit(); }
 
-std::unique_ptr<const FontModule> FontsService::get(std::string_view fontName) const
+std::unique_ptr<const FontModule> FontsService::get(std::string_view fontName)
 {
     if (fontName == SmallFont::name)
     {
@@ -25,13 +25,5 @@ void FontsService::transmit()
     {
         list.add(_name);
     }
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }
-
-FontsService &FontsService::getInstance()
-{
-    static FontsService instance;
-    return instance;
-}
-
-FontsService &Fonts{FontsService::getInstance()};

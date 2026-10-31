@@ -32,19 +32,19 @@ private:
 
     struct Ladder
     {
-        const uint pin;
-        const Button _high;
-        const Button _low;
-        const Button _medium;
-        const Button _zero;
-        volatile Button state;
-        bool pressed;
-        volatile bool ready;
-        uint8_t margin;
-        uint16_t high;
-        uint16_t idle;
-        uint16_t low;
-        uint16_t medium;
+        bool pressed{false};
+        volatile bool ready{false};
+        uint8_t margin{0U};
+        uint16_t high{0U};
+        uint16_t idle{0U};
+        uint16_t low{0U};
+        uint16_t medium{0U};
+        const uint pin{0U};
+        const Button _high{Button::UNKNOWN};
+        const Button _low{Button::UNKNOWN};
+        const Button _medium{Button::UNKNOWN};
+        const Button _zero{Button::UNKNOWN};
+        volatile Button state{Button::UNKNOWN};
     };
 
     static inline volatile bool enabled{true};
@@ -53,20 +53,35 @@ private:
     static inline volatile uint16_t raw{0U};
 
     static inline Ladder rear{
-        PIN_REAR, Button::DOWN, Button::ALARM, Button::UP, Button::SET, Button::NONE, false, false, 0U, 0U, 0U, 0U, 0U};
-    static inline Ladder top{PIN_TOP,
-                             Button::CYCLE,
-                             Button::DISMISS,
-                             Button::BRIGHTNESS,
-                             Button::SNOOZE,
-                             Button::NONE,
-                             false,
-                             false,
-                             0U,
-                             0U,
-                             0U,
-                             0U,
-                             0U};
+        pressed : false,
+        ready : false,
+        margin : 0U,
+        high : 0U,
+        idle : 0U,
+        low : 0U,
+        medium : 0U,
+        pin : PIN_REAR,
+        _high : Button::DOWN,
+        _low : Button::ALARM,
+        _medium : Button::UP,
+        _zero : Button::SET,
+        state : Button::NONE,
+    };
+    static inline Ladder top{
+        pressed : false,
+        ready : false,
+        margin : 0U,
+        high : 0U,
+        idle : 0U,
+        low : 0U,
+        medium : 0U,
+        pin : PIN_TOP,
+        _high : Button::CYCLE,
+        _low : Button::DISMISS,
+        _medium : Button::BRIGHTNESS,
+        _zero : Button::SNOOZE,
+        state : Button::NONE,
+    };
     static inline Ladder *active{&rear};
 
     void alarm();

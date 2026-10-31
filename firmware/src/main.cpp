@@ -1,10 +1,12 @@
 
 #include "services/DeviceService.h"
 
-void setup() { Device.begin0(); }
+DeviceService device{};
 
-void setup1() { Device.begin1(); }
+void setup() { device.begin0(); }
 
-void loop() { Device.handle0(); }
+void setup1() { device.begin1(); }
 
-void loop1() { Device.handle1(); }
+void loop() { device.handle0(); }
+
+void loop1() { device.handle1(); }

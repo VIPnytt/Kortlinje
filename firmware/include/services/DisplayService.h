@@ -12,6 +12,8 @@ class DisplayService final : public ServiceModule
 public:
     static constexpr std::string_view name{"Display"};
 
+    explicit DisplayService() : ServiceModule(name) {};
+
     enum class Brightness : uint8_t
     {
         DUTY1 = 0b1000'1000U,
@@ -38,57 +40,52 @@ public:
     void handle();
     void drawEllipseOutline(float x, float y, float radius, bool lit);
     void drawEllipseSolid(float x, float y, float radius, bool lit);
-    void drawLineHorizontal(uint8_t xMin, size_t columns, uint8_t y, bool lit);
-    void drawLineVertical(uint8_t x, uint8_t yMin, uint8_t yMax, bool lit);
     void drawRectangleOutline(size_t minX, size_t columns, size_t minY, size_t maxY, bool lit);
-    void drawRectangleSolid(uint8_t minX, uint8_t columns, uint8_t minY, uint8_t maxY, bool lit);
     void fillColumn(uint8_t x, bool lit);
-    void fillFrame(bool lit);
     void fillRow(uint8_t y, bool lit);
     void fillRows(size_t minY, size_t rows, bool lit);
     void flush();
     void invertFrame();
-    void onReceive(JsonObjectConst payload, std::string_view source) override;
-    void setBrightness(Brightness _brightness);
     void setFrame(std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> _frame);
-    void setPixel(size_t idx, bool lit);
-    void setPixel(uint8_t x, uint8_t y, bool lit);
-    void setPixel(Symbol symbol, bool lit);
-    void setPower(bool _power);
     void transmit();
 
-    [[nodiscard]] bool getPixel(size_t idx) const;
-    [[nodiscard]] bool getPixel(uint8_t x, uint8_t y) const;
-    [[nodiscard]] bool getPixel(Symbol symbol) const;
-    [[nodiscard]] bool getPower() const;
+    static void drawLineHorizontal(uint8_t xMin, size_t columns, uint8_t y, bool lit);
+    static void drawLineVertical(uint8_t x, uint8_t yMin, uint8_t yMax, bool lit);
+    static void drawRectangleSolid(uint8_t minX, uint8_t columns, uint8_t minY, uint8_t maxY, bool lit);
+    static void fillFrame(bool lit);
+    static void onReceive(JsonObjectConst payload, std::string_view source);
+    static void setBrightness(Brightness _brightness);
+    static void setPixel(uint8_t x, uint8_t y, bool lit);
+    static void setPixel(size_t idx, bool lit);
+    static void setPixel(Symbol symbol, bool lit);
+    static void setPower(bool enable);
 
-    [[nodiscard]] std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> getFrame() const;
+    [[nodiscard]] bool getPixel(size_t idx);
+    [[nodiscard]] bool getPixel(uint8_t x, uint8_t y);
+    [[nodiscard]] static bool getPixel(Symbol symbol);
+    [[nodiscard]] static bool getPower();
 
-    [[nodiscard]] Brightness getBrightness() const;
+    [[nodiscard]] static std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> getFrame();
 
-    static DisplayService &getInstance();
+    [[nodiscard]] static Brightness getBrightness();
 
 private:
-    explicit DisplayService() : ServiceModule(name) {};
-
     static constexpr std::array<uint16_t, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> pixels{LED_MAP};
 
     static constexpr size_t chips{pixels.size() >> 7U};
 
-    bool pending{false};
-    bool power{false};
-    bool render{false};
+    static inline bool pending{false};
+    static inline bool power{false};
+    static inline bool render{false};
 
-    std::array<bool, pixels.size()> frame{};
+    static inline std::array<bool, pixels.size()> frame{};
 
     std::array<pin_size_t, chips> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
     std::array<pin_size_t, chips> sda{PIN_DA1, PIN_DA2, PIN_DA3};
 
     alignas(4U) std::array<std::array<uint8_t, 16U>, chips> vkBuffer{};
 
-    alignas(4U) std::array<std::array<uint32_t, 19U>, chips> txBuffer{};
+    alignas(4U) static inline std::array<std::array<uint32_t, 19U>, chips> txBuffer{};
 
-    Brightness brightness{Brightness::DUTY14};
+    static inline Brightness brightness{Brightness::DUTY14};
 };
-
-extern DisplayService &Display;

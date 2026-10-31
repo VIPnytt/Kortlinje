@@ -61,6 +61,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     {
         return std::make_unique<TickerMode>();
     }
+    if (modeName == WeatherMode::name)
+    {
+        return std::make_unique<WeatherMode>();
+    }
     if (modeName == WeekdayMode::name)
     {
         return std::make_unique<WeekdayMode>();
@@ -80,7 +84,7 @@ void ModesService::setMode(std::string_view modeName, bool power)
         mode = std::move(_mode);
         if (power)
         {
-            Display.setPower(true);
+            DisplayService::setPower(true);
         }
         mode->begin();
         ConfigHandler::set(name, "mode", modeName);
@@ -92,7 +96,6 @@ ModeModule *ModesService::getMode() { return mode.get(); }
 
 void ModesService::onReceive(JsonObjectConst payload, std::string_view source)
 {
-    // Mode
     if (payload["mode"].is<std::string_view>())
     {
         setMode(payload["mode"].as<std::string_view>());
@@ -101,7 +104,7 @@ void ModesService::onReceive(JsonObjectConst payload, std::string_view source)
 
 void ModesService::setModeNext()
 {
-    Display.setPower(true);
+    DisplayService::setPower(true);
     for (size_t idx{0U}; idx < names.size(); ++idx)
     {
         if (names[idx] == mode->name)
@@ -115,7 +118,7 @@ void ModesService::setModeNext()
 
 void ModesService::setModePrevious()
 {
-    Display.setPower(true);
+    DisplayService::setPower(true);
     for (size_t idx{0U}; idx < names.size(); ++idx)
     {
         if (names[idx] == mode->name)
@@ -139,13 +142,5 @@ void ModesService::transmit()
     {
         doc["mode"].set(mode->name);
     }
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }
-
-ModesService &ModesService::getInstance()
-{
-    static ModesService instance;
-    return instance;
-}
-
-ModesService &Modes{ModesService::getInstance()};

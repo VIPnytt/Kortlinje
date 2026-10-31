@@ -7,7 +7,7 @@
 void WebSocketExtension::begin()
 {
     socket.onEvent(&onEvent);
-    WebServer.http.addHandler(&socket);
+    WebServerService::http.addHandler(&socket);
 }
 
 void WebSocketExtension::handle() { socket.cleanupClients(); }
@@ -19,7 +19,7 @@ void WebSocketExtension::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *c
     {
     case AwsEventType::WS_EVT_CONNECT:
     {
-        const JsonObjectConst transmits{Device.getTransmits()};
+        const JsonObjectConst transmits{DeviceService::getTransmits()};
         const size_t length{measureJson(transmits)};
         std::vector<char> message(length + 1U);
         serializeJson(transmits, message.data(), length + 1U);
@@ -54,7 +54,7 @@ void WebSocketExtension::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *c
                 {
                     if (pair.value().is<JsonObjectConst>())
                     {
-                        Device.receive(pair.value().as<JsonObjectConst>(),
+                        DeviceService::receive(pair.value().as<JsonObjectConst>(),
                                        name,
                                        std::string_view(pair.key().c_str(), pair.key().size()));
                     }

@@ -48,7 +48,7 @@ void PlaylistExtension::advance()
         setEnabled(false);
         return;
     }
-    if (!Display.getPower())
+    if (!DisplayService::getPower())
     {
         armTimer(0b1UL << 12U);
         return;
@@ -61,7 +61,7 @@ void PlaylistExtension::advance()
     if (std::ranges::find(ModesService::names, item.mode) != ModesService::names.end())
     {
         currentMode = item.mode;
-        Modes.setMode(currentMode);
+        ModesService::setMode(currentMode);
     }
     const uint32_t durationMs{static_cast<uint32_t>(item.duration) * 1'000UL};
     step = (step + 1U) % schedule.size();
@@ -171,7 +171,7 @@ void PlaylistExtension::onReceive(JsonObjectConst payload, std::string_view sour
 
 void PlaylistExtension::onTransmit(JsonObjectConst payload, std::string_view source)
 {
-    if (enabled && source == Modes.name && payload["mode"].is<std::string>() &&
+    if (enabled && source == ModesService::name && payload["mode"].is<std::string>() &&
         payload["mode"].as<std::string>() != currentMode)
     {
         setEnabled(false);
@@ -240,5 +240,5 @@ void PlaylistExtension::transmit()
         obj["mode"].set(item.mode);
         obj["duration"].set(item.duration);
     }
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

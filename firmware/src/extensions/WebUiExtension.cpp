@@ -9,11 +9,11 @@
 
 void WebUiExtension::begin()
 {
-    WebServer.http.on("/", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_HEAD, &onHeadRoot);
-    WebServer.http.on("/", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetHtml);
-    WebServer.http.on("/favicon.svg", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetSvg);
-    WebServer.http.on("/index.css", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetCss);
-    WebServer.http.on("/index.js", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetJavascript);
+    WebServerService::http.on("/", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_HEAD, &onHeadRoot);
+    WebServerService::http.on("/", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetHtml);
+    WebServerService::http.on("/favicon.svg", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetSvg);
+    WebServerService::http.on("/index.css", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetCss);
+    WebServerService::http.on("/index.js", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetJavascript);
 }
 
 void WebUiExtension::handle()
@@ -21,7 +21,7 @@ void WebUiExtension::handle()
     if (render && pending && WebSocketExtension::server().count() != 0U)
     {
         pending = false;
-        const std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> frame{Display.getFrame()};
+        const std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> frame{DisplayService::getFrame()};
         render = false;
         std::array<uint8_t, ((frame.size() + 7U) >> 3U)> bytes{};
         for (size_t idx{0U}; idx < bytes.size(); ++idx)

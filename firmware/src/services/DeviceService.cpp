@@ -18,14 +18,14 @@
 
 void DeviceService::begin0()
 {
-    Extensions.configure();
+    extensions.configure();
     WiFi.setHostname(HOSTNAME);
     WiFi.begin(WIFI_SSID, WIFI_KEY);
     NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
     setenv("TZ", TIME_ZONE_POSIX, 1);
     tzset();
-    WebServer.begin();
-    Extensions.begin();
+    webServer.begin();
+    extensions.begin();
     NTP.waitSet(&onWaitSet);
     rp2040.fifo.push(1UL);
 }
@@ -33,15 +33,15 @@ void DeviceService::begin0()
 void DeviceService::begin1()
 {
     LittleFS.begin();
-    Display.begin();
-    Fonts.begin();
+    display.begin();
+    fonts.begin();
     static_cast<void>(rp2040.fifo.pop());
-    Modes.begin();
+    modes.begin();
 }
 
 void DeviceService::handle0()
 {
-    Extensions.handle();
+    extensions.handle();
     if (!ButtonExtension::isEnabled())
     {
         adc_set_clkdiv(.0F);
@@ -72,15 +72,15 @@ void DeviceService::handle0()
         voltage = static_cast<float>(sumVsys) * (9.9F / static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)));
         transmit();
     }
-    Display.handle();
+    display.handle();
 }
 
 void DeviceService::handle1()
 {
-    if (Display.getPower())
+    if (display.getPower())
     {
-        Modes.handle();
-        Display.flush();
+        modes.handle();
+        display.flush();
     }
 }
 
@@ -98,30 +98,30 @@ uint16_t DeviceService::getSamples()
     return sum;
 }
 
-JsonObjectConst DeviceService::getTransmits() const { return transmits.as<JsonObjectConst>(); }
+JsonObjectConst DeviceService::getTransmits() { return transmits.as<JsonObjectConst>(); }
 
 void DeviceService::onReceive(JsonObjectConst payload, std::string_view source) {}
 
 void DeviceService::onWaitSet() { AlarmExtension::reschedule(); }
 
-void DeviceService::receive(JsonObjectConst payload, std::string_view source, std::string_view destination) const
+void DeviceService::receive(JsonObjectConst payload, std::string_view source, std::string_view destination)
 {
-    if (Device.name == destination)
+    if (name == destination)
     {
-        Device.onReceive(payload, source);
+        onReceive(payload, source);
         return;
     }
-    if (Display.name == destination)
+    if (DisplayService::name == destination)
     {
-        Display.onReceive(payload, source);
+        DisplayService::onReceive(payload, source);
         return;
     }
-    if (Modes.name == destination)
+    if (ModesService::name == destination)
     {
-        Modes.onReceive(payload, source);
+        ModesService::onReceive(payload, source);
         return;
     }
-    for (ExtensionModule *extension : Extensions.getAll())
+    for (ExtensionModule *extension : ExtensionsService::getAll())
     {
         if (extension->name == destination)
         {
@@ -129,13 +129,13 @@ void DeviceService::receive(JsonObjectConst payload, std::string_view source, st
             return;
         }
     }
-    ModeModule *mode{Modes.getMode()};
+    ModeModule *mode{ModesService::getMode()};
     if (mode != nullptr && mode->name == destination)
     {
         mode->onReceive(payload, source);
         return;
     }
-    std::unique_ptr<ModeModule> _mode{Modes.getMode(destination)};
+    std::unique_ptr<ModeModule> _mode{ModesService::getMode(destination)};
     if (_mode != nullptr)
     {
         _mode->onReceive(payload, source);
@@ -159,16 +159,8 @@ void DeviceService::transmit(JsonObjectConst payload, std::string_view source, b
     {
         transmits[source].set(payload);
     }
-    for (ExtensionModule *extension : Extensions.getAll())
+    for (ExtensionModule *extension : ExtensionsService::getAll())
     {
         extension->onTransmit(payload, source);
     }
 }
-
-DeviceService &DeviceService::getInstance()
-{
-    static DeviceService instance;
-    return instance;
-}
-
-DeviceService &Device{DeviceService::getInstance()};

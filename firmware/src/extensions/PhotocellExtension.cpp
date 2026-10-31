@@ -60,7 +60,7 @@ void PhotocellExtension::handle()
         pending = false;
         if (enabled)
         {
-            Display.setPower(detected);
+            DisplayService::setPower(detected);
         }
         transmit();
     }
@@ -158,5 +158,5 @@ void PhotocellExtension::transmit()
     JsonDocument doc{};
     doc["detected"].set(detected);
     doc["enabled"].set(enabled);
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

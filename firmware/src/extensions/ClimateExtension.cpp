@@ -103,5 +103,5 @@ void ClimateExtension::transmit()
     JsonDocument doc{};
     doc["humidity"].set(humidity);
     doc["temperature"].set(temperature);
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

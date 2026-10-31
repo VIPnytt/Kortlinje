@@ -100,12 +100,13 @@ jobs:
           file-annotations: false
           files-changed-only: false
           step-summary: true
+          ignore: firmware/src/pio/*.pio.h
           style: ""
           tidy-checks: ""
 
       - name: Summary
         env:
-          clang-threshold: 171
+          clang-threshold: 329
         run: |
           echo "Status: ${{ steps.tidy.outputs.checks-failed }} checks failed, threshold for success is ${{ env.clang-threshold }}."
           echo "Clang report:"

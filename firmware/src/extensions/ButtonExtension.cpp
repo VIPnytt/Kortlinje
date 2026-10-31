@@ -195,64 +195,64 @@ void ButtonExtension::alarm()
     }
 }
 
-void ButtonExtension::brightness() { Display.setPower(!Display.getPower()); }
+void ButtonExtension::brightness() { DisplayService::setPower(!DisplayService::getPower()); }
 
 void ButtonExtension::config()
 {
-    const bool _am{Display.getPixel(DisplayService::Symbol::AM)};
-    const bool _pm{Display.getPixel(DisplayService::Symbol::PM)};
+    const bool _am{DisplayService::getPixel(DisplayService::Symbol::AM)};
+    const bool _pm{DisplayService::getPixel(DisplayService::Symbol::PM)};
     if (_am && _pm)
     {
-        Display.setPixel(DisplayService::Symbol::AM, false);
-        Display.setPixel(DisplayService::Symbol::PM, false);
+        DisplayService::setPixel(DisplayService::Symbol::AM, false);
+        DisplayService::setPixel(DisplayService::Symbol::PM, false);
     }
     else if (_am)
     {
-        Display.setPixel(DisplayService::Symbol::AM, false);
-        Display.setPixel(DisplayService::Symbol::PM, true);
+        DisplayService::setPixel(DisplayService::Symbol::AM, false);
+        DisplayService::setPixel(DisplayService::Symbol::PM, true);
     }
     else if (_pm)
     {
-        Display.setPixel(DisplayService::Symbol::AM, true);
+        DisplayService::setPixel(DisplayService::Symbol::AM, true);
     }
     else
     {
-        Display.setPixel(DisplayService::Symbol::AM, true);
+        DisplayService::setPixel(DisplayService::Symbol::AM, true);
     }
 }
 
 void ButtonExtension::cycle()
 {
-    Display.getPower() ? PlaylistExtension::setEnabled(!PlaylistExtension::getEnabled()) : Display.setPower(true);
+    DisplayService::getPower() ? PlaylistExtension::setEnabled(!PlaylistExtension::getEnabled()) : DisplayService::setPower(true);
 }
 
 void ButtonExtension::dismiss() { AlarmExtension::dismiss(); }
 
 void ButtonExtension::minus()
 {
-    if (!Display.getPower())
+    if (!DisplayService::getPower())
     {
-        Display.setPower(true);
+        DisplayService::setPower(true);
         return;
     }
-    const DisplayService::Brightness _brightness{Display.getBrightness()};
+    const DisplayService::Brightness _brightness{DisplayService::getBrightness()};
     if (_brightness != DisplayService::Brightness::DUTY1)
     {
-        Display.setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) - 1U));
+        DisplayService::setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) - 1U));
     }
 }
 
 void ButtonExtension::plus()
 {
-    if (!Display.getPower())
+    if (!DisplayService::getPower())
     {
-        Display.setPower(true);
+        DisplayService::setPower(true);
         return;
     }
-    const DisplayService::Brightness _brightness{Display.getBrightness()};
+    const DisplayService::Brightness _brightness{DisplayService::getBrightness()};
     if (_brightness != DisplayService::Brightness::DUTY14)
     {
-        Display.setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) + 1U));
+        DisplayService::setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) + 1U));
     }
 }
 

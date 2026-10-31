@@ -91,7 +91,7 @@ void BitmapHandler<T>::draw(uint8_t x, uint8_t y, bool lit) const
         {
             if ((bitmap[_y] >> (msbMax - _x)) & 0b1U)
             {
-                Display.setPixel(x + _x, y + _y, lit);
+                DisplayService::setPixel(x + _x, y + _y, lit);
             }
         }
     }

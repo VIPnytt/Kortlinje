@@ -11,7 +11,9 @@ class WebServerService final : public ServiceModule
 public:
     static constexpr std::string_view name{"Web server"};
 
-    static consteval std::array<char, 11U> etag(std::span<const uint8_t> data)
+    explicit WebServerService() : ServiceModule(name) {};
+
+    static constexpr std::array<char, 11U> etag(std::span<const uint8_t> data)
     {
         uint32_t hash{2'166'136'261U};
         for (const uint8_t byte : data)
@@ -33,18 +35,12 @@ public:
         return std::to_array(raw);
     }
 
-    AsyncWebServer http{80U};
+    static inline AsyncWebServer http{80U};
 
     void begin();
 
     static void onEmpty(AsyncWebServerRequest *request);
 
-    static WebServerService &getInstance();
-
 private:
-    explicit WebServerService() : ServiceModule(name) {};
-
     static void onNotFound(AsyncWebServerRequest *request);
 };
-
-extern WebServerService &WebServer;

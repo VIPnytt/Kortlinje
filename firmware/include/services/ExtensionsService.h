@@ -18,21 +18,21 @@
 class ExtensionsService final : public ServiceModule
 {
 private:
-    explicit ExtensionsService() : ServiceModule("Extensions") {};
+    static constexpr std::string_view name{"Extensions"};
 
     unsigned long lastMillis{0UL};
 
-    AlarmExtension extensionAlarm{};
-    BatteryExtension extensionBattery{};
-    ButtonExtension extensionButton{};
-    ClimateExtension extensionClimate{};
-    OtaExtension extensionOta{};
-    PhotocellExtension extensionPhotocell{};
-    PlaylistExtension extensionPlaylist{};
-    WebSocketExtension extensionWebSocket{};
-    WebUiExtension extensionWebUi{};
+    static inline AlarmExtension extensionAlarm{};
+    static inline BatteryExtension extensionBattery{};
+    static inline ButtonExtension extensionButton{};
+    static inline ClimateExtension extensionClimate{};
+    static inline OtaExtension extensionOta{};
+    static inline PhotocellExtension extensionPhotocell{};
+    static inline PlaylistExtension extensionPlaylist{};
+    static inline WebSocketExtension extensionWebSocket{};
+    static inline WebUiExtension extensionWebUi{};
 
-    const std::array<ExtensionModule *, 9U> modules{
+    static inline const std::array<ExtensionModule *, 9U> modules{
         &extensionAlarm,
         &extensionBattery,
         &extensionButton,
@@ -45,13 +45,11 @@ private:
     };
 
 public:
+    explicit ExtensionsService() : ServiceModule(name) {};
+
     void begin();
     void configure();
     void handle();
 
-    [[nodiscard]] std::span<ExtensionModule *const> getAll();
-
-    static ExtensionsService &getInstance();
+    [[nodiscard]] static std::span<ExtensionModule *const> getAll();
 };
-
-extern ExtensionsService &Extensions;

@@ -2,7 +2,6 @@
 
 #include "modules/HandlerModule.h"
 
-#include <Arduino.h>
 #include <LittleFS.h>
 #include <array>
 #include <concepts>

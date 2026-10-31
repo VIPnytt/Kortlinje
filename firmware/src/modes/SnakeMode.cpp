@@ -10,7 +10,7 @@ SnakeMode::~SnakeMode() { stopTimer(); }
 
 void SnakeMode::begin()
 {
-    Display.fillFrame(false);
+    DisplayService::fillFrame(false);
     snakeClear();
     target = static_cast<size_t>(random(0L, static_cast<long>(GRID_COLUMNS * GRID_ROWS)));
     stage = Stage::READY;
@@ -45,7 +45,7 @@ void SnakeMode::end() { stopTimer(); }
 void SnakeMode::idle()
 {
     snakeReset(static_cast<size_t>(random(0L, static_cast<long>(GRID_COLUMNS * GRID_ROWS))));
-    Display.setPixel(snake[head], true);
+    DisplayService::setPixel(snake[head], true);
     setTarget();
     stage = Stage::MOVE;
 }
@@ -159,16 +159,16 @@ void SnakeMode::move()
         }
         else if (snake[head] == target)
         {
-            Display.setPixel(target, true);
+            DisplayService::setPixel(target, true);
             setTarget();
         }
         else
         {
             for (size_t idx{0U}; idx < length; ++idx)
             {
-                Display.setPixel(snakeAt(idx), true);
+                DisplayService::setPixel(snakeAt(idx), true);
             }
-            Display.setPixel(snakePopFront(), false);
+            DisplayService::setPixel(snakePopFront(), false);
         }
     }
     else
@@ -179,12 +179,12 @@ void SnakeMode::move()
 
 void SnakeMode::blink()
 {
-    const bool lit{(blinkCount & 0b1U) != 0U};
+    const bool lit{(blinkCount & 0b10U) != 0U};
     for (size_t idx{0U}; idx < length; ++idx)
     {
-        Display.setPixel(snakeAt(idx), lit);
+        DisplayService::setPixel(snakeAt(idx), lit);
     }
-    if (++blinkCount >= 6U)
+    if (++blinkCount >= 0b1U << 4U)
     {
         stage = Stage::REMOVE;
     }
@@ -194,11 +194,11 @@ void SnakeMode::clean()
 {
     if (length != 0U)
     {
-        Display.setPixel(snakePopFront(), false);
+        DisplayService::setPixel(snakePopFront(), false);
     }
     else
     {
-        Display.setPixel(target, false);
+        DisplayService::setPixel(target, false);
         stage = Stage::READY;
     }
 }
@@ -279,7 +279,7 @@ void SnakeMode::setTarget()
         return;
     }
     target = available[static_cast<size_t>(random(static_cast<long>(count)))];
-    Display.setPixel(target, true);
+    DisplayService::setPixel(target, true);
 }
 
 void SnakeMode::startTimer()

@@ -3,14 +3,15 @@
 #include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
 
-#include <Arduino.h>
-
 class TemperatureMode final : public ModeModule
 {
 private:
     static inline bool pending{false};
+    static inline bool saved{true};
 
     static inline float temperature{.0F};
+
+    void transmit();
 
 public:
     static constexpr std::string_view name{"Temperature"};

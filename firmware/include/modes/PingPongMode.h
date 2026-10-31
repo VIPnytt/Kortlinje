@@ -3,14 +3,13 @@
 #include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
 
-#include <Arduino.h>
 #include <bits/unique_ptr.h>
 #include <deque>
 
 class PingPongMode final : public ModeModule
 {
 private:
-    static constexpr float speed{7e-6F * GRID_COLUMNS};
+    static constexpr float speed{5e-5F * GRID_COLUMNS};
 
     float xDec{.0F};
     float yDec{.0F};

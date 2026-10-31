@@ -14,10 +14,10 @@ void ClockMode::handle()
         pending = false;
         hour = local.tm_hour;
         minute = local.tm_min;
-        Display.fillFrame(false);
+        DisplayService::fillFrame(false);
 #if CLOCK_12H
         const int hour{(local.tm_hour + 11) % 12 + 1};
-        Display.setPixel(local.tm_hour < 12 ? DisplayService::Symbol::AM : DisplayService::Symbol::PM, true);
+        DisplayService::setPixel(local.tm_hour < 12 ? DisplayService::Symbol::AM : DisplayService::Symbol::PM, true);
         if (hour >= 10)
         {
             BitmapHandler(KortlinjeFont::digitZero_digitNine[1U])

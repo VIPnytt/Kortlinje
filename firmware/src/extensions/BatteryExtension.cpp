@@ -69,7 +69,7 @@ void BatteryExtension::onInterrupt() { pending = true; }
 
 void BatteryExtension::sleep()
 {
-    Display.setPower(false);
+    DisplayService::setPower(false);
     Serial.flush();
     Serial.end();
 #ifdef PICO_CYW43_SUPPORTED
@@ -103,7 +103,7 @@ void BatteryExtension::sleep()
     cyw43_arch_init();
 #endif // PICO_CYW43_SUPPORTED
     Serial.begin();
-    Display.setPower(true);
+    DisplayService::setPower(true);
 #ifdef RP2350_ERRATA_E9
     pio_gpio_init(pio2, PIN_WAKE);
     pio_interrupt_clear(pio2, 3U);

@@ -22,5 +22,3 @@
 
 #define PIN_TOP 26
 #define PIN_REAR 27
-
-// #define CLOCK_12H true

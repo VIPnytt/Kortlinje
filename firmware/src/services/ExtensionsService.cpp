@@ -27,11 +27,3 @@ void ExtensionsService::handle()
         extension->handle();
     }
 }
-
-ExtensionsService &ExtensionsService::getInstance()
-{
-    static ExtensionsService instance;
-    return instance;
-}
-
-ExtensionsService &Extensions{ExtensionsService::getInstance()};

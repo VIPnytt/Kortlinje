@@ -19,9 +19,15 @@ void HumidityMode::handle()
     if (pending)
     {
         pending = false;
-        Display.fillFrame(false);
+        DisplayService::fillFrame(false);
         KortlinjeFont font{};
-        TextHandler(std::to_string(humidity).append("%"), font).draw();
+        TextHandler(std::format("{:d}%", humidity), font).draw();
+        if (!saved)
+        {
+            saved = true;
+            ConfigHandler::set(name, "humidity", humidity);
+        }
+        transmit();
     }
 }
 
@@ -30,7 +36,14 @@ void HumidityMode::set(uint8_t _humidity)
     if (_humidity != humidity)
     {
         humidity = _humidity;
-        ConfigHandler::set(name, "humidity", humidity);
+        saved = false;
         pending = true;
     }
+}
+
+void HumidityMode::transmit()
+{
+    JsonDocument doc{};
+    doc["humidity"].set(humidity);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

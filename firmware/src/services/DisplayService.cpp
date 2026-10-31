@@ -294,20 +294,20 @@ void DisplayService::flush()
     WebUiExtension::render = true;
 }
 
-DisplayService::Brightness DisplayService::getBrightness() const { return brightness; }
+DisplayService::Brightness DisplayService::getBrightness() { return brightness; }
 
-std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> DisplayService::getFrame() const { return frame; }
+std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> DisplayService::getFrame() { return frame; }
 
-bool DisplayService::getPixel(size_t idx) const { return frame[idx]; }
+bool DisplayService::getPixel(size_t idx) { return frame[idx]; }
 
-bool DisplayService::getPixel(uint8_t x, uint8_t y) const { return frame[static_cast<size_t>(x + (y * GRID_COLUMNS))]; }
+bool DisplayService::getPixel(uint8_t x, uint8_t y) { return frame[static_cast<size_t>(x + (y * GRID_COLUMNS))]; }
 
-bool DisplayService::getPixel(Symbol symbol) const
+bool DisplayService::getPixel(Symbol symbol)
 {
     return frame[static_cast<size_t>(symbol) + static_cast<size_t>(GRID_COLUMNS * GRID_ROWS)];
 }
 
-bool DisplayService::getPower() const { return power; }
+bool DisplayService::getPower() { return power; }
 
 void DisplayService::invertFrame()
 {
@@ -393,13 +393,13 @@ void DisplayService::setPixel(Symbol symbol, bool lit)
 #endif // PIN_LED
 }
 
-void DisplayService::setPower(bool _power)
+void DisplayService::setPower(bool enable)
 {
-    if (_power == power)
+    if (enable == power)
     {
         return;
     }
-    power = _power;
+    power = enable;
     const uint32_t command{power ? static_cast<uint32_t>(brightness) << 1U : 0b1000'0000UL << 1U};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
@@ -419,13 +419,5 @@ void DisplayService::transmit()
     JsonDocument doc{};
     doc["brightness"].set(static_cast<uint8_t>(brightness) + 1U - static_cast<uint8_t>(Brightness::DUTY1));
     doc["power"].set(power);
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }
-
-DisplayService &DisplayService::getInstance()
-{
-    static DisplayService instance;
-    return instance;
-}
-
-DisplayService &Display{DisplayService::getInstance()};

@@ -21,7 +21,7 @@ void TemperatureMode::handle()
     if (pending)
     {
         pending = false;
-        Display.fillFrame(false);
+        DisplayService::fillFrame(false);
         KortlinjeFont font{};
 #if TEMPERATURE_FAHRENHEIT
         TextHandler(std::format("{:.0f}°F", temperature), font).draw();
@@ -30,6 +30,12 @@ void TemperatureMode::handle()
 #else
         TextHandler(std::format("{:.1f}°C", temperature), font).draw();
 #endif // TEMPERATURE_FAHRENHEIT
+        if (!saved)
+        {
+            saved = true;
+            ConfigHandler::set(name, "temperature", temperature);
+        }
+        transmit();
     }
 }
 
@@ -38,7 +44,14 @@ void TemperatureMode::set(float _temperature)
     if (_temperature != temperature)
     {
         temperature = _temperature;
-        ConfigHandler::set(name, "temperature", temperature);
+        saved = false;
         pending = true;
     }
+}
+
+void TemperatureMode::transmit()
+{
+    JsonDocument doc{};
+    doc["temperature"].set(temperature);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

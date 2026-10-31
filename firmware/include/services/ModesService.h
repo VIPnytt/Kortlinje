@@ -8,6 +8,7 @@
 #include "modes/SnakeMode.h"       //NOLINT(misc-include-cleaner)
 #include "modes/TemperatureMode.h" //NOLINT(misc-include-cleaner)
 #include "modes/TickerMode.h"      //NOLINT(misc-include-cleaner)
+#include "modes/WeatherMode.h"     //NOLINT(misc-include-cleaner)
 #include "modes/WeekdayMode.h"     //NOLINT(misc-include-cleaner)
 #include "modules/ModeModule.h"
 #include "modules/ServiceModule.h"
@@ -21,7 +22,7 @@ class ModesService final : public ServiceModule
 public:
     static constexpr std::string_view name{"Modes"};
 
-    static constexpr std::array<std::string_view, 9U> names{
+    static constexpr std::array<std::string_view, 10U> names{
         ClockMode::name,
         DateMode::name,
         EqualizerMode::name,
@@ -30,30 +31,28 @@ public:
         SnakeMode::name,
         TickerMode::name,
         TemperatureMode::name,
+        WeatherMode::name,
         WeekdayMode::name,
     };
 
+    explicit ModesService() : ServiceModule(name) {};
+
     void begin();
     void handle();
-    void onReceive(JsonObjectConst payload, std::string_view source) override;
-    void setMode(std::string_view modeName, bool power = true);
     void setModeNext();
     void setModePrevious();
 
-    [[nodiscard]] ModeModule *getMode();
+    static void onReceive(JsonObjectConst payload, std::string_view source);
+    static void setMode(std::string_view modeName, bool power = true);
 
-    [[nodiscard]] std::unique_ptr<ModeModule> getMode(std::string_view modeName);
+    [[nodiscard]] static ModeModule *getMode();
 
-    static ModesService &getInstance();
+    [[nodiscard]] static std::unique_ptr<ModeModule> getMode(std::string_view modeName);
 
 private:
-    explicit ModesService() : ServiceModule(name) {};
-
     unsigned long lastMillis{0UL};
 
-    std::unique_ptr<ModeModule> mode{};
+    static inline std::unique_ptr<ModeModule> mode{};
 
-    void transmit();
+    static void transmit();
 };
-
-extern ModesService &Modes;

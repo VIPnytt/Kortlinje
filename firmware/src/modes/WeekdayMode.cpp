@@ -9,11 +9,11 @@ void WeekdayMode::begin() { pending = true; }
 void WeekdayMode::handle()
 {
     now = time(nullptr);
-    if (localtime_r(&now, &local) && (weekday != local.tm_wday || pending))
+    if (localtime_r(&now, &local) != nullptr && (weekday != local.tm_wday || pending))
     {
         pending = false;
         weekday = local.tm_wday;
-        Display.fillFrame(false);
+        DisplayService::fillFrame(false);
         KortlinjeFont font{};
         TextHandler(std::string(names[weekday]), font).draw();
     }

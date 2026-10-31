@@ -44,8 +44,8 @@ void AlarmExtension::begin()
         if (alarm1.enabled || alarm2.enabled)
         {
             reschedule();
-            Display.setPixel(DisplayService::Symbol::ALARM1, alarm1.enabled);
-            Display.setPixel(DisplayService::Symbol::ALARM2, alarm2.enabled);
+            DisplayService::setPixel(DisplayService::Symbol::ALARM1, alarm1.enabled);
+            DisplayService::setPixel(DisplayService::Symbol::ALARM2, alarm2.enabled);
         }
     }
 }
@@ -93,7 +93,7 @@ void AlarmExtension::dismiss()
     pio_sm_exec(pio2, 0U, pio_encode_set(pio_src_dest::pio_pins, 0U));
     state = State::IDLE;
     reschedule();
-    Display.setPixel(DisplayService::Symbol::SNOOZE, false);
+    DisplayService::setPixel(DisplayService::Symbol::SNOOZE, false);
 }
 
 bool AlarmExtension::getAlarm1() { return alarm1.enabled; }
@@ -168,8 +168,8 @@ int64_t __time_critical_func(AlarmExtension::onAlarm)(alarm_id_t id, void *user_
         pio_sm_clkdiv_restart(pio2, 0U);
         pio_sm_exec(pio2, 0U, pio_encode_jmp(0U));
         pio_sm_set_enabled(pio2, 0U, true);
-        Display.setPixel(DisplayService::Symbol::SNOOZE, false);
-        Display.setPower(true);
+        DisplayService::setPixel(DisplayService::Symbol::SNOOZE, false);
+        DisplayService::setPower(true);
         alarmId = add_alarm_in_ms(0b1UL << 20U, &onAlarm, nullptr, true);
     }
     return 0LL;
@@ -217,7 +217,7 @@ void AlarmExtension::setAlarm1(bool enable)
     }
     alarm1.enabled = enable;
     reschedule();
-    Display.setPixel(DisplayService::Symbol::ALARM1, alarm1.enabled);
+    DisplayService::setPixel(DisplayService::Symbol::ALARM1, alarm1.enabled);
     save();
     pending = true;
 }
@@ -230,7 +230,7 @@ void AlarmExtension::setAlarm2(bool enable)
     }
     alarm2.enabled = enable;
     reschedule();
-    Display.setPixel(DisplayService::Symbol::ALARM2, alarm2.enabled);
+    DisplayService::setPixel(DisplayService::Symbol::ALARM2, alarm2.enabled);
     save();
     pending = true;
 }
@@ -272,7 +272,7 @@ void AlarmExtension::snooze()
     pio_sm_exec(pio2, 0U, pio_encode_set(pio_src_dest::pio_pins, 0U));
     alarmId = add_alarm_in_ms(0b1UL << 19U, &onAlarm, nullptr, true);
     state = State::SNOOZED;
-    Display.setPixel(DisplayService::Symbol::SNOOZE, true);
+    DisplayService::setPixel(DisplayService::Symbol::SNOOZE, true);
 }
 
 void AlarmExtension::transmit()
@@ -284,5 +284,5 @@ void AlarmExtension::transmit()
     doc["alarm2"]["enabled"].set(alarm2.enabled);
     doc["alarm2"]["hour"].set(alarm2.hour);
     doc["alarm2"]["minute"].set(alarm2.minute);
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

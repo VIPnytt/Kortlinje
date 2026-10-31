@@ -43,7 +43,7 @@ void TickerMode::handle()
         {
             offsetX = GRID_COLUMNS;
         }
-        Display.fillFrame(false);
+        DisplayService::fillFrame(false);
         text->draw(offsetX, offsetY);
         --offsetX;
     }
@@ -57,12 +57,10 @@ void TickerMode::end()
 
 void TickerMode::onReceive(JsonObjectConst payload, std::string_view source)
 {
-    // Font
     if (payload["font"].is<std::string_view>())
     {
         setFont(payload["font"].as<std::string_view>());
     }
-    //  Message
     if (payload["message"].is<std::string_view>())
     {
         setMessage(payload["message"].as<std::string_view>());
@@ -80,7 +78,7 @@ void TickerMode::setFont(std::string_view fontName)
 {
     if (std::ranges::find(FontsService::names, fontName) != FontsService::names.end())
     {
-        font = Fonts.get(fontName);
+        font = FontsService::get(fontName);
         ConfigHandler::set(name, "font", fontName);
         pending = true;
     }
@@ -119,5 +117,5 @@ void TickerMode::transmit()
     JsonDocument doc{};
     doc["font"].set(font->name);
     doc["message"].set(message);
-    Device.transmit(doc.as<JsonObjectConst>(), name);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

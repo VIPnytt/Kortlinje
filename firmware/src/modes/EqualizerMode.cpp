@@ -10,7 +10,7 @@ void EqualizerMode::begin()
     {
         for (uint8_t y{0U}; y < GRID_ROWS; ++y)
         {
-            Display.setPixel(x, y, false);
+            DisplayService::setPixel(x, y, false);
         }
     }
     startTimer();
@@ -33,14 +33,14 @@ void EqualizerMode::handle()
                 const uint8_t minX{static_cast<uint8_t>(idx * (width + 1U))};
                 if (bar.first < bar.second)
                 {
-                    Display.drawLineHorizontal(minX, width, bar.first, false);
+                    DisplayService::drawLineHorizontal(minX, width, bar.first, false);
                     ++bar.first;
                 }
                 else if (bar.first > bar.second)
                 {
                     --bar.first;
                 }
-                Display.drawRectangleSolid(minX, width, bar.first, GRID_ROWS - 1U, true);
+                DisplayService::drawRectangleSolid(minX, width, bar.first, GRID_ROWS - 1U, true);
             }
             ++idx;
         }
@@ -59,7 +59,7 @@ void EqualizerMode::startTimer()
 {
     if (!timerRunning)
     {
-        timerRunning = add_repeating_timer_ms(-(0b1L << 4U), &onTimer, nullptr, &timer);
+        timerRunning = add_repeating_timer_ms(-static_cast<long>(0b1U << 4U), &onTimer, nullptr, &timer);
     }
 }
 
