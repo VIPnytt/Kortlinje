@@ -1,5 +1,6 @@
 #include "services/ModesService.h"
 
+#include "extensions/ProvisioningExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
@@ -21,6 +22,11 @@ void ModesService::begin()
 
 void ModesService::handle()
 {
+    if (ProvisioningExtension::isActive())
+    {
+        ProvisioningExtension::draw();
+        return;
+    }
     if (mode != nullptr)
     {
         mode->handle();

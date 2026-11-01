@@ -7,6 +7,7 @@
 #include "extensions/OtaExtension.h"
 #include "extensions/PhotocellExtension.h"
 #include "extensions/PlaylistExtension.h"
+#include "extensions/ProvisioningExtension.h"
 #include "extensions/WebSocketExtension.h"
 #include "extensions/WebUiExtension.h"
 #include "modules/ExtensionModule.h"
@@ -29,10 +30,11 @@ private:
     static inline OtaExtension extensionOta{};
     static inline PhotocellExtension extensionPhotocell{};
     static inline PlaylistExtension extensionPlaylist{};
+    static inline ProvisioningExtension extensionProvisioning{};
     static inline WebSocketExtension extensionWebSocket{};
     static inline WebUiExtension extensionWebUi{};
 
-    static inline const std::array<ExtensionModule *, 9U> modules{
+    static inline const std::array<ExtensionModule *, 10U> modules{
         &extensionAlarm,
         &extensionBattery,
         &extensionButton,
@@ -40,6 +42,7 @@ private:
         &extensionOta,
         &extensionPhotocell,
         &extensionPlaylist,
+        &extensionProvisioning,
         &extensionWebSocket,
         &extensionWebUi,
     };

@@ -1,16 +1,17 @@
 #include "services/DeviceService.h"
 
 #include "config/IkeaKortlinje.h"
-#include "config/secrets.h"
 #include "config/version.h"
 #include "extensions/AlarmExtension.h"
 #include "extensions/ButtonExtension.h"
+#include "extensions/ProvisioningExtension.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
 #include "services/FontsService.h"
 #include "services/ModesService.h"
 #include "services/WebServerService.h"
 
+#include <LittleFS.h>
 #include <WiFi.h>
 #include <hardware/adc.h>
 #include <pico/cyw43_arch.h>
@@ -18,15 +19,19 @@
 
 void DeviceService::begin0()
 {
+    LittleFS.begin();
     extensions.configure();
     WiFi.setHostname(HOSTNAME);
-    WiFi.begin(WIFI_SSID, WIFI_KEY);
-    NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
     setenv("TZ", TIME_ZONE_POSIX, 1);
     tzset();
     webServer.begin();
+    const bool station{ProvisioningExtension::beginStation()};
     extensions.begin();
-    NTP.waitSet(&onWaitSet);
+    if (station)
+    {
+        NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
+        NTP.waitSet(&onWaitSet);
+    }
     rp2040.fifo.push(1UL);
 }
 
