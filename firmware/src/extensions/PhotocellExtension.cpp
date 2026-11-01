@@ -58,7 +58,8 @@ void PhotocellExtension::handle()
     if (pending)
     {
         pending = false;
-        if (enabled)
+        // Only drive power after a real CDS sample — never blank on the initial false default.
+        if (enabled && sampled)
         {
             DisplayService::setPower(detected);
         }
@@ -96,6 +97,7 @@ void __time_critical_func(PhotocellExtension::onPio)()
     while (!pio_sm_is_rx_fifo_empty(pio0, NUM_PIO_STATE_MACHINES - 1U))
     {
         const bool light{pio_sm_get(pio0, NUM_PIO_STATE_MACHINES - 1U) != 0U};
+        sampled = true;
         if (light)
         {
             cancelAlarm();

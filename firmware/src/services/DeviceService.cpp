@@ -1,10 +1,12 @@
 #include "services/DeviceService.h"
 
 #include "config/IkeaKortlinje.h"
+#include "config/secrets.h"
 #include "config/version.h"
 #include "extensions/AlarmExtension.h"
 #include "extensions/ButtonExtension.h"
 #include "extensions/ProvisioningExtension.h"
+#include "handlers/ConfigHandler.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
 #include "services/FontsService.h"
@@ -19,29 +21,46 @@
 
 void DeviceService::begin0()
 {
-    LittleFS.begin();
+    Serial.begin(115200);
+    Serial.println("[boot] core0");
+    // Only core0 mounts LittleFS (never on core1 — dual mount races).
+    const bool fsOk{LittleFS.begin()};
+    Serial.printf("[boot] LittleFS %s\n", fsOk ? "ok" : "FAIL");
+#if defined(PROVISION_CLEAR_WIFI) && PROVISION_CLEAR_WIFI
+    static_cast<void>(ConfigHandler::remove("Wifi", "ssid"));
+    static_cast<void>(ConfigHandler::remove("Wifi", "key"));
+    Serial.println("[provision] cleared LittleFS Wifi (PROVISION_CLEAR_WIFI)");
+#endif
     extensions.configure();
+    Serial.println("[boot] configured");
     WiFi.setHostname(HOSTNAME);
     setenv("TZ", TIME_ZONE_POSIX, 1);
     tzset();
-    webServer.begin();
+    // Join WiFi before the web server binds — lwIP/DHCP is happier on a cold STA bring-up.
     const bool station{ProvisioningExtension::beginStation()};
+    Serial.printf("[boot] station=%d\n", station ? 1 : 0);
+    webServer.begin();
     extensions.begin();
+    Serial.println("[boot] extensions ready");
+    rp2040.fifo.push(1UL);
     if (station)
     {
         NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
         NTP.waitSet(&onWaitSet);
     }
-    rp2040.fifo.push(1UL);
+    Serial.println("[boot] core0 done");
 }
 
 void DeviceService::begin1()
 {
-    LittleFS.begin();
+    // Display must not wait on FS/WiFi — otherwise a LittleFS hang leaves a black panel forever.
     display.begin();
     fonts.begin();
+    DisplayService::setPower(true);
+    DisplayService::setBrightness(DisplayService::Brightness::DUTY14);
     static_cast<void>(rp2040.fifo.pop());
     modes.begin();
+    DisplayService::setPower(true);
 }
 
 void DeviceService::handle0()

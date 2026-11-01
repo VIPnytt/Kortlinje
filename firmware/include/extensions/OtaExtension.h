@@ -9,6 +9,8 @@ class OtaExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"OTA"};
 
+    static inline bool updating{false};
+
     static void onStart();
 
 public:
@@ -16,4 +18,6 @@ public:
 
     void begin() override;
     void handle() override;
+
+    [[nodiscard]] static bool isUpdating() { return updating; }
 };

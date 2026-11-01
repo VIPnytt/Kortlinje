@@ -12,6 +12,14 @@ void WebServerService::begin()
     http.begin();
 }
 
+void WebServerService::restart()
+{
+    http.end();
+    delay(20);
+    http.begin();
+    Serial.println("[web] server restarted");
+}
+
 void WebServerService::onEmpty(AsyncWebServerRequest *request) {}
 
 void WebServerService::onNotFound(AsyncWebServerRequest *request)

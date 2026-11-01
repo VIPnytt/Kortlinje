@@ -18,6 +18,7 @@ void OtaExtension::handle() { ArduinoOTA.handle(); }
 
 void OtaExtension::onStart()
 {
+    updating = true;
     DisplayService::fillFrame(false);
     KortlinjeFont font{};
     TextHandler(std::string("OTA"), font).draw();

@@ -23,6 +23,10 @@ import { name as ExtensionMessageName, receiver as ExtensionMessageReceiver } fr
 import { name as ExtensionMirrorName, receiver as ExtensionMirrorReceiver } from "./Mirror";
 import { name as ExtensionPhotocellName, receiver as ExtensionPhotocellReceiver } from "./Photocell";
 import { name as ExtensionPlaylistName, receiver as ExtensionPlaylistReceiver } from "./Playlist";
+import {
+    name as ExtensionProvisioningName,
+    receiver as ExtensionProvisioningReceiver,
+} from "./Provisioning";
 import { name as ExtensionSignalName, receiver as ExtensionSignalReceiver } from "./Signal";
 import {
     receiver as ExtensionWebUIReceiver,
@@ -61,6 +65,7 @@ export const WebSocketmessages: ParentComponent = (props) => {
             json[ExtensionAlarmName] && ExtensionAlarmReceiver(json[ExtensionAlarmName]);
             json[ExtensionPhotocellName] && ExtensionPhotocellReceiver(json[ExtensionPhotocellName]);
             json[ExtensionPlaylistName] && ExtensionPlaylistReceiver(json[ExtensionPlaylistName]);
+            json[ExtensionProvisioningName] && ExtensionProvisioningReceiver(json[ExtensionProvisioningName]);
             json[FontsName] && FontsReceiver(json[FontsName]);
             json[ModesName] && ModesReceiver(json[ModesName]);
             json[ModeTickerName] && ModeTickerReceiver(json[ModeTickerName]);

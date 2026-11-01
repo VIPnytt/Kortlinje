@@ -13,10 +13,12 @@ private:
 
     static inline volatile bool detected{false};
     static inline volatile bool pending{true};
+    static inline volatile bool sampled{false};
 
     static inline volatile alarm_id_t alarm{0L};
 
-    bool enabled{true};
+    // Off by default: before the first CDS sample, enabled+pending would blank the panel.
+    bool enabled{false};
 
     void transmit();
     static void cancelAlarm();

@@ -36,6 +36,11 @@ import {
     name as ExtensionPlaylistName,
     MainThird as ExtensionPlaylistThird,
 } from "../extensions/Playlist";
+import {
+    Link as ExtensionProvisioningLink,
+    name as ExtensionProvisioningName,
+    MainThird as ExtensionProvisioningThird,
+} from "../extensions/Provisioning";
 import { SidebarSectionSecondary, MainSecondary as WebUIMain, WebUIPath } from "../extensions/WebUI";
 import { name as ExtensionsName } from "./Extensions";
 
@@ -83,6 +88,9 @@ export const MainThird: Component = () => (
         <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionPlaylistName.toLowerCase()}`}>
             <ExtensionPlaylistThird />
         </Match>
+        <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionProvisioningName.toLowerCase()}`}>
+            <ExtensionProvisioningThird />
+        </Match>
         {EXTENSION_MESSAGE && (
             <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMessageName.toLowerCase()}`}>
                 <ExtensionMessageThird />
@@ -102,6 +110,7 @@ export const SidebarThird: Component = () => (
         <ExtensionOtaLink />
         <ExtensionPhotocellLink />
         <ExtensionPlaylistLink />
+        <ExtensionProvisioningLink />
         {EXTENSION_MESSAGE && <ExtensionMessageLink />}
         {EXTENSION_MIRROR && <ExtensionMirrorLink />}
     </SidebarSectionSecondary>

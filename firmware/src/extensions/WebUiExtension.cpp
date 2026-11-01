@@ -74,9 +74,9 @@ void WebUiExtension::onGetCss(AsyncWebServerRequest *request)
 
 void WebUiExtension::onGetHtml(AsyncWebServerRequest *request)
 {
-    if (ProvisioningExtension::isActive())
+    // Serve portal HTML directly (no 302) — some captive detectors do not follow redirects.
+    if (ProvisioningExtension::handleNotFound(request))
     {
-        request->redirect("http://192.168.4.1/portal");
         return;
     }
     const AsyncWebHeader *_etag{request->getHeader("If-None-Match")};
