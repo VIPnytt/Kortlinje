@@ -10,6 +10,7 @@
 #include "services/WebServerService.h"
 
 #include <ArduinoJson.h>
+#include <array>
 #include <HTTPClient.h>
 #include <WiFi.h>
 #include <cstdio>
@@ -23,6 +24,65 @@
 
 namespace
 {
+// SoftAP glyph, 7×8, bit 6 at the left. Bottom dot stays on; arcs build then clear.
+constexpr uint8_t wifiGlyphCols{7U};
+constexpr uint8_t wifiGlyphRows{8U};
+constexpr unsigned long wifiFrameMs{500UL};
+constexpr std::array<std::array<uint8_t, wifiGlyphRows>, 3U> wifiFrames{{
+    {
+        0b0000000U,
+        0b0000000U,
+        0b0000000U,
+        0b0000000U,
+        0b0000000U,
+        0b0000000U,
+        0b0000000U,
+        0b0001000U,
+    },
+    {
+        0b0000000U,
+        0b0000000U,
+        0b0000000U,
+        0b0000000U,
+        0b0011100U,
+        0b0100010U,
+        0b0000000U,
+        0b0001000U,
+    },
+    {
+        0b0011100U,
+        0b0111110U,
+        0b1000001U,
+        0b0000000U,
+        0b0011100U,
+        0b0100010U,
+        0b0000000U,
+        0b0001000U,
+    },
+}};
+
+void drawWifiGlyph(int16_t x, int16_t y, uint8_t frame)
+{
+    const std::array<uint8_t, wifiGlyphRows> &rows{wifiFrames[frame]};
+    for (uint8_t col{0U}; col < wifiGlyphCols; ++col)
+    {
+        for (uint8_t row{0U}; row < wifiGlyphRows; ++row)
+        {
+            if (((rows[row] >> (wifiGlyphCols - 1U - col)) & 0b1U) == 0U)
+            {
+                continue;
+            }
+            const int16_t pixelX{static_cast<int16_t>(x + col)};
+            const int16_t pixelY{static_cast<int16_t>(y + row)};
+            if (pixelX < 0 || pixelY < 0 || pixelX >= GRID_COLUMNS || pixelY >= GRID_ROWS)
+            {
+                continue;
+            }
+            DisplayService::setPixel(static_cast<uint8_t>(pixelX), static_cast<uint8_t>(pixelY), true);
+        }
+    }
+}
+
 constexpr const char *portalHead =
     "<!doctype html><html><head><meta charset=utf-8><meta name=viewport "
     "content=\"width=device-width,initial-scale=1\"><title>Kortlinje WiFi</title>"
@@ -104,7 +164,11 @@ void ProvisioningExtension::onReceive(JsonObjectConst payload, std::string_view 
     {
         return;
     }
-    static_cast<void>(clearCredentials());
+    if (!clearCredentials())
+    {
+        Serial.println("[provision] failed to clear WiFi");
+        return;
+    }
     Serial.println("[provision] cleared WiFi via Web UI — reboot");
     transmit();
     statusMs = millis();
@@ -124,9 +188,13 @@ void ProvisioningExtension::transmit()
 
 bool ProvisioningExtension::clearCredentials()
 {
-    // Missing files are fine — goal is no LittleFS Wifi left.
-    static_cast<void>(ConfigHandler::remove(configModule, "ssid"));
-    static_cast<void>(ConfigHandler::remove(configModule, "key"));
+    // remove() is false both when the file is already gone and when deletion fails.
+    std::string remaining{};
+    if ((!ConfigHandler::remove(configModule, "ssid") && ConfigHandler::get(configModule, "ssid", remaining)) ||
+        (!ConfigHandler::remove(configModule, "key") && ConfigHandler::get(configModule, "key", remaining)))
+    {
+        return false;
+    }
     // Suppress secrets.h WIFI_SSID fallback until the user saves new portal creds.
     return ConfigHandler::set(configModule, "forgotten", true);
 }
@@ -767,8 +835,12 @@ bool ProvisioningExtension::loadCredentials(std::string &ssid, std::string &key)
 
 bool ProvisioningExtension::saveCredentials(std::string_view ssid, std::string_view key)
 {
+    if (!ConfigHandler::set(configModule, "ssid", ssid) || !ConfigHandler::set(configModule, "key", key))
+    {
+        return false;
+    }
     static_cast<void>(ConfigHandler::remove(configModule, "forgotten"));
-    return ConfigHandler::set(configModule, "ssid", ssid) && ConfigHandler::set(configModule, "key", key);
+    return true;
 }
 
 bool ProvisioningExtension::secretsFallback(std::string &ssid, std::string &key)
@@ -826,10 +898,31 @@ void ProvisioningExtension::draw()
         line = "ERR";
         break;
     default:
-        // Phone SSID stays apName (ASCII). Panel prefixes 📶 so users know to join WiFi.
-        line = "📶";
-        line += apName.data();
-        break;
+    {
+        // Phone SSID stays apName. Glyph: dot, then middle arc, then top arc, then both arcs off.
+        static uint8_t frame{0U};
+        static unsigned long frameMs{0UL};
+        const unsigned long now{millis()};
+        if (frameMs == 0UL || now - frameMs >= wifiFrameMs)
+        {
+            if (frameMs != 0UL)
+            {
+                frame = static_cast<uint8_t>((frame + 1U) % wifiFrames.size());
+            }
+            frameMs = now;
+        }
+        TextHandler ssid{std::string{apName.data()}, font};
+        const uint8_t textHeight{ssid.getHeight()};
+        const uint8_t lineHeight{textHeight > wifiGlyphRows ? textHeight : wifiGlyphRows};
+        const int16_t lineY{static_cast<int16_t>((GRID_ROWS - lineHeight) / 2U)};
+        constexpr uint8_t tracking{1U};
+        const uint16_t totalWidth{static_cast<uint16_t>(wifiGlyphCols + tracking + ssid.getWidth())};
+        const int16_t originX{static_cast<int16_t>(totalWidth < GRID_COLUMNS ? (GRID_COLUMNS - totalWidth) / 2U : 0U)};
+        drawWifiGlyph(originX, static_cast<int16_t>(lineY + (lineHeight - wifiGlyphRows)), frame);
+        ssid.draw(static_cast<int16_t>(originX + wifiGlyphCols + tracking),
+                  static_cast<int8_t>(lineY + (lineHeight - textHeight)));
+        return;
+    }
     }
 
     TextHandler text{std::move(line), font};
