@@ -28,10 +28,17 @@ void ModesService::handle()
         // Keep the OTA frame; DeviceService still flushes.
         return;
     }
+    static bool provisioningShown{false};
     if (ProvisioningExtension::isActive())
     {
+        provisioningShown = true;
         ProvisioningExtension::draw();
         return;
+    }
+    if (provisioningShown && mode != nullptr)
+    {
+        provisioningShown = false;
+        mode->begin(); // re-arm pending so modes that only redraw on change repaint
     }
     if (mode != nullptr)
     {

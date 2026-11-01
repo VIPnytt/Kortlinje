@@ -11,6 +11,7 @@ void OtaExtension::begin()
     ArduinoOTA.setPasswordHash(OTA_KEY);
 #endif // OTA_KEY
     ArduinoOTA.onStart(&onStart);
+    ArduinoOTA.onError(&onError);
     ArduinoOTA.begin();
 }
 
@@ -22,4 +23,10 @@ void OtaExtension::onStart()
     DisplayService::fillFrame(false);
     KortlinjeFont font{};
     TextHandler(std::string("OTA"), font).draw();
+}
+
+void OtaExtension::onError(ota_error_t error)
+{
+    Serial.printf("[ota] error %u — resume modes\n", static_cast<unsigned>(error));
+    updating = false;
 }

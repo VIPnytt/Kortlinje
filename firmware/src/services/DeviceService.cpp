@@ -54,13 +54,11 @@ void DeviceService::begin0()
 void DeviceService::begin1()
 {
     // Display must not wait on FS/WiFi — otherwise a LittleFS hang leaves a black panel forever.
+    // display.begin() already loads saved brightness from LittleFS — do not force DUTY14 here.
     display.begin();
     fonts.begin();
-    DisplayService::setPower(true);
-    DisplayService::setBrightness(DisplayService::Brightness::DUTY14);
     static_cast<void>(rp2040.fifo.pop());
     modes.begin();
-    DisplayService::setPower(true);
 }
 
 void DeviceService::handle0()

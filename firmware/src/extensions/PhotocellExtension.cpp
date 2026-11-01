@@ -50,6 +50,10 @@ void PhotocellExtension::begin()
     if (enabled)
     {
         pio_sm_set_enabled(pio0, NUM_PIO_STATE_MACHINES - 1U, true);
+        // PIO only pushes on pin change; already-dark matches osr null and stays silent.
+        sampled = true;
+        detected = gpio_get(PIN_CDS) != 0;
+        pending = true;
     }
 }
 
@@ -144,13 +148,16 @@ void PhotocellExtension::setEnabled(bool enable)
             pio0, NUM_PIO_STATE_MACHINES - 1U, pio_encode_jmp(PIO_INSTRUCTION_COUNT - photocell_program.length));
 #endif // RP2350_ERRATA_E9
         pio_sm_set_enabled(pio0, NUM_PIO_STATE_MACHINES - 1U, true);
+        sampled = true;
+        detected = gpio_get(PIN_CDS) != 0;
     }
-#ifdef RP2350_ERRATA_E9
     else
     {
+#ifdef RP2350_ERRATA_E9
         pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, PIN_CDS, 1U, false);
-    }
 #endif // RP2350_ERRATA_E9
+        sampled = false;
+    }
     ConfigHandler::set(name, "enabled", enabled);
     pending = true;
 }

@@ -12,6 +12,7 @@ private:
     static inline bool updating{false};
 
     static void onStart();
+    static void onError(ota_error_t error);
 
 public:
     explicit OtaExtension() : ExtensionModule(name) {};

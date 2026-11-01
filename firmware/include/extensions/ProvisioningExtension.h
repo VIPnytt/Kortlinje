@@ -78,7 +78,10 @@ private:
     static constexpr unsigned long joinAttemptMs{12000UL};
     /** Short post-associate wait; finish DHCP in background so lwIP keeps running. */
     static constexpr unsigned long bootJoinWaitMs{3000UL};
+    /** Poll interval while associated but waiting for DHCP. */
     static constexpr unsigned long staRetryMs{1000UL};
+    /** Gap after a blocking rejoin attempt (connectStation up to setTimeout). */
+    static constexpr unsigned long staRejoinMs{30000UL};
     static constexpr unsigned long rebootDelayMs{800UL};
 
     static void startAp();

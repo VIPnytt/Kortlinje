@@ -127,7 +127,8 @@ bool ProvisioningExtension::clearCredentials()
     // Missing files are fine — goal is no LittleFS Wifi left.
     static_cast<void>(ConfigHandler::remove(configModule, "ssid"));
     static_cast<void>(ConfigHandler::remove(configModule, "key"));
-    return true;
+    // Suppress secrets.h WIFI_SSID fallback until the user saves new portal creds.
+    return ConfigHandler::set(configModule, "forgotten", true);
 }
 
 void ProvisioningExtension::handle()
@@ -159,6 +160,9 @@ void ProvisioningExtension::handle()
     if (rebootPending && millis() - statusMs >= rebootDelayMs)
     {
         Serial.println("[provision] reboot → STA join");
+        stopDns();
+        WiFi.mode(WIFI_AP_STA);
+        static_cast<void>(WiFi.disconnectAP());
         rp2040.reboot();
     }
 
@@ -170,34 +174,41 @@ void ProvisioningExtension::handle()
             staRetryPending = false;
             requestNtp();
         }
-        else if (millis() - statusMs >= staRetryMs)
+        else
         {
-            statusMs = millis();
             const int link{cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA)};
-            if (link == CYW43_LINK_JOIN || link == CYW43_LINK_NOIP || link == CYW43_LINK_UP)
+            const bool associated{link == CYW43_LINK_JOIN || link == CYW43_LINK_NOIP || link == CYW43_LINK_UP};
+            const unsigned long gap{associated ? staRetryMs : staRejoinMs};
+            if (millis() - statusMs >= gap)
             {
-                // Still associated — keep waiting for DHCP; do not tear down.
-                kickStaDhcp();
-                Serial.printf("[provision] waiting DHCP link=%d ip=%s\n",
-                              link,
-                              WiFi.localIP().toString().c_str());
-                requestNtp();
-            }
-            else
-            {
-                std::string ssid{};
-                std::string key{};
-                if (loadCredentials(ssid, key) || secretsFallback(ssid, key))
+                if (associated)
                 {
-                    Serial.printf("[provision] background STA rejoin link=%d\n", link);
-                    cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
-                    joinAttempts = 0U;
-                    connectStation(ssid, key);
+                    // Still associated — keep waiting for DHCP; do not tear down.
+                    statusMs = millis();
+                    kickStaDhcp();
+                    Serial.printf("[provision] waiting DHCP link=%d ip=%s\n",
+                                  link,
+                                  WiFi.localIP().toString().c_str());
                     requestNtp();
                 }
                 else
                 {
-                    staRetryPending = false;
+                    std::string ssid{};
+                    std::string key{};
+                    if (loadCredentials(ssid, key) || secretsFallback(ssid, key))
+                    {
+                        Serial.printf("[provision] background STA rejoin link=%d\n", link);
+                        cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+                        joinAttempts = 0U;
+                        connectStation(ssid, key);
+                        // connectStation blocks up to setTimeout — measure gap from its end.
+                        statusMs = millis();
+                        requestNtp();
+                    }
+                    else
+                    {
+                        staRetryPending = false;
+                    }
                 }
             }
         }
@@ -210,8 +221,15 @@ void ProvisioningExtension::handle()
 
     if (state == State::ApWait && timeoutMs != 0UL && millis() - enteredMs >= timeoutMs)
     {
-        exit();
-        return;
+        std::string ssid{};
+        std::string key{};
+        if (loadCredentials(ssid, key) || secretsFallback(ssid, key))
+        {
+            exit();
+            return;
+        }
+        // No fallback network — keep the captive portal up.
+        enteredMs = millis();
     }
 
     if (state == State::Joining)
@@ -749,11 +767,17 @@ bool ProvisioningExtension::loadCredentials(std::string &ssid, std::string &key)
 
 bool ProvisioningExtension::saveCredentials(std::string_view ssid, std::string_view key)
 {
+    static_cast<void>(ConfigHandler::remove(configModule, "forgotten"));
     return ConfigHandler::set(configModule, "ssid", ssid) && ConfigHandler::set(configModule, "key", key);
 }
 
 bool ProvisioningExtension::secretsFallback(std::string &ssid, std::string &key)
 {
+    bool forgotten{false};
+    if (ConfigHandler::get(configModule, "forgotten", forgotten) && forgotten)
+    {
+        return false;
+    }
 #ifdef WIFI_SSID
     const char *compiled{WIFI_SSID};
     if (compiled == nullptr || compiled[0] == '\0')
@@ -918,9 +942,7 @@ void ProvisioningExtension::onPostConnect(AsyncWebServerRequest *request)
     Serial.printf("[provision] saved ssid='%s', will reboot\n", pendingSsid.c_str());
     pendingSsid.clear();
     pendingKey.clear();
-    stopDns();
-    WiFi.mode(WIFI_AP_STA);
-    static_cast<void>(WiFi.disconnectAP());
+    // Keep SoftAP up until reboot so the phone still receives "Saved".
     state = State::Ok;
     statusMs = millis();
     rebootPending = true;
