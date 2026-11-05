@@ -11,4 +11,5 @@
 /webui/.env*
 /webui/dist
 /webui/node_modules
+/x509
 __pycache__

@@ -6,6 +6,7 @@ import unicodedata
 
 import dotenv
 
+from .components.certificate import Certificate
 from .components.Dependency import Dependency
 from .components.Time import Time
 from .config.version import VERSION
@@ -22,6 +23,7 @@ else:
 
 
 class Kortlinje:
+    certificate: Certificate | None = None
     dependency: Dependency | None = None
     dotenv: dict[str, str]
     env: Environment
@@ -40,6 +42,7 @@ class Kortlinje:
         """
         self.env = env
         self.dotenv = {key: (value if value is not None else "") for key, value in dotenv.dotenv_values(".env").items()}
+        self.certificate = Certificate(self)
         self.dependency = Dependency(self)
         self.firmware = Firmware(self)
         self.ota = Ota(self)
@@ -72,6 +75,8 @@ class Kortlinje:
                 "-",
                 unicodedata.normalize("NFKD", self.dotenv["NAME"]).encode("ascii", "ignore").decode("ascii").lower(),
             ).strip("-")
+        if self.certificate:
+            self.certificate.initialize()
         if self.dependency:
             self.dependency.initialize()
         if self.webui:
@@ -87,6 +92,8 @@ class Kortlinje:
             self.weather.configure()
 
     def finalize(self) -> None:
+        if self.certificate:
+            self.certificate.finalize()
         if self.firmware:
             self.firmware.finalize()
         if self.ota:

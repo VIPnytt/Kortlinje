@@ -5,6 +5,11 @@ if typing.TYPE_CHECKING:
 
 
 class Weather:
+    HOSTS: typing.Final[tuple[str, ...]] = (
+        "api.met.no",
+        "api.open-meteo.com",
+        "wttr.in",
+    )
     NAME: typing.Final[str] = "Weather"
 
     def __init__(self, project: "Kortlinje") -> None:
@@ -25,3 +30,6 @@ class Weather:
         ):
             if option in self.project.dotenv:
                 self.project.dotenv[option] = f"{float(self.project.dotenv[option]):.4f}".rstrip("0").rstrip(".")
+        if self.project.certificate:
+            for hostname in self.HOSTS:
+                self.project.certificate.add_host(hostname)
