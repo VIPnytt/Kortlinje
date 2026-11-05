@@ -14,6 +14,7 @@ import {
 import { WebSocketWS } from "../extensions/WebSocket";
 import { Main as ModeDrawMain, name as ModeDrawName, Sidebar as ModeDrawSidebar } from "../modes/Draw";
 import { name as ModeTickerName, Sidebar as ModeTickerSidebar } from "../modes/Ticker";
+import { name as ModeWeatherName, Sidebar as ModeWeatherSidebar } from "../modes/Weather";
 import { DisplayPowerSet } from "./Display";
 
 export const name = "Modes";
@@ -75,6 +76,9 @@ export const Sidebar: Component = () => {
                 )}
                 <Match when={getMode() === ModeTickerName}>
                     <ModeTickerSidebar />
+                </Match>
+                <Match when={getMode() === ModeWeatherName}>
+                    <ModeWeatherSidebar />
                 </Match>
             </Switch>
         </>

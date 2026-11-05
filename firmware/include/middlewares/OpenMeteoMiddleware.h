@@ -1,7 +1,5 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
-#include "config/secrets.h"
 #include "handlers/WeatherHandler.h"
 
 #include <array>
@@ -32,31 +30,24 @@ private:
     }};
 
     // https://open-meteo.com/en/docs#api-documentation
-    static inline std::vector<std::pair<const char *, const char *>> parts{
+    static inline std::vector<const char *> queries{
 #if TEMPERATURE_CELSIUS || TEMPERATURE_KELVIN
-        {
-            "api.open-meteo.com",
-            "latitude=" LATITUDE "&longitude=" LONGITUDE
-            "&current=temperature_2m,weather_code&temperature_unit=celsius",
-        },
+        "latitude=" LATITUDE "&longitude=" LONGITUDE "&current=temperature_2m,weather_code&temperature_unit=celsius",
 #elif TEMPERATURE_FAHRENHEIT
-        {
-            "api.open-meteo.com",
-            "latitude=" LATITUDE "&longitude=" LONGITUDE
-            "&current=temperature_2m,weather_code&temperature_unit=fahrenheit",
-        },
+        "latitude=" LATITUDE "&longitude=" LONGITUDE "&current=temperature_2m,weather_code&temperature_unit=fahrenheit",
 #else
-        {
-            "api.open-meteo.com",
-            "latitude=" LATITUDE "&longitude=" LONGITUDE "&current=temperature_2m,weather_code",
-        },
+        "latitude=" LATITUDE "&longitude=" LONGITUDE "&current=temperature_2m,weather_code",
 #endif // TEMPERATURE_CELSIUS || TEMPERATURE_KELVIN
     };
 
 public:
     static constexpr std::string_view name{"Open-Meteo"};
 
-    explicit OpenMeteoMiddleware() : WeatherHandler(name) { path = "/v1/forecast"; };
+    explicit OpenMeteoMiddleware() : WeatherHandler(name)
+    {
+        host = "api.open-meteo.com";
+        path = "/v1/forecast";
+    };
 
     void update(std::optional<WeatherHandler::Condition> &condition, std::optional<int16_t> &temperature,
                 unsigned long &lastMillis) override;

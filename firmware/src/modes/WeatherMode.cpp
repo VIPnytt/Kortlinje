@@ -14,12 +14,12 @@ void WeatherMode::begin()
     {
         setProvider(providerNames[0U]);
     }
-    lastMillis = millis() - provider->interval;
+    lastMillis = millis() - interval;
 }
 
 void WeatherMode::handle()
 {
-    if (WiFi.isConnected() && millis() - lastMillis > provider->interval)
+    if (WiFi.isConnected() && millis() - lastMillis > interval)
     {
         lastMillis = millis();
         provider->update(condition, temperature, lastMillis);
@@ -66,7 +66,7 @@ void WeatherMode::setProvider(std::string_view providerName)
     {
         condition.reset();
         temperature.reset();
-        lastMillis = millis() - provider->interval;
+        lastMillis = millis() - interval;
         transmit();
     }
 }

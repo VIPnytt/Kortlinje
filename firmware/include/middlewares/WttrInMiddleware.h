@@ -1,7 +1,5 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
-#include "config/secrets.h"
 #include "handlers/WeatherHandler.h"
 
 #include <array>

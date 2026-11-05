@@ -1,5 +1,7 @@
 #pragma once
 
+#include "services/WebServerService.h"
+
 #include <Arduino.h>
 #include <optional>
 #include <span>
@@ -7,11 +9,6 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
-
-namespace BearSSL
-{
-class CertStore;
-}
 
 class WeatherHandler
 {
@@ -37,14 +34,10 @@ public:
 
     const std::string_view name{};
 
-    const unsigned long interval{0b1U << 19U};
-
     virtual void update(std::optional<Condition> &condition, std::optional<int16_t> &temperature,
                         unsigned long &lastMillis) = 0;
 
     [[nodiscard]] std::variant<std::span<const uint8_t>, std::span<const uint16_t>> getSign(Condition condition);
-
-    static void setCertStore(BearSSL::CertStore *store) { certStore = store; }
 
 protected:
     explicit WeatherHandler(std::string_view name) : name(name) {};
@@ -134,8 +127,6 @@ protected:
     const char *host{nullptr};
     const char *path{nullptr};
     const char *query{nullptr};
-
-    static inline BearSSL::CertStore *certStore{nullptr};
 
     [[nodiscard]] int fetch(std::vector<char> &body, unsigned long &lastMillis);
 
