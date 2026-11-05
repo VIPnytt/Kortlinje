@@ -8,7 +8,6 @@ import urllib.request
 import warnings
 
 import cryptography.hazmat.primitives.serialization
-import cryptography.utils
 import cryptography.x509
 import cryptography.x509.oid
 
@@ -22,12 +21,20 @@ else:
 
 
 class Certificate:
-    path: typing.Final[pathlib.Path] = pathlib.Path("x509/cabundle.pem")
+    path: typing.Final[pathlib.Path] = pathlib.Path("x509") / "cabundle.pem"
     project: "Kortlinje"
     timeout: typing.Final[float] = 10
+    _hosts: set[str]
+    _root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]]
+    _selected_roots: dict[bytes, cryptography.x509.Certificate]
+    _ssl_contexts: dict[str, ssl.SSLContext]
 
     def __init__(self, project: "Kortlinje") -> None:
         self.project = project
+        self._hosts: set[str] = set()
+        self._root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = {}
+        self._selected_roots: dict[bytes, cryptography.x509.Certificate] = {}
+        self._ssl_contexts: dict[str, ssl.SSLContext] = {}
 
     def initialize(self) -> None:
         if COMMAND_LINE_TARGETS in [
@@ -35,9 +42,9 @@ class Certificate:
         ]:
             self.project.dependency = None
             return
-        self._hosts: set[str] = set()
-        self._root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] | None = None
-        self._selected_roots: dict[bytes, cryptography.x509.Certificate] = {}
+        self._root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = (
+            self._fetch_mozilla_roots()
+        )
         self._ssl_contexts: dict[str, ssl.SSLContext] = {
             cipher: self._create_ssl_context(cipher) for cipher in ("ECDSA", "RSA")
         }
@@ -57,34 +64,28 @@ class Certificate:
         if hostname in self._hosts:
             return
         self._hosts.add(hostname)
-        self._selected_roots.update(self._probe_host_branches(hostname, self._roots))
-
-    @property
-    def _roots(self) -> dict[cryptography.x509.Name, list[cryptography.x509.Certificate]]:
-        if self._root_store is None:
-            self._root_store = self._fetch_mozilla_roots()
-        return self._root_store
+        self._selected_roots.update(self._probe_host_branches(hostname, self._root_store))
 
     def _fetch_mozilla_roots(self) -> dict[cryptography.x509.Name, list[cryptography.x509.Certificate]]:
-        request = urllib.request.Request(
-            "https://curl.se/ca/cacert.pem",
-            headers={"User-Agent": f"Kortlinje/{VERSION} (+https://github.com/VIPnytt/Kortlinje)"},
-        )
-        with urllib.request.urlopen(request, timeout=self.timeout) as response:
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                "https://curl.se/ca/cacert.pem",
+                headers={"User-Agent": f"Kortlinje/{VERSION} (+https://github.com/VIPnytt/Kortlinje)"},
+            ),
+            timeout=self.timeout,
+        ) as response:
             pem_data: bytes = response.read()
         roots_by_subject: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = collections.defaultdict(
             list
         )
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=cryptography.utils.CryptographyDeprecationWarning)
+        with warnings.catch_warnings(record=True) as captured:
             for raw_block in pem_data.split(b"-----END CERTIFICATE-----"):
                 if b"-----BEGIN CERTIFICATE-----" in raw_block:
                     pem_cert = raw_block + b"-----END CERTIFICATE-----\n"
-                    try:
-                        cert = cryptography.x509.load_pem_x509_certificate(pem_cert)
-                        roots_by_subject[cert.subject].append(cert)
-                    except ValueError as err:
-                        logging.getLogger(__name__).debug("Skipping non-compliant root: %s", err)
+                    cert = cryptography.x509.load_pem_x509_certificate(pem_cert)
+                    roots_by_subject[cert.subject].append(cert)
+            for record in captured:
+                logging.getLogger(__name__).debug("Certificate parser warning: %s", record.message)
         return roots_by_subject
 
     def _get_server_chain(self, ip: str, hostname: str, cipher_pref: str) -> list[cryptography.x509.Certificate] | None:
@@ -105,8 +106,7 @@ class Certificate:
 
     def _resolve_intermediate_aia(self, cert: cryptography.x509.Certificate) -> cryptography.x509.Certificate | None:
         try:
-            aia_ext = cert.extensions.get_extension_for_class(cryptography.x509.AuthorityInformationAccess)
-            for desc in aia_ext.value:
+            for desc in cert.extensions.get_extension_for_class(cryptography.x509.AuthorityInformationAccess).value:
                 if desc.access_method == cryptography.x509.oid.AuthorityInformationAccessOID.CA_ISSUERS and isinstance(
                     desc.access_location.value, str
                 ):
