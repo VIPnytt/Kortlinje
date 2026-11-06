@@ -30,7 +30,7 @@ public:
         return out;
     }
 
-    template <std::size_t N> [[nodiscard]] static consteval auto embed(const unsigned char (&&raw)[N])
+    template <std::size_t N> [[nodiscard]] static consteval auto embed(const uint8_t (&&raw)[N])
     {
         return std::to_array(raw);
     }

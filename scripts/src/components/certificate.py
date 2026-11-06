@@ -28,6 +28,7 @@ class Certificate:
     _root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]]
     _selected_roots: dict[bytes, cryptography.x509.Certificate]
     _ssl_contexts: dict[str, ssl.SSLContext]
+    _visited_certificates: dict[bytes, list[cryptography.x509.Certificate]]
 
     def __init__(self, project: "Kortlinje") -> None:
         self.project = project
@@ -35,6 +36,7 @@ class Certificate:
         self._root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = {}
         self._selected_roots: dict[bytes, cryptography.x509.Certificate] = {}
         self._ssl_contexts: dict[str, ssl.SSLContext] = {}
+        self._visited_certificates: dict[bytes, list[cryptography.x509.Certificate]] = {}
 
     def initialize(self) -> None:
         if COMMAND_LINE_TARGETS in [
@@ -50,6 +52,8 @@ class Certificate:
         }
 
     def finalize(self) -> None:
+        if not self._selected_roots:
+            return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.path, "wb") as file:
             file.writelines(
@@ -110,12 +114,18 @@ class Certificate:
                 if desc.access_method == cryptography.x509.oid.AuthorityInformationAccessOID.CA_ISSUERS and isinstance(
                     desc.access_location.value, str
                 ):
-                    with urllib.request.urlopen(desc.access_location.value, timeout=self.timeout) as response:
-                        raw = response.read()
-                        try:
-                            return cryptography.x509.load_der_x509_certificate(raw)
-                        except ValueError:
-                            return cryptography.x509.load_pem_x509_certificate(raw)
+                    try:
+                        with urllib.request.urlopen(desc.access_location.value, timeout=self.timeout) as response:
+                            raw = response.read()
+                            try:
+                                return cryptography.x509.load_der_x509_certificate(raw)
+                            except ValueError:
+                                try:
+                                    return cryptography.x509.load_pem_x509_certificate(raw)
+                                except ValueError:
+                                    continue
+                    except OSError:
+                        continue
         except (cryptography.x509.ExtensionNotFound, OSError):
             pass
         return None
@@ -152,14 +162,31 @@ class Certificate:
         chain: list[cryptography.x509.Certificate],
         root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]],
     ) -> list[cryptography.x509.Certificate]:
+        for cert in reversed(chain):
+            fingerprint = cert.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.DER)
+            if fingerprint in self._visited_certificates:
+                return self._visited_certificates[fingerprint]
         top = chain[-1]
         candidates = self._find_candidate_roots(top, root_store)
+        traversed: list[bytes] = [
+            cert.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.DER) for cert in chain
+        ]
         while not candidates:
             parent = self._resolve_intermediate_aia(top)
             if not parent:
                 break
+            parent_fp = parent.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.DER)
+            if parent_fp in self._visited_certificates:
+                candidates = self._visited_certificates[parent_fp]
+                break
+            if parent_fp in traversed:
+                break
+            traversed.append(parent_fp)
             candidates = self._find_candidate_roots(parent, root_store)
             top = parent
+        if candidates:
+            for fp in traversed:
+                self._visited_certificates[fp] = candidates
         return candidates
 
     def _probe_host_branches(

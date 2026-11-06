@@ -36,7 +36,9 @@ struct VectorStreamWriter final : public Stream
 
 int WeatherHandler::fetch(std::vector<char> &body, unsigned long &lastMillis)
 {
+    BearSSL::X509List trusted{bundle.data(), bundle.size()};
     BearSSL::WiFiClientSecure secure{};
+    secure.setTrustAnchors(&trusted);
     HTTPClient http{};
     http.setUserAgent("Kortlinje/" VERSION " (RP2350; +https://github.com/VIPnytt/Kortlinje)");
     if (!http.begin(secure, std::string("https://").append(host).append(path).append("?").append(query).c_str()))

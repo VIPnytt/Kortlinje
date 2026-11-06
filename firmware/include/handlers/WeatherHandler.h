@@ -124,6 +124,10 @@ protected:
         0b1000000000000U,
     };
 
+    static constexpr auto bundle{WebServerService::embed({
+#embed "../../../x509/cabundle.pem"
+    })};
+
     const char *host{nullptr};
     const char *path{nullptr};
     const char *query{nullptr};
