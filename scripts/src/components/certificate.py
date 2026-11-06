@@ -1,4 +1,5 @@
 import collections
+import http.client
 import ipaddress
 import logging
 import pathlib
@@ -133,7 +134,7 @@ class Certificate:
                 if b"-----BEGIN CERTIFICATE-----" in raw:
                     return cryptography.x509.load_pem_x509_certificate(raw)
                 return cryptography.x509.load_der_x509_certificate(raw)
-            except (OSError, ValueError) as e:
+            except (OSError, ValueError, http.client.HTTPException) as e:
                 logging.getLogger(__name__).debug("Failed to load AIA certificate from %s: %s", url, e)
         return None
 
