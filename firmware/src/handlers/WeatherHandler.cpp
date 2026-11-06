@@ -34,6 +34,15 @@ struct VectorStreamWriter final : public Stream
 };
 } // namespace
 
+/**
+ * @brief Fetch the configured weather URL over HTTPS using the embedded CA bundle.
+ *
+ * @param body Receives appended response bytes for HTTP 200; existing contents are preserved.
+ * @param lastMillis Millisecond scheduling timestamp, adjusted for a 65,536 ms retry delay
+ * on request initialization or transport failure; otherwise unchanged.
+ * @return HTTP status, or -1 on initialization or transport failure. A 200 status
+ * does not guarantee a complete body because stream write errors are not checked.
+ */
 int WeatherHandler::fetch(std::vector<char> &body, unsigned long &lastMillis)
 {
     BearSSL::X509List trusted{bundle.data(), bundle.size()};

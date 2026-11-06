@@ -92,6 +92,7 @@ class Kortlinje:
             self.weather.configure()
 
     def finalize(self) -> None:
+        """Write the certificate bundle and finalize enabled firmware, OTA, and Web UI components."""
         if self.certificate:
             self.certificate.finalize()
         if self.firmware:
