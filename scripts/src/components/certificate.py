@@ -40,7 +40,7 @@ class Certificate:
         if COMMAND_LINE_TARGETS in [
             ["compiledb"],
         ]:
-            self.project.dependency = None
+            self.project.certificate = None
             return
         self._root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = (
             self._fetch_mozilla_roots()
