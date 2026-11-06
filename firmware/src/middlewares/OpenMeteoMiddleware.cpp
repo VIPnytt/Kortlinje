@@ -1,5 +1,7 @@
 #include "middlewares/OpenMeteoMiddleware.h"
 
+#include "modes/WeatherMode.h"
+
 #include <ArduinoJson.h> // NOLINT(misc-include-cleaner)
 
 /**
@@ -15,20 +17,19 @@
 void OpenMeteoMiddleware::update(std::optional<WeatherHandler::Condition> &condition,
                                  std::optional<int16_t> &temperature, unsigned long &lastMillis)
 {
-    if (parts.empty())
+    if (queries.empty())
     {
         return;
     }
-    host = parts.back().first;
-    query = parts.back().second;
+    query = queries.back();
     std::vector<char> body;
     const int status{fetch(body, lastMillis)};
     if (status != 200)
     {
         if (status >= 400 && status < 500)
         {
-            parts.pop_back();
-            lastMillis = millis() - interval + (0b1U << 12U);
+            queries.pop_back();
+            lastMillis = millis() - WeatherMode::interval + (0b1U << 12U);
         }
         return;
     }
@@ -47,6 +48,6 @@ void OpenMeteoMiddleware::update(std::optional<WeatherHandler::Condition> &condi
 #endif // TEMPERATURE_KELVIN
         return;
     }
-    parts.pop_back();
-    lastMillis = millis() - interval + (0b1U << 13U);
+    queries.pop_back();
+    lastMillis = millis() - WeatherMode::interval + (0b1U << 13U);
 }

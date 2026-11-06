@@ -28,8 +28,11 @@ class Weather:
             "LATITUDE",
             "LONGITUDE",
         ):
-            if option in self.project.dotenv:
-                self.project.dotenv[option] = f"{float(self.project.dotenv[option]):.4f}".rstrip("0").rstrip(".")
+            self.project.dotenv[option] = (
+                f"{float(self.project.dotenv[option]):.4f}".rstrip("0").rstrip(".")
+                if option in self.project.dotenv
+                else "0"
+            )
         if self.project.certificate:
             for hostname in self.HOSTS:
                 self.project.certificate.add_host(hostname)

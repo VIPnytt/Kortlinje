@@ -1,5 +1,7 @@
 #include "middlewares/YrMiddleware.h"
 
+#include "modes/WeatherMode.h"
+
 #include <ArduinoJson.h>
 
 /**
@@ -24,7 +26,7 @@ void YrMiddleware::update(std::optional<WeatherHandler::Condition> &condition, s
         if (status >= 400 && status < 500)
         {
             paths.pop_back();
-            lastMillis = millis() - interval + (0b1U << 12U);
+            lastMillis = millis() - WeatherMode::interval + (0b1U << 12U);
         }
         return;
     }
@@ -56,5 +58,5 @@ void YrMiddleware::update(std::optional<WeatherHandler::Condition> &condition, s
         return;
     }
     paths.pop_back();
-    lastMillis = millis() - interval + (0b1U << 13U);
+    lastMillis = millis() - WeatherMode::interval + (0b1U << 13U);
 }

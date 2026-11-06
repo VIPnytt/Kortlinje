@@ -1,15 +1,12 @@
 #include "handlers/WeatherHandler.h"
 
-#include "config/IkeaKortlinje.h"
 #include "config/version.h"
+#include "modes/WeatherMode.h"
 #include "services/DisplayService.h"
 
-#include <CertStoreBearSSL.h>
 #include <HTTPClient.h>
-#include <Stream.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#include <cstring>
 #include <string>
 #include <variant>
 
@@ -39,13 +36,12 @@ struct VectorStreamWriter final : public Stream
 
 int WeatherHandler::fetch(std::vector<char> &body, unsigned long &lastMillis)
 {
-    BearSSL::WiFiClientSecure secureClient{};
-    secureClient.setCertStore(certStore);
+    BearSSL::WiFiClientSecure secure{};
     HTTPClient http{};
     http.setUserAgent("Kortlinje/" VERSION " (RP2350; +https://github.com/VIPnytt/Kortlinje)");
-    if (!http.begin(secureClient, std::string("https://").append(host).append(path).append("?").append(query).c_str()))
+    if (!http.begin(secure, std::string("https://").append(host).append(path).append("?").append(query).c_str()))
     {
-        lastMillis = millis() - interval + (0b1U << 16U);
+        lastMillis = millis() - WeatherMode::interval + (0b1U << 16U);
         return -1;
     }
     http.addHeader("Accept", "application/json");
@@ -54,7 +50,7 @@ int WeatherHandler::fetch(std::vector<char> &body, unsigned long &lastMillis)
     if (status <= 0)
     {
         http.end();
-        lastMillis = millis() - interval + (0b1U << 16U);
+        lastMillis = millis() - WeatherMode::interval + (0b1U << 16U);
         return -1;
     }
     if (status != 200)

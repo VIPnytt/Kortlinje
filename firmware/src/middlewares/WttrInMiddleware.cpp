@@ -1,5 +1,7 @@
 #include "middlewares/WttrInMiddleware.h"
 
+#include "modes/WeatherMode.h"
+
 #include <ArduinoJson.h> // NOLINT(misc-include-cleaner)
 
 /**
@@ -24,7 +26,7 @@ void WttrInMiddleware::update(std::optional<WeatherHandler::Condition> &conditio
         if (status >= 400 && status < 500)
         {
             queries.pop_back();
-            lastMillis = millis() - interval + (0b1U << 12U);
+            lastMillis = millis() - WeatherMode::interval + (0b1U << 12U);
         }
         return;
     }
@@ -55,5 +57,5 @@ void WttrInMiddleware::update(std::optional<WeatherHandler::Condition> &conditio
         return;
     }
     queries.pop_back();
-    lastMillis = millis() - interval + (0b1U << 13U);
+    lastMillis = millis() - WeatherMode::interval + (0b1U << 13U);
 }

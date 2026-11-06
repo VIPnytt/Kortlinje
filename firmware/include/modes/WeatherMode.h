@@ -1,6 +1,5 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "middlewares/OpenMeteoMiddleware.h"
 #include "middlewares/WttrInMiddleware.h"
 #include "middlewares/YrMiddleware.h"
@@ -9,7 +8,6 @@
 #include <array>
 #include <memory>
 #include <optional>
-#include <vector>
 
 class WeatherMode final : public ModeModule
 {
@@ -26,11 +24,11 @@ private:
         "Wind",
     };
 
-    static constexpr auto providerNames{std::to_array<std::string_view>({
+    static constexpr std::array<std::string_view, 3U> providerNames{
         OpenMeteoMiddleware::name,
         WttrInMiddleware::name,
         YrMiddleware::name,
-    })};
+    };
 
     unsigned long lastMillis{0UL};
 
@@ -46,6 +44,8 @@ private:
 
 public:
     static constexpr std::string_view name{"Weather"};
+
+    static constexpr unsigned long interval{0b1UL << 19U};
 
     explicit WeatherMode() : ModeModule(name) {};
 
