@@ -39,6 +39,9 @@ public:
 
     void begin();
 
+    /** Re-bind after SoftAP/STA interface changes (lwIP netif teardown). */
+    static void restart();
+
     static void onEmpty(AsyncWebServerRequest *request);
 
 private:

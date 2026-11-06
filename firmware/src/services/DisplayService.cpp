@@ -63,8 +63,15 @@ void DisplayService::begin()
         dma_channel_configure(chip, &dma, &pio0->txf[chip], txBuffer[chip].data(), txBuffer[chip].size(), true);
     }
     ConfigHandler::get(name, "brightness", brightness);
+    // Guard against a corrupt LittleFS brightness value blanking the panel.
+    if (static_cast<uint8_t>(brightness) < static_cast<uint8_t>(Brightness::DUTY1) ||
+        static_cast<uint8_t>(brightness) > static_cast<uint8_t>(Brightness::DUTY14))
+    {
+        brightness = Brightness::DUTY14;
+    }
     KortlinjeFont font{};
     TextHandler("Hej! ♥", font).draw();
+    power = false; // force setPower to emit the duty command
     setPower(true);
     flush();
 }

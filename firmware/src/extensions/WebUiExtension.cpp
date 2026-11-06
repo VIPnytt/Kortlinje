@@ -1,5 +1,6 @@
 #include "extensions/WebUiExtension.h"
 
+#include "extensions/ProvisioningExtension.h"
 #include "extensions/WebSocketExtension.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
@@ -74,6 +75,11 @@ void WebUiExtension::onGetCss(AsyncWebServerRequest *request)
 
 void WebUiExtension::onGetHtml(AsyncWebServerRequest *request)
 {
+    // Serve portal HTML directly (no 302) — some captive detectors do not follow redirects.
+    if (ProvisioningExtension::handleNotFound(request))
+    {
+        return;
+    }
     const AsyncWebHeader *_etag{request->getHeader("If-None-Match")};
     if (_etag != nullptr && strcmp(_etag->value().c_str(), htmlEtag.data()) == 0)
     {
