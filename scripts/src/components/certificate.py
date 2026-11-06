@@ -1,17 +1,17 @@
 import collections
+import ipaddress
 import logging
 import pathlib
 import socket
 import ssl
 import typing
+import urllib.parse
 import urllib.request
-import warnings
 
+import certifi
 import cryptography.hazmat.primitives.serialization
 import cryptography.x509
 import cryptography.x509.oid
-
-from ..config.version import VERSION
 
 if typing.TYPE_CHECKING:
     from ..Kortlinje import Kortlinje
@@ -20,23 +20,43 @@ else:
     from SCons.Script import COMMAND_LINE_TARGETS
 
 
+class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(
+        self,
+        req: urllib.request.Request,
+        fp: typing.Any,
+        code: int,
+        msg: str,
+        headers: typing.Any,
+        newurl: str,
+    ) -> urllib.request.Request | None:
+        if not Certificate._is_safe_url(newurl):
+            logging.getLogger(__name__).debug("Blocked unsafe AIA redirect to: %s", newurl)
+            return None
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 class Certificate:
-    path: typing.Final[pathlib.Path] = pathlib.Path("x509") / "cabundle.pem"
+    path: typing.Final[pathlib.Path] = pathlib.Path("x509") / "cacert.pem"
     project: "Kortlinje"
     timeout: typing.Final[float] = 10
+    _has_failures: bool
     _hosts: set[str]
     _root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]]
-    _selected_roots: dict[bytes, cryptography.x509.Certificate]
-    _ssl_contexts: dict[str, ssl.SSLContext]
-    _visited_certificates: dict[bytes, list[cryptography.x509.Certificate]]
+    _selected_roots: set[cryptography.x509.Certificate]
+    _ssl_contexts: tuple[ssl.SSLContext, ...]
+    _url_opener: urllib.request.OpenerDirector
+    _visited_certificates: dict[cryptography.x509.Certificate, list[cryptography.x509.Certificate]]
 
     def __init__(self, project: "Kortlinje") -> None:
         self.project = project
-        self._hosts: set[str] = set()
-        self._root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = {}
-        self._selected_roots: dict[bytes, cryptography.x509.Certificate] = {}
-        self._ssl_contexts: dict[str, ssl.SSLContext] = {}
-        self._visited_certificates: dict[bytes, list[cryptography.x509.Certificate]] = {}
+        self._has_failures = False
+        self._hosts = set()
+        self._root_store = collections.defaultdict(list)
+        self._selected_roots = set()
+        self._ssl_contexts = ()
+        self._url_opener = urllib.request.build_opener(_SafeRedirectHandler())
+        self._visited_certificates = {}
 
     def initialize(self) -> None:
         if COMMAND_LINE_TARGETS in [
@@ -44,107 +64,96 @@ class Certificate:
         ]:
             self.project.certificate = None
             return
-        self._root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = (
-            self._fetch_mozilla_roots()
-        )
-        self._ssl_contexts: dict[str, ssl.SSLContext] = {
-            cipher: self._create_ssl_context(cipher) for cipher in ("ECDSA", "RSA")
-        }
+        for cert in cryptography.x509.load_pem_x509_certificates(certifi.contents().encode()):
+            self._root_store[cert.subject].append(cert)
+        self._ssl_contexts = tuple(self._create_ssl_context(cipher) for cipher in ("ECDSA", "RSA"))
 
     def finalize(self) -> None:
         if not self._selected_roots:
+            if self._hosts:
+                logging.getLogger(__name__).warning(
+                    "Certificate discovery failed: no roots found for %d host(s).",
+                    len(self._hosts),
+                )
+            else:
+                logging.getLogger(__name__).debug("No hosts registered for certificate bundling.")
+            if self.path.is_file():
+                return
+        elif self._has_failures and self.path.is_file():
+            logging.getLogger(__name__).warning(
+                "Certificate discovery had errors; preserving existing %s to avoid clobbering", self.path
+            )
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "wb") as file:
-            file.writelines(
+        self.path.write_bytes(
+            b"".join(
                 cert.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.PEM)
                 for cert in sorted(
-                    self._selected_roots.values(),
+                    self._selected_roots,
                     key=lambda cert: cert.subject.rfc4514_string(),
                 )
             )
+        )
 
     def add_host(self, hostname: str) -> None:
         if hostname in self._hosts:
             return
         self._hosts.add(hostname)
-        self._selected_roots.update(self._probe_host_branches(hostname, self._root_store))
+        self._selected_roots.update(self._probe_host_branches(hostname))
 
-    def _fetch_mozilla_roots(self) -> dict[cryptography.x509.Name, list[cryptography.x509.Certificate]]:
-        with urllib.request.urlopen(
-            urllib.request.Request(
-                "https://curl.se/ca/cacert.pem",
-                headers={"User-Agent": f"Kortlinje/{VERSION} (+https://github.com/VIPnytt/Kortlinje)"},
-            ),
-            timeout=self.timeout,
-        ) as response:
-            pem_data: bytes = response.read()
-        roots_by_subject: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]] = collections.defaultdict(
-            list
-        )
-        with warnings.catch_warnings(record=True) as captured:
-            for raw_block in pem_data.split(b"-----END CERTIFICATE-----"):
-                if b"-----BEGIN CERTIFICATE-----" in raw_block:
-                    pem_cert = raw_block + b"-----END CERTIFICATE-----\n"
-                    cert = cryptography.x509.load_pem_x509_certificate(pem_cert)
-                    roots_by_subject[cert.subject].append(cert)
-            for record in captured:
-                logging.getLogger(__name__).debug("Certificate parser warning: %s", record.message)
-        return roots_by_subject
-
-    def _get_server_chain(self, ip: str, hostname: str, cipher_pref: str) -> list[cryptography.x509.Certificate] | None:
-        ctx = self._ssl_contexts[cipher_pref]
-        try:
-            with (
-                socket.create_connection((ip, 443), timeout=self.timeout) as sock,
-                ctx.wrap_socket(sock, server_hostname=hostname) as ssock,
-            ):
-                if hasattr(ssock, "get_unverified_chain"):
-                    chain = ssock.get_unverified_chain()
-                    if chain:
-                        return [cryptography.x509.load_der_x509_certificate(der) for der in chain]
-                der_cert = ssock.getpeercert(binary_form=True)
-                return [cryptography.x509.load_der_x509_certificate(der_cert)] if der_cert is not None else None
-        except (OSError, ssl.SSLError):
-            return None
+    def _get_server_chain(
+        self, ip: str, hostname: str, ssl_context: ssl.SSLContext
+    ) -> list[cryptography.x509.Certificate]:
+        with socket.create_connection((ip, 443), timeout=self.timeout) as sock:
+            try:
+                with ssl_context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                    return [cryptography.x509.load_der_x509_certificate(der) for der in ssock.get_unverified_chain()]
+            except (ssl.SSLError, OSError):
+                return []
 
     def _resolve_intermediate_aia(self, cert: cryptography.x509.Certificate) -> cryptography.x509.Certificate | None:
+        max_cert_size: typing.Final[int] = 1 << 16
         try:
-            for desc in cert.extensions.get_extension_for_class(cryptography.x509.AuthorityInformationAccess).value:
-                if desc.access_method == cryptography.x509.oid.AuthorityInformationAccessOID.CA_ISSUERS and isinstance(
-                    desc.access_location.value, str
-                ):
-                    try:
-                        with urllib.request.urlopen(desc.access_location.value, timeout=self.timeout) as response:
-                            raw = response.read()
-                            try:
-                                return cryptography.x509.load_der_x509_certificate(raw)
-                            except ValueError:
-                                try:
-                                    return cryptography.x509.load_pem_x509_certificate(raw)
-                                except ValueError:
-                                    continue
-                    except OSError:
-                        continue
-        except (cryptography.x509.ExtensionNotFound, OSError):
-            pass
+            aia = cert.extensions.get_extension_for_class(cryptography.x509.AuthorityInformationAccess).value
+        except cryptography.x509.ExtensionNotFound:
+            return None
+        for desc in aia:
+            if desc.access_method != cryptography.x509.oid.AuthorityInformationAccessOID.CA_ISSUERS or not isinstance(
+                desc.access_location.value, str
+            ):
+                continue
+            url = desc.access_location.value
+            if not self._is_safe_url(url):
+                logging.getLogger(__name__).debug("Skipping untrusted or non-global AIA URL: %s", url)
+                continue
+            try:
+                with self._url_opener.open(url, timeout=self.timeout) as response:
+                    raw = response.read(max_cert_size + 1)
+                if len(raw) > max_cert_size:
+                    logging.getLogger(__name__).debug(
+                        "AIA certificate from %s exceeded %d bytes limit; skipping",
+                        url,
+                        max_cert_size,
+                    )
+                    continue
+                if b"-----BEGIN CERTIFICATE-----" in raw:
+                    return cryptography.x509.load_pem_x509_certificate(raw)
+                return cryptography.x509.load_der_x509_certificate(raw)
+            except (OSError, ValueError) as err:
+                logging.getLogger(__name__).debug("Failed to load AIA certificate from %s: %s", url, err)
         return None
 
-    def _find_candidate_roots(
-        self,
-        cert: cryptography.x509.Certificate,
-        root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]],
-    ) -> list[cryptography.x509.Certificate]:
-        candidates = root_store.get(cert.issuer, [])
-        if not candidates:
+    def _find_candidate_roots(self, cert: cryptography.x509.Certificate) -> list[cryptography.x509.Certificate]:
+        if not (candidates := self._root_store.get(cert.issuer)):
             return []
         try:
-            akid = cert.extensions.get_extension_for_class(
-                cryptography.x509.AuthorityKeyIdentifier
-            ).value.key_identifier
+            if not (
+                akid := cert.extensions.get_extension_for_class(
+                    cryptography.x509.AuthorityKeyIdentifier
+                ).value.key_identifier
+            ):
+                return candidates
         except cryptography.x509.ExtensionNotFound:
-            akid = None
-        if not akid:
             return candidates
         matches: list[cryptography.x509.Certificate] = []
         for root in candidates:
@@ -160,52 +169,56 @@ class Certificate:
     def _trace_to_roots(
         self,
         chain: list[cryptography.x509.Certificate],
-        root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]],
     ) -> list[cryptography.x509.Certificate]:
-        for cert in reversed(chain):
-            fingerprint = cert.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.DER)
-            if fingerprint in self._visited_certificates:
-                return self._visited_certificates[fingerprint]
-        top = chain[-1]
-        candidates = self._find_candidate_roots(top, root_store)
-        traversed: list[bytes] = [
-            cert.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.DER) for cert in chain
-        ]
-        while not candidates:
-            parent = self._resolve_intermediate_aia(top)
-            if not parent:
+        traversed: set[cryptography.x509.Certificate] = set()
+        current: cryptography.x509.Certificate | None = chain[-1]
+        candidates: list[cryptography.x509.Certificate] = []
+        while current and current not in traversed:
+            traversed.add(current)
+            if candidates := self._visited_certificates.get(current) or self._find_candidate_roots(current):
                 break
-            parent_fp = parent.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.DER)
-            if parent_fp in self._visited_certificates:
-                candidates = self._visited_certificates[parent_fp]
-                break
-            if parent_fp in traversed:
-                break
-            traversed.append(parent_fp)
-            candidates = self._find_candidate_roots(parent, root_store)
-            top = parent
+            current = self._resolve_intermediate_aia(current)
         if candidates:
-            for fp in traversed:
-                self._visited_certificates[fp] = candidates
+            for cert in traversed.union(chain):
+                self._visited_certificates[cert] = candidates
         return candidates
 
-    def _probe_host_branches(
-        self, hostname: str, root_store: dict[cryptography.x509.Name, list[cryptography.x509.Certificate]]
-    ) -> dict[bytes, cryptography.x509.Certificate]:
-        discovered_roots: dict[bytes, cryptography.x509.Certificate] = {}
+    def _probe_host_branches(self, hostname: str) -> set[cryptography.x509.Certificate]:
+        discovered_roots: set[cryptography.x509.Certificate] = set()
+        max_failed_ips_per_host: typing.Final[int] = 3
         try:
             ips = sorted({str(entry[4][0]) for entry in socket.getaddrinfo(hostname, 443, proto=socket.IPPROTO_TCP)})
-        except socket.gaierror:
+        except socket.gaierror as err:
+            logging.getLogger(__name__).warning(
+                "Certificate discovery failed: cannot resolve DNS for '%s': %s", hostname, err
+            )
+            self._has_failures = True
             return discovered_roots
+        failed_ips = 0
         for ip in ips:
-            for cipher in ("ECDSA", "RSA"):
-                chain = self._get_server_chain(ip, hostname, cipher)
-                if not chain:
-                    continue
-                for root in self._trace_to_roots(chain, root_store):
-                    discovered_roots[root.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.DER)] = (
-                        root
-                    )
+            if failed_ips >= max_failed_ips_per_host:
+                logging.getLogger(__name__).warning(
+                    "Aborting remaining IP probes for '%s': reached failure threshold (%d/%d failed)",
+                    hostname,
+                    failed_ips,
+                    max_failed_ips_per_host,
+                )
+                self._has_failures = True
+                break
+            for ssl_context in self._ssl_contexts:
+                try:
+                    chain = self._get_server_chain(ip, hostname, ssl_context)
+                except OSError as err:
+                    logging.getLogger(__name__).debug("TCP connection to '%s' (%s) failed: %s", hostname, ip, err)
+                    failed_ips += 1
+                    break
+                if chain:
+                    discovered_roots.update(self._trace_to_roots(chain))
+        if not discovered_roots:
+            logging.getLogger(__name__).warning(
+                "Certificate discovery incomplete: no root CAs found for '%s'", hostname
+            )
+            self._has_failures = True
         return discovered_roots
 
     @staticmethod
@@ -215,6 +228,17 @@ class Certificate:
         ctx.verify_mode = ssl.CERT_NONE
         ctx.set_ciphers(f"{cipher_pref}:!aNULL:!eNULL")
         return ctx
+
+    @staticmethod
+    def _is_safe_url(url: str) -> bool:
+        try:
+            parsed = urllib.parse.urlparse(url)
+            if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.port not in (None, 80, 443):
+                return False
+            addr_info = socket.getaddrinfo(parsed.hostname, parsed.port or 80, proto=socket.IPPROTO_TCP)
+            return bool(addr_info) and all(ipaddress.ip_address(entry[4][0]).is_global for entry in addr_info)
+        except (ValueError, socket.gaierror):
+            return False
 
     @staticmethod
     def clean() -> None:

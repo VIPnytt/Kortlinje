@@ -34,6 +34,7 @@ scons = [
 scripts = [
     { include-group = "nodejs" },
     { include-group = "packaging" },
+    "certifi==2026.10.23",
     "cryptography==50.0.2",
     "python-dotenv==1.2.4",
     "tzdata==2026.5",

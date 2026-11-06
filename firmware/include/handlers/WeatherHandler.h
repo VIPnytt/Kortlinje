@@ -125,7 +125,7 @@ protected:
     };
 
     static constexpr auto bundle{WebServerService::embed({
-#embed "../../../x509/cabundle.pem"
+#embed "../../../x509/cacert.pem"
     })};
 
     const char *host{nullptr};
