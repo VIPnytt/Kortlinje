@@ -3,8 +3,8 @@ import { type Component, createSignal } from "solid-js";
 
 import { Icon } from "../components/Icon";
 import { HOSTNAME } from "../config/constants";
-import { SidebarSection } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection } from "../extensions/WebUI";
 import { MainComponent as ModesMainComponent } from "../services/Modes";
 
 export const name = "Stream";

@@ -2,16 +2,14 @@ import { mdiClockDigital, mdiImageFrame } from "@mdi/js";
 import { type Component, createSignal, For, Match, Switch } from "solid-js";
 
 import { Icon } from "../components/Icon";
-import {
-    MODE_DRAW,
-} from "../config/modules";
+import { MODE_DRAW } from "../config/modules";
+import { WebSocketWS } from "../extensions/WebSocket";
 import {
     Main as ExtensionWebUIMain,
     SidebarSection,
     SidebarSectionSecondary,
     MainSecondary as WebUIMain,
 } from "../extensions/WebUI";
-import { WebSocketWS } from "../extensions/WebSocket";
 import { Main as ModeDrawMain, name as ModeDrawName, Sidebar as ModeDrawSidebar } from "../modes/Draw";
 import { name as ModeTickerName, Sidebar as ModeTickerSidebar } from "../modes/Ticker";
 import { name as ModeWeatherName, Sidebar as ModeWeatherSidebar } from "../modes/Weather";
@@ -69,17 +67,17 @@ export const Sidebar: Component = () => {
                 </div>
             </SidebarSection>
             <Switch>
-                {MODE_DRAW && (
-                    <Match when={getMode() === ModeDrawName}>
-                        <ModeDrawSidebar />
-                    </Match>
-                )}
                 <Match when={getMode() === ModeTickerName}>
                     <ModeTickerSidebar />
                 </Match>
                 <Match when={getMode() === ModeWeatherName}>
                     <ModeWeatherSidebar />
                 </Match>
+                {MODE_DRAW && (
+                    <Match when={getMode() === ModeDrawName}>
+                        <ModeDrawSidebar />
+                    </Match>
+                )}
             </Switch>
         </>
     );
@@ -102,12 +100,11 @@ export const SidebarSecondary: Component = () => (
     </SidebarSectionSecondary>
 );
 
-export const MainThird: Component = () => (
-    <WebUIMain />
-);
+export const MainThird: Component = () => <WebUIMain />;
 
 export const SidebarThird: Component = () => (
-    <SidebarSectionSecondary title={name}><></>
+    <SidebarSectionSecondary title={name}>
+        <></>
     </SidebarSectionSecondary>
 );
 

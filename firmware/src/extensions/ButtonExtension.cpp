@@ -223,7 +223,8 @@ void ButtonExtension::config()
 
 void ButtonExtension::cycle()
 {
-    DisplayService::getPower() ? PlaylistExtension::setEnabled(!PlaylistExtension::getEnabled()) : DisplayService::setPower(true);
+    DisplayService::getPower() ? PlaylistExtension::setEnabled(!PlaylistExtension::getEnabled())
+                               : DisplayService::setPower(true);
 }
 
 void ButtonExtension::dismiss() { AlarmExtension::dismiss(); }

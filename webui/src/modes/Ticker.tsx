@@ -3,8 +3,8 @@ import { type Component, createSignal, For } from "solid-js";
 
 import { Icon } from "../components/Icon";
 import { Tooltip } from "../components/Tooltip";
-import { SidebarSection } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection } from "../extensions/WebUI";
 import { FontsList } from "../services/Fonts";
 
 export const name = "Ticker";

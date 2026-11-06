@@ -1,4 +1,4 @@
-import { mdiDockLeft, mdiClockDigital, mdiHome, mdiMenu, mdiWindowClose } from "@mdi/js";
+import { mdiClockDigital, mdiDockLeft, mdiHome, mdiMenu, mdiWindowClose } from "@mdi/js";
 import { type Component, createEffect, createSignal, type JSX, Match, onCleanup, onMount, Switch } from "solid-js";
 
 import { Canvas } from "../components/Canvas";
@@ -8,11 +8,7 @@ import { Tooltip } from "../components/Tooltip";
 import { HOSTNAME, NAME } from "../config/constants";
 import { Device } from "../config/devices";
 import { VERSION } from "../config/version";
-import {
-    Main as DisplayMain,
-    DisplayPower,
-    Sidebar as DisplaySidebar,
-} from "../services/Display";
+import { Main as DisplayMain, DisplayPower, Sidebar as DisplaySidebar } from "../services/Display";
 import {
     Footer as ExtensionsFooter,
     name as ExtensionsName,

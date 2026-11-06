@@ -90,9 +90,9 @@ export const MainThird: Component = () => {
             getSchedule().map((item, i) =>
                 i === index
                     ? {
-                        ...item,
-                        duration,
-                    }
+                          ...item,
+                          duration,
+                      }
                     : item,
             ),
         );
@@ -106,9 +106,9 @@ export const MainThird: Component = () => {
             getSchedule().map((item, i) =>
                 i === index
                     ? {
-                        ...item,
-                        mode: name,
-                    }
+                          ...item,
+                          mode: name,
+                      }
                     : item,
             ),
         );

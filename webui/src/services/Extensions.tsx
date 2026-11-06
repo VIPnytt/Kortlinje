@@ -2,15 +2,12 @@ import { mdiBriefcase } from "@mdi/js";
 import { type Component, Match, Switch } from "solid-js";
 
 import { Icon } from "../components/Icon";
-import {
-    EXTENSION_MESSAGE,
-    EXTENSION_MIRROR,
-} from "../config/modules";
+import { EXTENSION_MESSAGE, EXTENSION_MIRROR } from "../config/modules";
 import {
     Actions as ExtensionAlarmActions,
     Link as ExtensionAlarmLink,
     name as ExtensionAlarmName,
-    MainThird as ExtensionAlarmThird
+    MainThird as ExtensionAlarmThird,
 } from "../extensions/Alarm";
 import {
     Link as ExtensionMessageLink,
@@ -28,7 +25,7 @@ import {
     Actions as ExtensionPhotocellActions,
     Link as ExtensionPhotocellLink,
     name as ExtensionPhotocellName,
-    MainThird as ExtensionPhotocellThird
+    MainThird as ExtensionPhotocellThird,
 } from "../extensions/Photocell";
 import {
     Actions as ExtensionPlaylistActions,

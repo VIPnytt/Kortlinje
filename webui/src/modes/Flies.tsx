@@ -22,7 +22,7 @@ export const Main: Component = () => {
     };
 
     const handlePixel = (_x: number, _y: number, _lit: boolean) => {
-        setFrame(new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0));
+        setFrame(new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false));
         WebSocketWS.send(
             JSON.stringify({
                 [name]: {
@@ -40,7 +40,7 @@ export const Main: Component = () => {
                 <Canvas
                     onFrame={handleFrame}
                     onPixel={handlePixel}
-                    pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0)}
+                    pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false)}
                 />
             </div>
         </div>

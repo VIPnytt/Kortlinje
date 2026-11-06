@@ -15,8 +15,8 @@ import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
 import { Device } from "../config/devices";
-import { SidebarSection } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection } from "../extensions/WebUI";
 
 export const name = "Draw";
 
@@ -40,7 +40,7 @@ export const Sidebar: Component = () => {
 
     const handleDownload = () => {
         csvExport(name.toLowerCase(), [
-            getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0),
+            getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false),
         ]);
     };
 
@@ -137,7 +137,7 @@ export const Sidebar: Component = () => {
 export const Main: Component = () => {
     const handleClear = () => {
         setFrame([
-            ...new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0),
+            ...new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false),
         ]);
         WebSocketWS.send(
             JSON.stringify({
@@ -205,7 +205,7 @@ export const Main: Component = () => {
                     <Canvas
                         onFrame={handleFrame}
                         onPixel={handlePixel}
-                        pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0)}
+                        pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false)}
                     />
                 </div>
             </div>

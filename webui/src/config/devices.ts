@@ -18,4 +18,4 @@ const IkeaKortlinjeParameters: Parameters = {
     PITCH_VERTICAL: 3.3, // mm
 };
 
-export const Device: Parameters = IkeaKortlinjeParameters
+export const Device: Parameters = IkeaKortlinjeParameters;

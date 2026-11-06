@@ -5,15 +5,15 @@ import {
     mdiAlarmSnooze,
     mdiBellOffOutline,
     mdiNumeric1BoxMultipleOutline,
-    mdiNumeric2BoxMultipleOutline
+    mdiNumeric2BoxMultipleOutline,
 } from "@mdi/js";
 import { type Component, createSignal } from "solid-js";
 import { Temporal } from "temporal-polyfill-lite";
 
 import { Icon } from "../components/Icon";
 import { Tooltip } from "../components/Tooltip";
-import { WebSocketWS } from "./WebSocket";
 import { name as ExtensionsName } from "../services/Extensions";
+import { WebSocketWS } from "./WebSocket";
 
 export const name = "Alarm";
 
@@ -22,9 +22,17 @@ type AlarmId = 1 | 2;
 const createAlarm = () => {
     const [getEnabled, setEnabled] = createSignal<boolean>(false);
     const [getTime, setTime] = createSignal<Temporal.PlainTime>(
-        Temporal.PlainTime.from({ hour: 0, minute: 0 }),
+        Temporal.PlainTime.from({
+            hour: 0,
+            minute: 0,
+        }),
     );
-    return { getEnabled, setEnabled, getTime, setTime };
+    return {
+        getEnabled,
+        setEnabled,
+        getTime,
+        setTime,
+    };
 };
 
 const alarms = {
@@ -49,11 +57,17 @@ export const receiver = (json: {
         minute?: number;
     };
 }) => {
-    ([1, 2] as const).forEach((id) => {
+    (
+        [
+            1,
+            2,
+        ] as const
+    ).forEach((id) => {
         const item = json?.[`alarm${id}`];
         if (!item) return;
         item.enabled !== undefined && alarms[id].setEnabled(item.enabled);
-        item.hour !== undefined && item.minute !== undefined &&
+        item.hour !== undefined &&
+            item.minute !== undefined &&
             alarms[id].setTime(
                 Temporal.PlainTime.from({
                     hour: item.hour,
@@ -64,7 +78,9 @@ export const receiver = (json: {
 };
 
 const getTime = (id: AlarmId) =>
-    alarms[id].getTime().toString({ smallestUnit: "minute" });
+    alarms[id].getTime().toString({
+        smallestUnit: "minute",
+    });
 
 const handleUpdate = (id: AlarmId) => {
     const time = alarms[id].getTime();
@@ -95,7 +111,12 @@ export const Actions: Component = () => (
             />
             {name}
         </a>
-        {([1, 2] as const).map((id) => (
+        {(
+            [
+                1,
+                2,
+            ] as const
+        ).map((id) => (
             <Tooltip text={`${alarms[id].getEnabled() ? "Turn off" : "Turn on"} ${getTime(id)} ${name.toLowerCase()}`}>
                 <button
                     class={`w-full ${alarms[id].getEnabled() ? "action-activated" : "action-deactivated"}`}
@@ -129,7 +150,7 @@ export const MainThird: Component = () => {
         WebSocketWS.send(
             JSON.stringify({
                 [name]: {
-                    ["action"]: action,
+                    action: action,
                 },
             }),
         );
@@ -147,7 +168,12 @@ export const MainThird: Component = () => {
                 <h2>{name}</h2>
                 <div class="box">
                     <div class="space-y-3">
-                        {([1, 2] as const).map((id) => (
+                        {(
+                            [
+                                1,
+                                2,
+                            ] as const
+                        ).map((id) => (
                             <div class="flex items-center gap-3">
                                 <Icon path={icons[id]} />
                                 <input
@@ -157,7 +183,9 @@ export const MainThird: Component = () => {
                                     value={getTime(id)}
                                 />
                                 <div class="flex-none">
-                                    <Tooltip text={`${alarms[id].getEnabled() ? "Turn off" : "Turn on"} ${name.toLowerCase()} ${id}`}>
+                                    <Tooltip
+                                        text={`${alarms[id].getEnabled() ? "Turn off" : "Turn on"} ${name.toLowerCase()} ${id}`}
+                                    >
                                         <button
                                             class={alarms[id].getEnabled() ? "action-activated" : "action-deactivated"}
                                             onclick={() => handleEnable(id)}

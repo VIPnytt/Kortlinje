@@ -3,13 +3,7 @@ import { createReconnectingWS, createWSState } from "@solid-primitives/websocket
 import { batch, createEffect, type ParentComponent } from "solid-js";
 
 import { HOSTNAME } from "../config/constants";
-import {
-    EXTENSION_MESSAGE,
-    EXTENSION_MIRROR,
-    EXTENSION_SIGNAL,
-    MODE_DRAW,
-    MODE_STREAM,
-} from "../config/modules";
+import { EXTENSION_MESSAGE, EXTENSION_MIRROR, EXTENSION_SIGNAL, MODE_DRAW, MODE_STREAM } from "../config/modules";
 import { name as ModeDrawName, receiver as ModeDrawReceiver } from "../modes/Draw";
 import { name as ModeStreamName, receiver as ModeStreamReceiver } from "../modes/Stream";
 import { name as ModeTickerName, receiver as ModeTickerReceiver } from "../modes/Ticker";
@@ -23,10 +17,7 @@ import { name as ExtensionMirrorName, receiver as ExtensionMirrorReceiver } from
 import { name as ExtensionPhotocellName, receiver as ExtensionPhotocellReceiver } from "./Photocell";
 import { name as ExtensionPlaylistName, receiver as ExtensionPlaylistReceiver } from "./Playlist";
 import { name as ExtensionSignalName, receiver as ExtensionSignalReceiver } from "./Signal";
-import {
-    receiver as ExtensionWebUIReceiver,
-    Canonical as WebUICanonical,
-} from "./WebUI";
+import { receiver as ExtensionWebUIReceiver, Canonical as WebUICanonical } from "./WebUI";
 
 export const name = "WebSocket";
 export const WebSocketUrl = `ws://${HOSTNAME}.local/ws`;
