@@ -69,30 +69,24 @@ class Certificate:
         self._ssl_contexts = tuple(self._create_ssl_context(cipher) for cipher in ("ECDSA", "RSA"))
 
     def finalize(self) -> None:
-        if not self._selected_roots:
-            if self._hosts:
-                logging.getLogger(__name__).warning(
-                    "Certificate discovery failed: no roots found for %d host(s).",
-                    len(self._hosts),
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if self._selected_roots and not self._has_failures:
+            self.path.write_bytes(
+                b"".join(
+                    cert.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.PEM)
+                    for cert in sorted(
+                        self._selected_roots,
+                        key=lambda cert: cert.subject.rfc4514_string(),
+                    )
                 )
-            else:
-                logging.getLogger(__name__).debug("No hosts registered for certificate bundling.")
-            if self.path.is_file():
-                return
-        elif self._has_failures and self.path.is_file():
-            logging.getLogger(__name__).warning(
-                "Certificate discovery had errors; preserving existing %s to avoid clobbering", self.path
             )
             return
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if self._has_failures:
+            logging.getLogger(__name__).warning("Falling back to stripped certifi bundle.")
         self.path.write_bytes(
-            b"".join(
-                cert.public_bytes(cryptography.hazmat.primitives.serialization.Encoding.PEM)
-                for cert in sorted(
-                    self._selected_roots,
-                    key=lambda cert: cert.subject.rfc4514_string(),
-                )
-            )
+            (
+                "\n".join(line for line in certifi.contents().splitlines() if line and not line.startswith("#")) + "\n"
+            ).encode()
         )
 
     def add_host(self, hostname: str) -> None:
@@ -139,8 +133,8 @@ class Certificate:
                 if b"-----BEGIN CERTIFICATE-----" in raw:
                     return cryptography.x509.load_pem_x509_certificate(raw)
                 return cryptography.x509.load_der_x509_certificate(raw)
-            except (OSError, ValueError) as err:
-                logging.getLogger(__name__).debug("Failed to load AIA certificate from %s: %s", url, err)
+            except (OSError, ValueError) as e:
+                logging.getLogger(__name__).debug("Failed to load AIA certificate from %s: %s", url, e)
         return None
 
     def _find_candidate_roots(self, cert: cryptography.x509.Certificate) -> list[cryptography.x509.Certificate]:
@@ -187,30 +181,37 @@ class Certificate:
         discovered_roots: set[cryptography.x509.Certificate] = set()
         max_failed_ips_per_host: typing.Final[int] = 3
         try:
-            ips = sorted({str(entry[4][0]) for entry in socket.getaddrinfo(hostname, 443, proto=socket.IPPROTO_TCP)})
-        except socket.gaierror as err:
+            ips = sorted(
+                {
+                    str(entry[4][0])
+                    for entry in socket.getaddrinfo(hostname, 443, proto=socket.IPPROTO_TCP, flags=socket.AI_ADDRCONFIG)
+                }
+            )
+        except socket.gaierror as e:
             logging.getLogger(__name__).warning(
-                "Certificate discovery failed: cannot resolve DNS for '%s': %s", hostname, err
+                "Certificate discovery failed: cannot resolve DNS for '%s': %s", hostname, e
             )
             self._has_failures = True
             return discovered_roots
-        failed_ips = 0
+        failed_ips: collections.Counter[int] = collections.Counter()
         for ip in ips:
-            if failed_ips >= max_failed_ips_per_host:
-                logging.getLogger(__name__).warning(
-                    "Aborting remaining IP probes for '%s': reached failure threshold (%d/%d failed)",
-                    hostname,
-                    failed_ips,
-                    max_failed_ips_per_host,
-                )
-                self._has_failures = True
-                break
+            version = ipaddress.ip_address(ip).version
+            if failed_ips[version] >= max_failed_ips_per_host:
+                continue
             for ssl_context in self._ssl_contexts:
                 try:
                     chain = self._get_server_chain(ip, hostname, ssl_context)
-                except OSError as err:
-                    logging.getLogger(__name__).debug("TCP connection to '%s' (%s) failed: %s", hostname, ip, err)
-                    failed_ips += 1
+                except OSError as e:
+                    logging.getLogger(__name__).debug("TCP connection to '%s' (%s) failed: %s", hostname, ip, e)
+                    failed_ips[version] += 1
+                    if failed_ips[version] == max_failed_ips_per_host:
+                        logging.getLogger(__name__).warning(
+                            "Aborting remaining IPv%d probes for '%s': reached failure threshold (%d/%d failed)",
+                            version,
+                            hostname,
+                            failed_ips[version],
+                            max_failed_ips_per_host,
+                        )
                     break
                 if chain:
                     discovered_roots.update(self._trace_to_roots(chain))
