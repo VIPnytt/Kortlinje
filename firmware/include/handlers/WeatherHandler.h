@@ -125,10 +125,6 @@ protected:
         0b1000000000000U,
     };
 
-    static constexpr auto bundle{EmbedHandler::embed<char>({
-#embed "../../../x509/cacert.pem"
-    })};
-
     const char *host{nullptr};
     const char *path{nullptr};
     const char *query{nullptr};

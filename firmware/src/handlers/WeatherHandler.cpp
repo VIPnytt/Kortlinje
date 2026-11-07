@@ -1,6 +1,7 @@
 #include "handlers/WeatherHandler.h"
 
 #include "config/version.h"
+#include "handlers/CertificateHandler.h"
 #include "modes/WeatherMode.h"
 #include "services/DisplayService.h"
 
@@ -45,7 +46,7 @@ struct VectorStreamWriter final : public Stream
  */
 int WeatherHandler::fetch(std::vector<char> &body, unsigned long &lastMillis)
 {
-    BearSSL::X509List trusted{bundle.data(), bundle.size()};
+    BearSSL::X509List trusted{CertificateHandler::bundle.data(), CertificateHandler::bundle.size()};
     BearSSL::WiFiClientSecure secure{};
     secure.setTrustAnchors(&trusted);
     HTTPClient http{};
