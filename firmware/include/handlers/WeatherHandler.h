@@ -1,5 +1,6 @@
 #pragma once
 
+#include "handlers/EmbedHandler.h"
 #include "services/WebServerService.h"
 
 #include <Arduino.h>
@@ -124,7 +125,7 @@ protected:
         0b1000000000000U,
     };
 
-    static constexpr auto bundle{WebServerService::embed({
+    static constexpr auto bundle{EmbedHandler::embed<char>({
 #embed "../../../x509/cacert.pem"
     })};
 

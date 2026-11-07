@@ -30,12 +30,6 @@ public:
         return out;
     }
 
-    /** @brief Copy embedded bytes into a compile-time array without adding a terminator. */
-    template <std::size_t N> [[nodiscard]] static consteval auto embed(const uint8_t (&&raw)[N])
-    {
-        return std::to_array(raw);
-    }
-
     static inline AsyncWebServer http{80U};
 
     void begin();

@@ -45,7 +45,7 @@ struct VectorStreamWriter final : public Stream
  */
 int WeatherHandler::fetch(std::vector<char> &body, unsigned long &lastMillis)
 {
-    BearSSL::X509List trusted{reinterpret_cast<const char *>(bundle.data()), bundle.size()};
+    BearSSL::X509List trusted{bundle.data(), bundle.size()};
     BearSSL::WiFiClientSecure secure{};
     secure.setTrustAnchors(&trusted);
     HTTPClient http{};
