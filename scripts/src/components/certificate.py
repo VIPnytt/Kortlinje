@@ -1,6 +1,7 @@
 import collections
 import http.client
 import ipaddress
+import itertools
 import logging
 import pathlib
 import socket
@@ -10,6 +11,7 @@ import urllib.parse
 import urllib.request
 
 import certifi
+import cryptography.exceptions
 import cryptography.hazmat.primitives.serialization
 import cryptography.x509
 import cryptography.x509.oid
@@ -67,11 +69,14 @@ class Certificate:
     def initialize(self) -> None:
         """Load certifi roots and prepare ECDSA and RSA TLS probes.
 
-        Disable the project certificate component when the sole target is
-        ``compiledb``. Bundle read/parse errors and SSL context errors propagate."""
+        Ensure the bundle file exists and disable the project certificate
+        component when the sole target is ``compiledb``. Bundle read/parse
+        errors, filesystem errors, and SSL context errors propagate."""
         if COMMAND_LINE_TARGETS in [
             ["compiledb"],
         ]:
+            if not self.path.is_file():
+                self.finalize()
             self.project.certificate = None
             return
         for cert in cryptography.x509.load_pem_x509_certificates(certifi.contents().encode()):
@@ -122,7 +127,7 @@ class Certificate:
 
         TCP connection errors propagate. TLS or socket errors after connection
         return an empty list; invalid DER raises ValueError. Each connection uses
-        ``timeout`` seconds. The returned chain is not verified by this method."""
+        ``timeout`` seconds."""
         with socket.create_connection((ip, 443), timeout=self.timeout) as sock:
             try:
                 with ssl_context.wrap_socket(sock, server_hostname=hostname) as ssock:
@@ -131,13 +136,12 @@ class Certificate:
                 return []
 
     def _resolve_intermediate_aia(self, cert: cryptography.x509.Certificate) -> cryptography.x509.Certificate | None:
-        """Return the first parsed certificate from an eligible CA Issuers AIA URL.
+        """Return the first verified issuer certificate from an eligible CA Issuers AIA URL.
 
         Only URLs passing the safety check are fetched, with ``timeout`` seconds
         per request and a 65,536-byte response limit. Missing AIA, rejected URLs,
-        oversized responses, and caught network or parse failures yield None if
-        no other URL succeeds. The returned PEM or DER certificate is not checked
-        as an issuer of cert."""
+        oversized responses, and caught network, parse, or signature failures
+        yield None if no other URL succeeds."""
         max_cert_size: typing.Final[int] = 1 << 16
         try:
             aia = cert.extensions.get_extension_for_class(cryptography.x509.AuthorityInformationAccess).value
@@ -162,39 +166,32 @@ class Certificate:
                         max_cert_size,
                     )
                     continue
-                if b"-----BEGIN CERTIFICATE-----" in raw:
-                    return cryptography.x509.load_pem_x509_certificate(raw)
-                return cryptography.x509.load_der_x509_certificate(raw)
-            except (OSError, ValueError, http.client.HTTPException) as e:
+                issuer = (
+                    cryptography.x509.load_pem_x509_certificate(raw)
+                    if b"-----BEGIN CERTIFICATE-----" in raw
+                    else cryptography.x509.load_der_x509_certificate(raw)
+                )
+                cert.verify_directly_issued_by(issuer)
+                return issuer
+            except (
+                OSError,
+                ValueError,
+                TypeError,
+                http.client.HTTPException,
+                cryptography.exceptions.InvalidSignature,
+            ) as e:
                 logging.getLogger(__name__).debug("Failed to load AIA certificate from %s: %s", url, e)
         return None
 
     def _find_candidate_roots(self, cert: cryptography.x509.Certificate) -> list[cryptography.x509.Certificate]:
-        """Return stored roots whose subject matches the certificate issuer.
-
-        Exclude roots with a differing subject key identifier when the certificate
-        has an authority key identifier. Missing identifiers do not exclude roots;
-        signatures are not verified."""
-        if not (candidates := self._root_store.get(cert.issuer)):
-            return []
-        try:
-            if not (
-                akid := cert.extensions.get_extension_for_class(
-                    cryptography.x509.AuthorityKeyIdentifier
-                ).value.key_identifier
-            ):
-                return candidates
-        except cryptography.x509.ExtensionNotFound:
-            return candidates
+        """Return stored roots whose subject and signature match the certificate issuer."""
         matches: list[cryptography.x509.Certificate] = []
-        for root in candidates:
+        for root in self._root_store.get(cert.issuer, ()):
             try:
-                skid = root.extensions.get_extension_for_class(cryptography.x509.SubjectKeyIdentifier).value.digest
-                if skid and akid != skid:
-                    continue
-            except cryptography.x509.ExtensionNotFound:
-                pass
-            matches.append(root)
+                cert.verify_directly_issued_by(root)
+                matches.append(root)
+            except (ValueError, TypeError, cryptography.exceptions.InvalidSignature):
+                continue
         return matches
 
     def _trace_to_roots(
@@ -203,10 +200,15 @@ class Certificate:
     ) -> list[cryptography.x509.Certificate]:
         """Find candidate roots starting from the last certificate in a nonempty chain.
 
-        Follow AIA issuers until candidates are found or traversal stops or cycles.
-        Cache successful candidates for all supplied and traversed certificates.
-        Return an empty list if none are found; an empty chain raises IndexError.
-        This discovers candidates without verifying certificate signatures."""
+        Verify chain link signatures, then follow AIA issuers until candidates
+        are found or traversal stops or cycles. Cache successful candidates for
+        all supplied and traversed certificates. Return an empty list if chain
+        verification fails or no roots are found; an empty chain raises IndexError."""
+        try:
+            for child, issuer in itertools.pairwise(chain):
+                child.verify_directly_issued_by(issuer)
+        except (ValueError, TypeError, cryptography.exceptions.InvalidSignature):
+            return []
         traversed: set[cryptography.x509.Certificate] = set()
         current: cryptography.x509.Certificate | None = chain[-1]
         candidates: list[cryptography.x509.Certificate] = []
@@ -289,8 +291,7 @@ class Certificate:
         """Accept HTTP(S) URLs on default ports, port 80, or port 443 with global IPs.
 
         Resolve the hostname and require every returned address to be global.
-        Invalid URLs, DNS failures, and empty DNS results return False. This checks
-        current DNS results without pinning the address used by a later request."""
+        Invalid URLs, DNS failures, and empty DNS results return False."""
         try:
             parsed = urllib.parse.urlparse(url)
             if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.port not in (None, 80, 443):
