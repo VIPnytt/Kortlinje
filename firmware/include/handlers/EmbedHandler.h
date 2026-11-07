@@ -3,6 +3,7 @@
 #include "modules/HandlerModule.h"
 
 #include <array>
+#include <type_traits>
 
 class EmbedHandler final : public HandlerModule
 {
