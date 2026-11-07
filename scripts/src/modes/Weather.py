@@ -5,6 +5,11 @@ if typing.TYPE_CHECKING:
 
 
 class Weather:
+    HOSTS: typing.Final[tuple[str, ...]] = (
+        "api.met.no",
+        "api.open-meteo.com",
+        "wttr.in",
+    )
     NAME: typing.Final[str] = "Weather"
 
     def __init__(self, project: "Kortlinje") -> None:
@@ -13,11 +18,12 @@ class Weather:
 
     def configure(self) -> None:
         """
-        Configure weather settings and normalize location-related options.
+        Normalize coordinates and discover roots for all configured provider hosts.
 
-        Weather is disabled unless the weather mode option is set to ``"true"``.
         Latitude and longitude are formatted as decimal strings with up to four
-        decimal places when provided.
+        decimal places, defaulting to "0" when absent. Invalid numeric strings
+        raise ValueError. When the certificate component is enabled, probe every
+        host in HOSTS, regardless of the selected weather mode.
         """
         for option in (
             "LATITUDE",
@@ -28,3 +34,6 @@ class Weather:
                 if option in self.project.dotenv
                 else "0"
             )
+        if self.project.certificate:
+            for hostname in self.HOSTS:
+                self.project.certificate.add_host(hostname)
