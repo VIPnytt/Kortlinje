@@ -66,13 +66,21 @@ class Certificate:
                     )
                 )
             )
-            return
-        if self._has_failures:
-            logging.getLogger(__name__).warning("Falling back to stripped certifi bundle.")
-        self.path.write_bytes(
-            (
-                "\n".join(line for line in certifi.contents().splitlines() if line and not line.startswith("#")) + "\n"
-            ).encode()
+        else:
+            logging.getLogger(__name__).warning(
+                "Failed to retrieve verified roots for one or more hosts; falling back to full certifi bundle."
+                if self._has_failures
+                else "No hosts were declared; falling back to full certifi bundle."
+            )
+            self.path.write_bytes(
+                (
+                    "\n".join(line for line in certifi.contents().splitlines() if line and not line.startswith("#"))
+                    + "\n"
+                ).encode()
+            )
+        self.project.env.Depends(
+            self.project.env.File("${BUILD_DIR}/src/handlers/CertificateHandler.cpp.o"),
+            self.project.env.File(f"#{self.path.as_posix()}"),
         )
 
     def add_host(self, hostname: str) -> None:
