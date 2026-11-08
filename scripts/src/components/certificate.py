@@ -94,9 +94,9 @@ class Certificate:
 
         Call initialize first to prepare TLS probes. Without contexts, record
         the hostname without probing; it will still be skipped on later calls.
-        DNS failures and discovery that finds no roots mark the final bundle for
-        fallback to certifi. Invalid IP addresses or DER certificates raise
-        ValueError; repeated hostnames are skipped even after a failed probe."""
+        DNS failures, unprobed addresses, and discovery that finds no roots mark
+        the final bundle for fallback to certifi. Invalid IP addresses or DER
+        certificates raise ValueError; repeated hostnames are skipped."""
         if hostname in self._hosts:
             return
         self._hosts.add(hostname)
@@ -125,9 +125,10 @@ class Certificate:
         """Collect verified roots from resolved IPs using each configured TLS context.
 
         Stop probing an IP version after three TCP connection failures. DNS
-        failure or finding no roots marks the bundle for fallback; caught TCP
-        and TLS failures do not escape. Return an empty set when no roots are
-        found. Invalid IP addresses or DER certificates raise ValueError."""
+        failure, any unprobed address, or finding no roots marks the bundle for
+        fallback; caught TCP and TLS failures do not escape. Return an empty set
+        when no roots are found. Invalid IP addresses or DER certificates raise
+        ValueError."""
         discovered_roots: set[cryptography.x509.Certificate] = set()
         max_failed_ips_per_host: typing.Final[int] = 3
         try:
@@ -147,7 +148,9 @@ class Certificate:
         for ip in ips:
             version = ipaddress.ip_address(ip).version
             if failed_ips[version] >= max_failed_ips_per_host:
+                self._has_failures = True
                 continue
+            ip_has_successful_probe = False
             for ssl_context in self._ssl_contexts:
                 try:
                     root = self._get_server_root(ip, hostname, ssl_context)
@@ -165,6 +168,9 @@ class Certificate:
                     break
                 if root:
                     discovered_roots.add(root)
+                    ip_has_successful_probe = True
+            if not ip_has_successful_probe:
+                self._has_failures = True
         if not discovered_roots:
             logging.getLogger(__name__).warning(
                 "Certificate discovery incomplete: no root CAs found for '%s'", hostname
