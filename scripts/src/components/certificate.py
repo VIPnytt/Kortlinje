@@ -38,14 +38,20 @@ class Certificate:
         """Prepare ECDSA and RSA TLS probes verified against certifi.
 
         Ensure the bundle file exists and disable the project certificate
-        component when the sole target is ``compiledb``. Filesystem and SSL
-        context errors propagate."""
+        component when the sole target is ``compiledb``. SSL context creation
+        errors trigger certifi fallback; filesystem errors propagate."""
         if COMMAND_LINE_TARGETS == ["compiledb"]:
             if not self.path.is_file():
                 self.finalize()
             self.project.certificate = None
             return
-        self._ssl_contexts = tuple(self._create_ssl_context(cipher) for cipher in ("aECDSA", "aRSA"))
+        try:
+            self._ssl_contexts = tuple(self._create_ssl_context(cipher) for cipher in ("aECDSA", "aRSA"))
+        except ssl.SSLError as e:
+            logging.getLogger(__name__).warning(
+                "Failed to initialize TLS probe context: %s; falling back to full certifi bundle.", e
+            )
+            self._has_failures = True
 
     def finalize(self) -> None:
         """Create or overwrite the PEM bundle at ``path``.
@@ -84,12 +90,14 @@ class Certificate:
     def add_host(self, hostname: str) -> None:
         """Probe a hostname once per instance and accumulate its verified roots.
 
-        Call initialize first to prepare TLS probes. DNS failures and discovery
-        that finds no roots mark the final bundle for fallback to certifi.
-        Repeated hostnames are skipped, including those whose discovery failed."""
+        Call initialize first to prepare TLS probes. DNS failures, context
+        creation failures, and discovery that finds no roots mark the final
+        bundle for fallback to certifi. Repeated hostnames are skipped."""
         if hostname in self._hosts:
             return
         self._hosts.add(hostname)
+        if not self._ssl_contexts:
+            return
         self._selected_roots.update(self._probe_host_branches(hostname))
 
     def _get_server_root(
