@@ -39,7 +39,8 @@ class Certificate:
 
         Ensure the bundle file exists and disable the project certificate
         component when the sole target is ``compiledb``. SSL context creation
-        errors trigger certifi fallback; filesystem errors propagate."""
+        errors trigger certifi fallback; other OS errors, including certifi read
+        errors, propagate."""
         if COMMAND_LINE_TARGETS == ["compiledb"]:
             if not self.path.is_file():
                 self.finalize()
@@ -58,7 +59,8 @@ class Certificate:
 
         Write selected roots sorted by subject when discovery found roots without
         failures. Otherwise, write all certifi roots with blank and comment lines
-        removed. Filesystem and certifi read errors propagate."""
+        removed. Register the bundle as a dependency of the certificate handler
+        object file. Filesystem and certifi read errors propagate."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if self._selected_roots and not self._has_failures:
             self.path.write_bytes(
@@ -90,9 +92,11 @@ class Certificate:
     def add_host(self, hostname: str) -> None:
         """Probe a hostname once per instance and accumulate its verified roots.
 
-        Call initialize first to prepare TLS probes. DNS failures, context
-        creation failures, and discovery that finds no roots mark the final
-        bundle for fallback to certifi. Repeated hostnames are skipped."""
+        Call initialize first to prepare TLS probes. Without contexts, record
+        the hostname without probing; it will still be skipped on later calls.
+        DNS failures and discovery that finds no roots mark the final bundle for
+        fallback to certifi. Invalid IP addresses or DER certificates raise
+        ValueError; repeated hostnames are skipped even after a failed probe."""
         if hostname in self._hosts:
             return
         self._hosts.add(hostname)
@@ -105,9 +109,9 @@ class Certificate:
     ) -> cryptography.x509.Certificate | None:
         """Fetch the verified root CA from an IP on port 443 using hostname as SNI.
 
-        TCP connection errors propagate. TLS or socket errors after connection
-        return None; invalid DER raises ValueError. Each connection uses
-        ``timeout`` seconds."""
+        TCP connection errors propagate. Return None for TLS or socket errors
+        after connection, or for an empty verified chain. Invalid DER raises
+        ValueError. Each connection uses ``timeout`` seconds."""
         with socket.create_connection((ip, 443), timeout=self.timeout) as sock:
             try:
                 with ssl_context.wrap_socket(sock, server_hostname=hostname) as ssock:
@@ -122,7 +126,8 @@ class Certificate:
 
         Stop probing an IP version after three TCP connection failures. DNS
         failure or finding no roots marks the bundle for fallback; caught TCP
-        and TLS failures do not escape."""
+        and TLS failures do not escape. Return an empty set when no roots are
+        found. Invalid IP addresses or DER certificates raise ValueError."""
         discovered_roots: set[cryptography.x509.Certificate] = set()
         max_failed_ips_per_host: typing.Final[int] = 3
         try:
@@ -169,7 +174,7 @@ class Certificate:
 
     @staticmethod
     def _create_ssl_context(cipher_pref: str) -> ssl.SSLContext:
-        """Return a TLS probe context verified against certifi roots.
+        """Return a TLS 1.2-only probe context verified against certifi roots.
 
         cipher_pref is an OpenSSL cipher selection expression; anonymous and null
         encryption ciphers are excluded. SSL context creation, certifi loading,
