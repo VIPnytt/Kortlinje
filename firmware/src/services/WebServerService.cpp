@@ -4,7 +4,6 @@
 #include "services/DeviceService.h"
 
 #include <HTTPClient.h>
-#include <WiFi.h>
 
 void WebServerService::begin()
 {
@@ -15,7 +14,7 @@ void WebServerService::begin()
 void WebServerService::restart()
 {
     http.end();
-    delay(20);
+    delay(20L);
     http.begin();
     Serial.println("[web] server restarted");
 }

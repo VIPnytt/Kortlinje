@@ -33,9 +33,7 @@ class WebUI:
         """
         Disable the web app for command-line targets that do not require it.
         """
-        if COMMAND_LINE_TARGETS in [
-            ["compiledb"],
-        ]:
+        if COMMAND_LINE_TARGETS == ["compiledb"]:
             self.project.webui = None
 
     def finalize(self) -> None:
@@ -47,15 +45,10 @@ class WebUI:
             "NAME",
             "TEMPERATURE_UNIT",
         )
-        prefixes = (
-            "EXTENSION_",
-            "IKEA_",
-            "MODE_",
-        )
         for option, value in self.project.dotenv.items():
-            if option in ("OTA_KEY",):
+            if option == "OTA_KEY":
                 dotenv.set_key(self.path / ".env", f"VITE_{option}", "true")
-            elif option in options or option.startswith(prefixes):
+            elif option in options:
                 dotenv.set_key(self.path / ".env", f"VITE_{option}", value)
         config = self.project.env.GetProjectConfig()
         for option in ("board",):
@@ -65,7 +58,7 @@ class WebUI:
         for option in dotenv.dotenv_values(self.path / ".env"):
             if option.startswith("VITE_"):
                 _option = option.removeprefix("VITE_")
-                if _option not in self.project.dotenv and (_option in options or _option.startswith(prefixes)):
+                if _option not in self.project.dotenv and (_option in options):
                     dotenv.unset_key(self.path / ".env", option)
         self._npm_build()
 
@@ -89,6 +82,10 @@ class WebUI:
             if file.is_file() and file.suffix != ".gz":
                 with gzip.open(file.parent / f"{file.name}.gz", "wb") as gz:
                     gz.write(file.read_bytes())
+                self.project.env.Depends(
+                    self.project.env.File("${BUILD_DIR}/src/extensions/WebUiExtension.cpp.o"),
+                    self.project.env.File(f"#{file.as_posix()}"),
+                )
 
     @staticmethod
     def clean() -> None:

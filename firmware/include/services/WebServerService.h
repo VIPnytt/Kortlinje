@@ -11,15 +11,13 @@ class WebServerService final : public ServiceModule
 public:
     static constexpr std::string_view name{"Web server"};
 
-    explicit WebServerService() : ServiceModule(name) {};
-
     static constexpr std::array<char, 11U> etag(std::span<const uint8_t> data)
     {
-        uint32_t hash{2'166'136'261U};
+        uint32_t hash{2'166'136'261UL};
         for (const uint8_t byte : data)
         {
             hash ^= byte;
-            hash *= 16'777'619U;
+            hash *= 16'777'619UL;
         }
         std::array<char, 11U> out{{'"', '0', '0', '0', '0', '0', '0', '0', '0', '"', '\0'}};
         for (size_t idx{1U}; idx < 9U; ++idx)
@@ -29,6 +27,8 @@ public:
         }
         return out;
     }
+
+    explicit WebServerService() : ServiceModule(name) {};
 
     static inline AsyncWebServer http{80U};
 

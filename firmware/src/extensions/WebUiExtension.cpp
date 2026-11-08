@@ -2,16 +2,20 @@
 
 #include "extensions/ProvisioningExtension.h"
 #include "extensions/WebSocketExtension.h"
+#include "handlers/EmbedHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
 
 #include <HTTPClient.h>
+#include <array>
 
 void WebUiExtension::begin()
 {
-    WebServerService::http.on("/", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_HEAD, &onHeadRoot);
-    WebServerService::http.on("/", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetHtml);
+    WebServerService::http.on("/",
+                              AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET |
+                                  AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_HEAD,
+                              &onHtml);
     WebServerService::http.on("/favicon.svg", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetSvg);
     WebServerService::http.on("/index.css", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetCss);
     WebServerService::http.on(
@@ -41,108 +45,123 @@ void WebUiExtension::handle()
             ++interval;
             render = true;
         }
-        alarm = add_alarm_in_ms(interval, &onAlarm, nullptr, true);
+        alarm = add_alarm_in_ms(interval, &onAlarm, this, true);
     }
 }
 
 int64_t WebUiExtension::onAlarm(alarm_id_t id, void *user_data)
 {
     static_cast<void>(id);
-    static_cast<void>(user_data);
-    alarm = 0L;
-    pending = true;
+    auto *self{static_cast<WebUiExtension *>(user_data)};
+    self->pending = true;
+    self->alarm = 0L;
     return 0LL;
 }
 
 void WebUiExtension::onGetCss(AsyncWebServerRequest *request)
 {
+    static constexpr auto content{EmbedHandler::embed<uint8_t>({
+#embed "../../../webui/dist/index.css.gz"
+    })};
+    static constexpr std::array<char, 11U> etag{WebServerService::etag(content)};
     const AsyncWebHeader *_etag{request->getHeader("If-None-Match")};
-    if (_etag != nullptr && strcmp(_etag->value().c_str(), cssEtag.data()) == 0)
+    if (_etag != nullptr && strcmp(_etag->value().c_str(), etag.data()) == 0)
     {
         AsyncWebServerResponse *response{request->beginResponse(t_http_codes::HTTP_CODE_NOT_MODIFIED)};
-        response->addHeader("ETag", cssEtag.data(), false);
-        response->setContentLength(css.size());
+        response->addHeader("ETag", etag.data(), false);
+        response->setContentLength(content.size());
         request->send(response);
     }
     else
     {
-        AsyncWebServerResponse *response{request->beginResponse(200, "text/css", css.data(), css.size())};
+        AsyncWebServerResponse *response{request->beginResponse(200, "text/css", content.data(), content.size())};
         response->addHeader("Content-Encoding", "gzip", false);
-        response->addHeader("ETag", cssEtag.data(), false);
-        request->send(response);
-    }
-}
-
-void WebUiExtension::onGetHtml(AsyncWebServerRequest *request)
-{
-    // Serve portal HTML directly (no 302) — some captive detectors do not follow redirects.
-    if (ProvisioningExtension::handleNotFound(request))
-    {
-        return;
-    }
-    const AsyncWebHeader *_etag{request->getHeader("If-None-Match")};
-    if (_etag != nullptr && strcmp(_etag->value().c_str(), htmlEtag.data()) == 0)
-    {
-        AsyncWebServerResponse *response{request->beginResponse(t_http_codes::HTTP_CODE_NOT_MODIFIED)};
-        response->addHeader("ETag", htmlEtag.data(), false);
-        response->setContentLength(html.size());
-        request->send(response);
-    }
-    else
-    {
-        AsyncWebServerResponse *response{request->beginResponse(200, "text/html", html.data(), html.size())};
-        response->addHeader("Content-Encoding", "gzip", false);
-        response->addHeader("ETag", htmlEtag.data(), false);
+        response->addHeader("ETag", etag.data(), false);
         request->send(response);
     }
 }
 
 void WebUiExtension::onGetJavascript(AsyncWebServerRequest *request)
 {
+    static constexpr auto content{EmbedHandler::embed<uint8_t>({
+#embed "../../../webui/dist/index.js.gz"
+    })};
+    static constexpr std::array<char, 11U> etag{WebServerService::etag(content)};
     const AsyncWebHeader *_etag{request->getHeader("If-None-Match")};
-    if (_etag != nullptr && strcmp(_etag->value().c_str(), javascriptEtag.data()) == 0)
+    if (_etag != nullptr && strcmp(_etag->value().c_str(), etag.data()) == 0)
     {
         AsyncWebServerResponse *response{request->beginResponse(t_http_codes::HTTP_CODE_NOT_MODIFIED)};
-        response->addHeader("ETag", javascriptEtag.data(), false);
-        response->setContentLength(javascript.size());
+        response->addHeader("ETag", etag.data(), false);
+        response->setContentLength(content.size());
         request->send(response);
     }
     else
     {
         AsyncWebServerResponse *response{
-            request->beginResponse(200, "text/javascript", javascript.data(), javascript.size())};
+            request->beginResponse(200, "text/javascript", content.data(), content.size())};
         response->addHeader("Content-Encoding", "gzip", false);
-        response->addHeader("ETag", javascriptEtag.data(), false);
+        response->addHeader("ETag", etag.data(), false);
         request->send(response);
     }
 }
 
 void WebUiExtension::onGetSvg(AsyncWebServerRequest *request)
 {
+    static constexpr auto content{EmbedHandler::embed<uint8_t>({
+#embed "../../../webui/dist/favicon.svg.gz"
+    })};
+    static constexpr std::array<char, 11U> etag{WebServerService::etag(content)};
     const AsyncWebHeader *_etag{request->getHeader("If-None-Match")};
-    if (_etag != nullptr && strcmp(_etag->value().c_str(), svgEtag.data()) == 0)
+    if (_etag != nullptr && strcmp(_etag->value().c_str(), etag.data()) == 0)
     {
         AsyncWebServerResponse *response{request->beginResponse(t_http_codes::HTTP_CODE_NOT_MODIFIED)};
-        response->addHeader("ETag", svgEtag.data(), false);
-        response->setContentLength(svg.size());
+        response->addHeader("ETag", etag.data(), false);
+        response->setContentLength(content.size());
         request->send(response);
     }
     else
     {
-        AsyncWebServerResponse *response{request->beginResponse(200, "image/svg+xml", svg.data(), svg.size())};
+        AsyncWebServerResponse *response{request->beginResponse(200, "image/svg+xml", content.data(), content.size())};
         response->addHeader("Content-Encoding", "gzip", false);
-        response->addHeader("ETag", svgEtag.data(), false);
+        response->addHeader("ETag", etag.data(), false);
         request->send(response);
     }
 }
 
-void WebUiExtension::onHeadRoot(AsyncWebServerRequest *request)
+void WebUiExtension::onHtml(AsyncWebServerRequest *request)
 {
-    AsyncWebServerResponse *response{request->beginResponse(t_http_codes::HTTP_CODE_OK)};
-    response->addHeader("Access-Control-Allow-Methods", "HEAD,GET", false);
-    response->addHeader("Access-Control-Allow-Origin", "*", false);
-    response->addHeader("Content-Encoding", "gzip", false);
-    response->addHeader("ETag", htmlEtag.data(), false);
-    response->setContentLength(html.size());
-    request->send(response);
+    // Serve portal HTML directly (no 302) — some captive detectors do not follow redirects.
+    if (ProvisioningExtension::handleNotFound(request))
+    {
+        return;
+    }
+    static constexpr auto content{EmbedHandler::embed<uint8_t>({
+#embed "../../../webui/dist/index.html.gz"
+    })};
+    static constexpr std::array<char, 11U> etag{WebServerService::etag(content)};
+    const AsyncWebHeader *_etag{request->getHeader("If-None-Match")};
+    if (_etag != nullptr && strcmp(_etag->value().c_str(), etag.data()) == 0)
+    {
+        AsyncWebServerResponse *response{request->beginResponse(t_http_codes::HTTP_CODE_NOT_MODIFIED)};
+        response->addHeader("ETag", etag.data(), false);
+        response->setContentLength(content.size());
+        request->send(response);
+    }
+    else if (request->method() == HTTP_HEAD)
+    {
+        AsyncWebServerResponse *response{request->beginResponse(t_http_codes::HTTP_CODE_OK)};
+        response->addHeader("Access-Control-Allow-Methods", "HEAD,GET", false);
+        response->addHeader("Access-Control-Allow-Origin", "*", false);
+        response->addHeader("Content-Encoding", "gzip", false);
+        response->addHeader("ETag", etag.data(), false);
+        response->setContentLength(content.size());
+        request->send(response);
+    }
+    else
+    {
+        AsyncWebServerResponse *response{request->beginResponse(200, "text/html", content.data(), content.size())};
+        response->addHeader("Content-Encoding", "gzip", false);
+        response->addHeader("ETag", etag.data(), false);
+        request->send(response);
+    }
 }
