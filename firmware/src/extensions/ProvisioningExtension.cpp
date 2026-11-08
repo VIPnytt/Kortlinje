@@ -10,9 +10,9 @@
 #include "services/WebServerService.h"
 
 #include <ArduinoJson.h>
-#include <array>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <cyw43.h>
@@ -254,9 +254,7 @@ void ProvisioningExtension::handle()
                     // Still associated — keep waiting for DHCP; do not tear down.
                     statusMs = millis();
                     kickStaDhcp();
-                    Serial.printf("[provision] waiting DHCP link=%d ip=%s\n",
-                                  link,
-                                  WiFi.localIP().toString().c_str());
+                    Serial.printf("[provision] waiting DHCP link=%d ip=%s\n", link, WiFi.localIP().toString().c_str());
                     requestNtp();
                 }
                 else
@@ -451,9 +449,7 @@ bool ProvisioningExtension::beginStation()
                 associated = true;
                 break;
             }
-            Serial.printf("[provision] boot STA rejoin %u (link=%d)\n",
-                          static_cast<unsigned>(round + 1U),
-                          link);
+            Serial.printf("[provision] boot STA rejoin %u (link=%d)\n", static_cast<unsigned>(round + 1U), link);
             cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
             delay(100);
         }
@@ -487,9 +483,7 @@ bool ProvisioningExtension::beginStation()
                 if (associatedMs == 0UL || millis() - associatedMs >= 1000UL)
                 {
                     associated = false;
-                    Serial.printf("[provision] link=%d status=%d — rejoin\n",
-                                  link,
-                                  static_cast<int>(WiFi.status()));
+                    Serial.printf("[provision] link=%d status=%d — rejoin\n", link, static_cast<int>(WiFi.status()));
                     break;
                 }
             }
@@ -1019,8 +1013,8 @@ void ProvisioningExtension::onPostConnect(AsyncWebServerRequest *request)
     pendingKey = request->hasParam("key", true) ? request->getParam("key", true)->value().c_str() : "";
     if (pendingSsid.empty())
     {
-        request->send(t_http_codes::HTTP_CODE_BAD_REQUEST, "text/html",
-                      "<p>SSID required. <a href=/portal>Back</a></p>");
+        request->send(
+            t_http_codes::HTTP_CODE_BAD_REQUEST, "text/html", "<p>SSID required. <a href=/portal>Back</a></p>");
         return;
     }
 
@@ -1028,8 +1022,8 @@ void ProvisioningExtension::onPostConnect(AsyncWebServerRequest *request)
     // finishes) — display stuck on "...". Save creds, stop AP, reboot; cold boot joins cleanly.
     if (!saveCredentials(pendingSsid, pendingKey))
     {
-        request->send(t_http_codes::HTTP_CODE_INTERNAL_SERVER_ERROR, "text/html",
-                      "<p>Save failed. <a href=/portal>Back</a></p>");
+        request->send(
+            t_http_codes::HTTP_CODE_INTERNAL_SERVER_ERROR, "text/html", "<p>Save failed. <a href=/portal>Back</a></p>");
         return;
     }
     Serial.printf("[provision] saved ssid='%s', will reboot\n", pendingSsid.c_str());
@@ -1042,10 +1036,7 @@ void ProvisioningExtension::onPostConnect(AsyncWebServerRequest *request)
     request->send(t_http_codes::HTTP_CODE_OK, "text/html", portalDoneHtml);
 }
 
-void ProvisioningExtension::servePortal(AsyncWebServerRequest *request)
-{
-    onGetPortal(request);
-}
+void ProvisioningExtension::servePortal(AsyncWebServerRequest *request) { onGetPortal(request); }
 
 bool ProvisioningExtension::handleNotFound(AsyncWebServerRequest *request)
 {
