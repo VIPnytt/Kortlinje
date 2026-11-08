@@ -38,7 +38,7 @@ scripts = [
     "cryptography==50.0.2",
     "python-dotenv==1.2.4",
     "tzdata==2026.5",
-    "tzlocal==5.4.4",
+    "tzlocal==5.4.5",
 ]
 
 [tool.ruff]
