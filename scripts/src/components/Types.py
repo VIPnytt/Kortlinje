@@ -8,6 +8,7 @@ COMMAND_LINE_TARGETS = globals().get("COMMAND_LINE_TARGETS", [])
 
 class BoardConfig:
     def get(self, key: str, default: typing.Any = None) -> typing.Any:
+        """Declare board configuration lookup; this placeholder raises NotImplementedError."""
         raise NotImplementedError
 
     def update(self, key: str, value: typing.Any) -> None:
@@ -16,6 +17,7 @@ class BoardConfig:
 
 class ProjectConfig:
     def get(self, section: str, option: str, default: typing.Any = None) -> typing.Any:
+        """Declare project option lookup within a section; this placeholder raises NotImplementedError."""
         raise NotImplementedError
 
 
