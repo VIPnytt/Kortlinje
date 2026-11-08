@@ -1,13 +1,10 @@
-import {
-    mdiPower,
-    mdiSleep,
-} from "@mdi/js";
+import { mdiPower, mdiSleep } from "@mdi/js";
 import { type Component, createSignal } from "solid-js";
 
 import { Icon } from "../components/Icon";
 import { Tooltip } from "../components/Tooltip";
-import { SidebarSection } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection } from "../extensions/WebUI";
 
 export const name = "Display";
 
@@ -69,7 +66,25 @@ export const Sidebar: Component = () => {
                     >
                         <Icon path={mdiPower} />
                     </button>
-                    <Tooltip text={`Brightness ${Math.floor((([1, 2, 4, 10, 11, 12, 13, 14][getBrightness() - 1] - 1) / 13) * 99) + 1} %`}>
+                    <Tooltip
+                        text={`Brightness ${
+                            Math.floor(
+                                (([
+                                    1,
+                                    2,
+                                    4,
+                                    10,
+                                    11,
+                                    12,
+                                    13,
+                                    14,
+                                ][getBrightness() - 1] -
+                                    1) /
+                                    13) *
+                                    99,
+                            ) + 1
+                        } %`}
+                    >
                         <input
                             class="w-full"
                             max="8"

@@ -6,8 +6,8 @@ import { Temporal } from "temporal-polyfill-lite";
 import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
-import { SidebarSection } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection } from "../extensions/WebUI";
 import { name as DisplayName, DisplayPower } from "../services/Display";
 import { ModesMode, name as ModesName } from "../services/Modes";
 

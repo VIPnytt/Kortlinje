@@ -64,7 +64,7 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
                         return p + (c - p) / (i + 1);
                     }, 0);
                     callback([
-                        frame.map((i) => (i > avg)),
+                        frame.map((i) => i > avg),
                     ]);
                 }
             };

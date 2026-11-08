@@ -14,7 +14,8 @@ void WebUiExtension::begin()
     WebServerService::http.on("/", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetHtml);
     WebServerService::http.on("/favicon.svg", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetSvg);
     WebServerService::http.on("/index.css", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetCss);
-    WebServerService::http.on("/index.js", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetJavascript);
+    WebServerService::http.on(
+        "/index.js", AsyncWebRequestMethod::AsyncWebRequestMethodType::HTTP_GET, &onGetJavascript);
 }
 
 void WebUiExtension::handle()

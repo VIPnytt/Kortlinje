@@ -55,8 +55,8 @@ void WebSocketExtension::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *c
                     if (pair.value().is<JsonObjectConst>())
                     {
                         DeviceService::receive(pair.value().as<JsonObjectConst>(),
-                                       name,
-                                       std::string_view(pair.key().c_str(), pair.key().size()));
+                                               name,
+                                               std::string_view(pair.key().c_str(), pair.key().size()));
                     }
                 }
             }

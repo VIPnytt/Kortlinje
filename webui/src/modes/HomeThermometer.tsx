@@ -47,7 +47,7 @@ export const MainSecondary: Component = () => {
                     indoor: 70,
                     outdoor: 50,
                 };
-            default: // °K
+            default: // K
                 return {
                     indoor: 295,
                     outdoor: 280,

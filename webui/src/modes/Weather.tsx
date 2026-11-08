@@ -2,8 +2,8 @@ import { mdiWeb } from "@mdi/js";
 import { type Component, createSignal, For } from "solid-js";
 
 import { Icon } from "../components/Icon";
-import { SidebarSection } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection } from "../extensions/WebUI";
 
 export const name = "Weather";
 

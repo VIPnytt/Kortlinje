@@ -5,4 +5,3 @@ export const EXTENSION_SIGNAL: boolean = import.meta.env.VITE_EXTENSION_SIGNAL =
 
 export const MODE_DRAW: boolean = import.meta.env.VITE_MODE_DRAW === "true";
 export const MODE_STREAM: boolean = import.meta.env.VITE_MODE_STREAM === "true";
-export const MODE_WEATHER: boolean = import.meta.env.VITE_MODE_WEATHER === "true";

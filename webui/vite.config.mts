@@ -9,8 +9,8 @@ export default defineConfig(({ mode }) => ({
     build: {
         rolldownOptions: {
             output: {
-                entryFileNames: '[name].js',
-                assetFileNames: '[name].[ext]',
+                entryFileNames: "[name].js",
+                assetFileNames: "[name].[ext]",
             },
         },
     },
@@ -46,9 +46,15 @@ export default defineConfig(({ mode }) => ({
                 for (const file of Object.values(bundle)) {
                     if (file.type === "asset") {
                         if (file.fileName === "index.css") {
-                            file.source = file.source.toString().replace(/\/\*.*?\*\//g, "").trim();
+                            file.source = file.source
+                                .toString()
+                                .replace(/\/\*.*?\*\//g, "")
+                                .trim();
                         } else if (file.fileName === "index.html") {
-                            file.source = file.source.toString().replace(/\r?\n\s*/g, "").trim();
+                            file.source = file.source
+                                .toString()
+                                .replace(/\r?\n\s*/g, "")
+                                .trim();
                         }
                     }
                 }

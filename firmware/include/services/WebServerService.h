@@ -30,11 +30,6 @@ public:
         return out;
     }
 
-    template <std::size_t N> [[nodiscard]] static consteval auto embed(const unsigned char (&&raw)[N])
-    {
-        return std::to_array(raw);
-    }
-
     static inline AsyncWebServer http{80U};
 
     void begin();

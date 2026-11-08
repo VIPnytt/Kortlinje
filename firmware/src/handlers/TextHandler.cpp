@@ -85,7 +85,8 @@ void TextHandler::draw(int16_t x, int8_t y) const
                             if (pixelX >= 0 && pixelX < GRID_COLUMNS && pixelY >= 0 && pixelY < GRID_ROWS &&
                                 (((bitmap[_y] >> (msbMax - _x)) & 0b1U) != 0U))
                             {
-                                DisplayService::setPixel(static_cast<uint8_t>(pixelX), static_cast<uint8_t>(pixelY), true);
+                                DisplayService::setPixel(
+                                    static_cast<uint8_t>(pixelX), static_cast<uint8_t>(pixelY), true);
                             }
                         }
                     }

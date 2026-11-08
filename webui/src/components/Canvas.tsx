@@ -52,12 +52,8 @@ export const Canvas: Component<{
         canvasRef.height = divRef.clientHeight;
         const columnWidth = canvasRef.width / Device.GRID_COLUMNS;
         const rowHeight = canvasRef.height / Device.GRID_ROWS;
-        const pixelHeight =
-            rowHeight *
-            (Device.LED_SIZE_VERTICAL / Device.PITCH_VERTICAL);
-        const pixelWidth =
-            columnWidth *
-            (Device.LED_SIZE_HORIZONTAL / Device.PITCH_HORIZONTAL);
+        const pixelHeight = rowHeight * (Device.LED_SIZE_VERTICAL / Device.PITCH_VERTICAL);
+        const pixelWidth = columnWidth * (Device.LED_SIZE_HORIZONTAL / Device.PITCH_HORIZONTAL);
         const offsetX = (columnWidth - pixelWidth) / 2;
         const offsetY = (rowHeight - pixelHeight) / 2;
         const ctx = canvasRef.getContext("2d");
@@ -79,8 +75,8 @@ export const Canvas: Component<{
     };
 
     const toColor = (lit: boolean) => {
-        const factor = (lit ? 0xFF : Device.LED_BASE_TONE) / 0xFF;
-        return `rgb(${factor * 0xF4},${factor * 0xEB},${factor * 0xDC})`;
+        const factor = (lit ? 0xff : Device.LED_BASE_TONE) / 0xff;
+        return `rgb(${factor * 0xf4},${factor * 0xeb},${factor * 0xdc})`;
     };
 
     const handleEvent = (e: PointerEvent) => {

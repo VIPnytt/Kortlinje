@@ -22,8 +22,8 @@ import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
 import { Device } from "../config/devices";
-import { SidebarSection, WebUISidebar } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection, WebUISidebar } from "../extensions/WebUI";
 import { MainComponent as ModesMainComponent } from "../services/Modes";
 
 export const name = "Animation";
@@ -53,7 +53,7 @@ export const receiver = (json: { frame?: Frame; index?: number; interval?: numbe
 
 let divRef: HTMLDivElement | undefined;
 
-const template = new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(0);
+const template = new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false);
 
 const handleFrameAt = (index: number, frame: Frame) => (frames: Frame[]) => {
     const next = [
@@ -409,7 +409,7 @@ export const Main: Component = () => {
                                                     class="canvas-action-negative"
                                                     disabled={
                                                         !getFramesDraft()
-                                                        [index()][0]?.()
+                                                            [index()][0]?.()
                                                             .some((pixel) => pixel)
                                                     }
                                                     onclick={() => handleClear(index())}

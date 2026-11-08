@@ -84,5 +84,5 @@ jobs:
         uses: sindrel/endoflife-github-action@5f91adaabc542a346876290ff0f447c7bc355f99 # v1.0.3
         with:
           product: python
-          version: 3.11
+          version: 3.13
           fail_on_eol: true

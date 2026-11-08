@@ -28,7 +28,6 @@ class Firmware:
         """
         Define C/C++ preprocessor macros from dotenv options, including enabled extension counts and temperature-unit selections. Unsupported temperature units are logged as warnings.
         """
-        count_extension = 0
         for option, _value in self.project.dotenv.items():
             if (value := _value or "") in (
                 "false",
@@ -39,8 +38,6 @@ class Firmware:
                         (option, "true" if value == "true" else "false"),
                     ]
                 )
-                if value == "true" and option.startswith("EXTENSION_"):
-                    count_extension += 1
             else:
                 self.project.env.Append(
                     CPPDEFINES=[
@@ -61,17 +58,6 @@ class Firmware:
                                 (_option, "true"),
                             ]
                         )
-        self.project.env.Append(
-            CPPDEFINES=list(
-                {
-                    option: value
-                    for option, value in {
-                        "COUNT_EXTENSION": count_extension,
-                    }.items()
-                    if value
-                }.items()
-            )
-        )
 
     def _define_pio(self) -> None:
         """

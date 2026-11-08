@@ -3,14 +3,7 @@ import { createReconnectingWS, createWSState } from "@solid-primitives/websocket
 import { batch, createEffect, type ParentComponent } from "solid-js";
 
 import { HOSTNAME } from "../config/constants";
-import {
-    EXTENSION_MESSAGE,
-    EXTENSION_MIRROR,
-    EXTENSION_SIGNAL,
-    MODE_DRAW,
-    MODE_STREAM,
-    MODE_WEATHER,
-} from "../config/modules";
+import { EXTENSION_MESSAGE, EXTENSION_MIRROR, EXTENSION_SIGNAL, MODE_DRAW, MODE_STREAM } from "../config/modules";
 import { name as ModeDrawName, receiver as ModeDrawReceiver } from "../modes/Draw";
 import { name as ModeStreamName, receiver as ModeStreamReceiver } from "../modes/Stream";
 import { name as ModeTickerName, receiver as ModeTickerReceiver } from "../modes/Ticker";
@@ -28,10 +21,7 @@ import {
     receiver as ExtensionProvisioningReceiver,
 } from "./Provisioning";
 import { name as ExtensionSignalName, receiver as ExtensionSignalReceiver } from "./Signal";
-import {
-    receiver as ExtensionWebUIReceiver,
-    Canonical as WebUICanonical,
-} from "./WebUI";
+import { receiver as ExtensionWebUIReceiver, Canonical as WebUICanonical } from "./WebUI";
 
 export const name = "WebSocket";
 export const WebSocketUrl = `ws://${HOSTNAME}.local/ws`;
@@ -69,12 +59,12 @@ export const WebSocketmessages: ParentComponent = (props) => {
             json[FontsName] && FontsReceiver(json[FontsName]);
             json[ModesName] && ModesReceiver(json[ModesName]);
             json[ModeTickerName] && ModeTickerReceiver(json[ModeTickerName]);
+            json[ModeWeatherName] && ModeWeatherReceiver(json[ModeWeatherName]);
             EXTENSION_MESSAGE && json[ExtensionMessageName] && ExtensionMessageReceiver(json[ExtensionMessageName]);
             EXTENSION_MIRROR && json[ExtensionMirrorName] && ExtensionMirrorReceiver(json[ExtensionMirrorName]);
             EXTENSION_SIGNAL && json[ExtensionSignalName] && ExtensionSignalReceiver(json[ExtensionSignalName]);
             MODE_DRAW && json[ModeDrawName] && ModeDrawReceiver(json[ModeDrawName]);
             MODE_STREAM && json[ModeStreamName] && ModeStreamReceiver(json[ModeStreamName]);
-            MODE_WEATHER && json[ModeWeatherName] && ModeWeatherReceiver(json[ModeWeatherName]);
         });
     });
     return props.children;
