@@ -40,9 +40,7 @@ class Certificate:
         Ensure the bundle file exists and disable the project certificate
         component when the sole target is ``compiledb``. Filesystem and SSL
         context errors propagate."""
-        if COMMAND_LINE_TARGETS in [
-            ["compiledb"],
-        ]:
+        if COMMAND_LINE_TARGETS == ["compiledb"]:
             if not self.path.is_file():
                 self.finalize()
             self.project.certificate = None
@@ -169,6 +167,8 @@ class Certificate:
         encryption ciphers are excluded. SSL context creation, certifi loading,
         and cipher selection errors propagate."""
         ctx = ssl.create_default_context(cafile=certifi.where())
+        ctx.maximum_version = ssl.TLSVersion.TLSv1_2
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         ctx.set_ciphers(f"{cipher_pref}:!aNULL:!eNULL")
         return ctx
 
