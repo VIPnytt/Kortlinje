@@ -45,7 +45,7 @@ class Certificate:
                 self.finalize()
             self.project.certificate = None
             return
-        self._ssl_contexts = tuple(self._create_ssl_context(cipher) for cipher in ("ECDSA", "RSA"))
+        self._ssl_contexts = tuple(self._create_ssl_context(cipher) for cipher in ("aECDSA", "aRSA"))
 
     def finalize(self) -> None:
         """Create or overwrite the PEM bundle at ``path``.
@@ -167,8 +167,8 @@ class Certificate:
         encryption ciphers are excluded. SSL context creation, certifi loading,
         and cipher selection errors propagate."""
         ctx = ssl.create_default_context(cafile=certifi.where())
-        ctx.maximum_version = ssl.TLSVersion.TLSv1_2
         ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        ctx.maximum_version = ssl.TLSVersion.TLSv1_2
         ctx.set_ciphers(f"{cipher_pref}:!aNULL:!eNULL")
         return ctx
 
