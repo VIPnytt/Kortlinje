@@ -19,14 +19,14 @@ const [getDuration, setDuration] = createSignal<number>(parseInt(Cookies.get(`${
 const [getEnabled, setEnabled] = createSignal<boolean>(false);
 const [getSchedule, setSchedule] = createSignal<Item[]>([]);
 
-export const PlaylistActive = getEnabled;
+export const PlaylistEnabled = getEnabled;
 
 export const receiver = (json: { enabled?: boolean; schedule?: Item[] }) => {
     json?.enabled !== undefined && setEnabled(json.enabled);
     json?.schedule !== undefined && setSchedule(json.schedule);
 };
 
-const handleActive = () => {
+const handleEnabled = () => {
     setEnabled(!getEnabled());
     WebSocketWS.send(
         JSON.stringify({
@@ -51,7 +51,7 @@ export const Actions: Component = () => (
             <button
                 class={`w-full ${getEnabled() ? "action-activated" : "action-deactivated"}`}
                 disabled={!getSchedule().length}
-                onclick={handleActive}
+                onclick={handleEnabled}
                 type="button"
             >
                 <Icon path={getEnabled() ? mdiStop : mdiPlay} />
@@ -115,7 +115,7 @@ export const MainThird: Component = () => {
     };
 
     const handleRemove = (index: number) => {
-        setSchedule(getSchedule().filter((_, i) => i !== index));
+        setSchedule(getSchedule().filter((_, idx) => idx !== index));
     };
 
     return (
@@ -185,7 +185,7 @@ export const MainThird: Component = () => {
                                 <button
                                     class={`w-full ${getEnabled() ? "action-activated" : "action-positive"}`}
                                     disabled={getSchedule().length < 2}
-                                    onclick={handleActive}
+                                    onclick={handleEnabled}
                                     type="button"
                                 >
                                     <Icon path={getEnabled() ? mdiStop : mdiPlay} />

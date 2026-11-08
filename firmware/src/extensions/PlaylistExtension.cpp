@@ -101,7 +101,7 @@ void PlaylistExtension::loadSchedule()
         JsonDocument doc{};
         const DeserializationError error{deserializeJson(doc, file)};
         file.close();
-        if (ArduinoJson::V743PB22::DeserializationError::Ok && doc.is<JsonArrayConst>())
+        if (error == ArduinoJson::V743PB22::DeserializationError::Ok && doc.is<JsonArrayConst>())
         {
             for (const JsonVariantConst item : doc.as<JsonArrayConst>())
             {
@@ -171,8 +171,8 @@ void PlaylistExtension::onReceive(JsonObjectConst payload, std::string_view sour
 
 void PlaylistExtension::onTransmit(JsonObjectConst payload, std::string_view source)
 {
-    if (enabled && source == ModesService::name && payload["mode"].is<std::string>() &&
-        payload["mode"].as<std::string>() != currentMode)
+    if (enabled && source == ModesService::name && payload["mode"].is<std::string_view>() &&
+        payload["mode"].as<std::string_view>() != currentMode)
     {
         setEnabled(false);
     }
