@@ -25,15 +25,25 @@ class Weather:
         raise ValueError. When the certificate component is enabled, probe every
         host in HOSTS, regardless of the selected weather mode.
         """
-        for option in (
-            "LATITUDE",
-            "LONGITUDE",
-        ):
-            self.project.dotenv[option] = (
-                f"{float(self.project.dotenv[option]):.4f}".rstrip("0").rstrip(".")
-                if option in self.project.dotenv
-                else "0"
-            )
         if self.project.certificate:
             for hostname in self.HOSTS:
                 self.project.certificate.add_host(hostname)
+        options = (
+            "LATITUDE",
+            "LONGITUDE",
+        )
+        precision = min(
+            4,
+            max(
+                (
+                    len(str(self.project.dotenv[option]).strip().partition(".")[2].rstrip("0"))
+                    for option in options
+                    if option in self.project.dotenv
+                ),
+                default=0,
+            ),
+        )
+        for option in options:
+            self.project.dotenv[option] = (
+                f"{float(self.project.dotenv[option]):.{precision}f}" if option in self.project.dotenv else "0"
+            )

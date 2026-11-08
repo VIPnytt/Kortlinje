@@ -32,6 +32,7 @@ The firmware currently includes the following standalone render modes switchable
 - **Snake:** Autonomous, self-playing demo animation.
 - **Temperature:** Displays live ambient temperature telemetry from the onboard sensor.
 - **Text Ticker:** Horizontal scrolling marquee displaying text.
+- **Weather:** Displays live weather telemetry from a configured provider.
 - **Weekday:** Displays the current day of the week.
 
 ## Hardware & Modding
