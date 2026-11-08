@@ -1,5 +1,6 @@
 #pragma once
 
+#include "handlers/EmbedHandler.h"
 #include "services/WebServerService.h"
 
 #include <Arduino.h>

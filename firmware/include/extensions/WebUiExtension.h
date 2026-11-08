@@ -1,5 +1,6 @@
 #pragma once
 
+#include "handlers/EmbedHandler.h"
 #include "modules/ExtensionModule.h"
 #include "services/WebServerService.h"
 
@@ -13,16 +14,16 @@ class WebUiExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"Web UI"};
 
-    static constexpr auto css{WebServerService::embed({
+    static constexpr auto css{EmbedHandler::embed<uint8_t>({
 #embed "../../../webui/dist/index.css.gz"
     })};
-    static constexpr auto html{WebServerService::embed({
+    static constexpr auto html{EmbedHandler::embed<uint8_t>({
 #embed "../../../webui/dist/index.html.gz"
     })};
-    static constexpr auto javascript{WebServerService::embed({
+    static constexpr auto javascript{EmbedHandler::embed<uint8_t>({
 #embed "../../../webui/dist/index.js.gz"
     })};
-    static constexpr auto svg{WebServerService::embed({
+    static constexpr auto svg{EmbedHandler::embed<uint8_t>({
 #embed "../../../webui/dist/favicon.svg.gz"
     })};
 
