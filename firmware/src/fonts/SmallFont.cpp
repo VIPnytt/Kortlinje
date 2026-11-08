@@ -126,6 +126,8 @@ FontModule::Symbol SmallFont::getChar(char32_t character) const
         return toSymbol(latinSmallLetterUWithDiaeresis);
     case U'π': // U+03C0 GREEK SMALL LETTER PI
         return toSymbol(greekSmallLetterPi);
+    case U'\U0001F4F6': // ANTENNA WITH BARS (wifi cue)
+        return toSymbol(antennaWithBars);
     default:
         return {};
     }

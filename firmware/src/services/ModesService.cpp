@@ -1,5 +1,6 @@
 #include "services/ModesService.h"
 
+#include "extensions/ProvisioningExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
@@ -21,6 +22,18 @@ void ModesService::begin()
 
 void ModesService::handle()
 {
+    static bool provisioningShown{false};
+    if (ProvisioningExtension::isActive())
+    {
+        provisioningShown = true;
+        ProvisioningExtension::draw();
+        return;
+    }
+    if (provisioningShown && mode != nullptr)
+    {
+        provisioningShown = false;
+        mode->begin(); // re-arm pending so modes that only redraw on change repaint
+    }
     if (mode != nullptr)
     {
         mode->handle();
