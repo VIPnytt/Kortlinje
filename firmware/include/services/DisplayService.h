@@ -53,6 +53,7 @@ public:
     static void drawLineVertical(uint8_t x, uint8_t yMin, uint8_t yMax, bool lit);
     static void drawRectangleSolid(uint8_t minX, uint8_t columns, uint8_t minY, uint8_t maxY, bool lit);
     static void fillFrame(bool lit);
+    static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
     static void onReceive(JsonObjectConst payload, std::string_view source);
     static void setBrightness(Brightness _brightness);
     static void setPixel(uint8_t x, uint8_t y, bool lit);

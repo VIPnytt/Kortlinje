@@ -325,6 +325,45 @@ void DisplayService::invertFrame()
     render = true;
 }
 
+/**
+ * @brief Adds the Home Assistant light component configuration to a discovery document.
+ *
+ * @param discovery Discovery document to update.
+ * @param topic Base MQTT topic for the component state.
+ * @param unique Prefix used to construct the component's unique identifier.
+ */
+void DisplayService::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    const std::string id{std::string(name).append("_light")};
+    const std::string topicDisplay{std::string(topic).append(name)};
+    const std::string topicModes{std::string(topic).append(ModesService::name)};
+    JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+    component[HomeAssistantAbbreviations::brightness_command_template].set(R"({"brightness":{{value}}})");
+    component[HomeAssistantAbbreviations::brightness_command_topic].set(topicDisplay + "/set");
+    component[HomeAssistantAbbreviations::brightness_scale].set(8U);
+    component[HomeAssistantAbbreviations::brightness_state_topic].set(topicDisplay);
+    component[HomeAssistantAbbreviations::brightness_value_template].set("{{value_json.brightness}}");
+    component[HomeAssistantAbbreviations::command_topic].set(topicDisplay + "/set");
+    component[HomeAssistantAbbreviations::effect_command_template].set(R"({"mode":"{{value}}"})");
+    component[HomeAssistantAbbreviations::effect_command_topic].set(topicModes + "/set");
+    JsonArray effectList{component[HomeAssistantAbbreviations::effect_list].to<JsonArray>()};
+    for (const std::string_view _mode : ModesService::names)
+    {
+        effectList.add(_mode);
+    }
+    component[HomeAssistantAbbreviations::effect_state_topic].set(topicModes);
+    component[HomeAssistantAbbreviations::effect_value_template].set("{{value_json.mode}}");
+    component[HomeAssistantAbbreviations::icon].set("mdi:clock-digital");
+    component[HomeAssistantAbbreviations::name].set("");
+    component[HomeAssistantAbbreviations::on_command_type].set("brightness");
+    component[HomeAssistantAbbreviations::payload_off].set(R"({"power":false})");
+    component[HomeAssistantAbbreviations::payload_on].set(R"({"power":true})");
+    component[HomeAssistantAbbreviations::platform].set("light");
+    component[HomeAssistantAbbreviations::state_topic].set(topicDisplay);
+    component[HomeAssistantAbbreviations::state_value_template].set(R"({"power":{{value_json.power|lower}}})");
+    component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+}
+
 void DisplayService::onReceive(JsonObjectConst payload, std::string_view source)
 {
     if (payload["brightness"].is<uint8_t>())

@@ -1,8 +1,5 @@
 #pragma once
 
-#define WIFI_SSID "name"
-#define WIFI_KEY "password"
-
 #define PIN_CLK1 1
 #define PIN_CLK2 2
 #define PIN_CLK3 3
@@ -22,3 +19,10 @@
 
 #define PIN_TOP 26
 #define PIN_REAR 27
+
+#define WIFI_SSID "name"
+#define WIFI_KEY "password"
+
+#define MQTT_HOST "mqtt.local"
+#define MQTT_USER "username"
+#define MQTT_KEY "password"

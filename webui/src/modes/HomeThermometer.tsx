@@ -4,8 +4,8 @@ import { type Component, createSignal } from "solid-js";
 import { Icon } from "../components/Icon";
 import { Tooltip } from "../components/Tooltip";
 import { TEMPERATURE_UNIT } from "../config/constants";
-import { EXTENSION_RESTFUL } from "../config/modules";
-import { name as ExtensionRestfulName, RestfulUrl } from "../extensions/Restful";
+import { name as ExtensionMqttName, MqttTopic } from "../extensions/Mqtt";
+import { name as ExtensionRestfulName, RestUrl } from "../extensions/Rest";
 import { name as ExtensionWebSocketName, WebSocketUrl } from "../extensions/WebSocket";
 import { name as ModesName } from "../services/Modes";
 
@@ -73,28 +73,45 @@ export const MainSecondary: Component = () => {
                                 temperature readings.
                             </a>
                         </div>
-                        {EXTENSION_RESTFUL && (
-                            <>
-                                <div class="border-t" />
-                                <h3>{ExtensionRestfulName}</h3>
-                                <div class="text-sm">
-                                    <span class="font-medium">Method:</span>{" "}
-                                    <span class="text-content-alt-light dark:text-content-alt-dark font-mono">
-                                        PATCH
-                                    </span>
-                                    <br />
-                                    <span class="font-medium">URL:</span>{" "}
-                                    <span class="text-content-alt-light dark:text-content-alt-dark font-mono">
-                                        {RestfulUrl + encodeURIComponent(name)}
-                                    </span>
-                                    <br />
-                                    <span class="font-medium">Body:</span>{" "}
-                                    <span class="text-content-alt-light dark:text-content-alt-dark font-mono whitespace-nowrap">
-                                        {payload}
-                                    </span>
-                                </div>
-                            </>
-                        )}
+                        <div class="border-t" />
+                        <h3>Home Assistant</h3>
+                        <div class="text-sm">
+                            <span class="font-medium">Automation:</span>{" "}
+                            <span class="text-content-alt-light dark:text-content-alt-dark">
+                                Set up in the user-interface.
+                            </span>
+                        </div>
+                        <div class="border-t" />
+                        <h3>{ExtensionMqttName}</h3>
+                        <div class="text-sm">
+                            <span class="font-medium">Topic:</span>{" "}
+                            <span class="text-content-alt-light dark:text-content-alt-dark font-mono whitespace-nowrap">
+                                {MqttTopic}/set
+                            </span>
+                            <br />
+                            <span class="font-medium">Message:</span>{" "}
+                            <span class="text-content-alt-light dark:text-content-alt-dark font-mono whitespace-nowrap">
+                                {payload}
+                            </span>
+                        </div>
+                        <div class="border-t" />
+                        <h3>{ExtensionRestfulName}</h3>
+                        <div class="text-sm">
+                            <span class="font-medium">Method:</span>{" "}
+                            <span class="text-content-alt-light dark:text-content-alt-dark font-mono">
+                                PATCH
+                            </span>
+                            <br />
+                            <span class="font-medium">URL:</span>{" "}
+                            <span class="text-content-alt-light dark:text-content-alt-dark font-mono">
+                                {RestUrl + encodeURIComponent(name)}
+                            </span>
+                            <br />
+                            <span class="font-medium">Body:</span>{" "}
+                            <span class="text-content-alt-light dark:text-content-alt-dark font-mono whitespace-nowrap">
+                                {payload}
+                            </span>
+                        </div>
                         <div class="border-t" />
                         <h3>{ExtensionWebSocketName}</h3>
                         <div class="text-sm">

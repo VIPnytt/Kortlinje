@@ -1,8 +1,8 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
-#include "hardware/pio.h"
 #include "modules/ExtensionModule.h"
+
+#include <hardware/pio.h>
 
 class ClimateExtension final : public ExtensionModule
 {
@@ -26,6 +26,7 @@ public:
     void configure() override;
     void begin() override;
     void handle() override;
+    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
 
     [[nodiscard]] uint8_t getHumidity() const;
 

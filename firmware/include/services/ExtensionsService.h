@@ -4,10 +4,12 @@
 #include "extensions/BatteryExtension.h"
 #include "extensions/ButtonExtension.h"
 #include "extensions/ClimateExtension.h"
+#include "extensions/MqttExtension.h"
 #include "extensions/OtaExtension.h"
 #include "extensions/PhotocellExtension.h"
 #include "extensions/PlaylistExtension.h"
 #include "extensions/ProvisioningExtension.h"
+#include "extensions/RestExtension.h"
 #include "extensions/WebSocketExtension.h"
 #include "extensions/WebUiExtension.h"
 #include "modules/ExtensionModule.h"
@@ -27,22 +29,26 @@ private:
     static inline BatteryExtension extensionBattery{};
     static inline ButtonExtension extensionButton{};
     static inline ClimateExtension extensionClimate{};
+    static inline MqttExtension extensionMqtt{};
     static inline OtaExtension extensionOta{};
     static inline PhotocellExtension extensionPhotocell{};
     static inline PlaylistExtension extensionPlaylist{};
     static inline ProvisioningExtension extensionProvisioning{};
+    static inline RestExtension extensionRest{};
     static inline WebSocketExtension extensionWebSocket{};
     static inline WebUiExtension extensionWebUi{};
 
-    static inline const std::array<ExtensionModule *, 10U> modules{
+    static inline const std::array<ExtensionModule *, 12U> modules{
         &extensionAlarm,
         &extensionBattery,
         &extensionButton,
         &extensionClimate,
+        &extensionMqtt,
         &extensionOta,
         &extensionPhotocell,
         &extensionPlaylist,
         &extensionProvisioning,
+        &extensionRest,
         &extensionWebSocket,
         &extensionWebUi,
     };

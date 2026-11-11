@@ -6,7 +6,6 @@
 #include "pio/climate.pio.h"
 #include "services/DeviceService.h"
 
-#include <algorithm>
 #include <hardware/clocks.h>
 #include <hardware/irq.h>
 
@@ -71,6 +70,39 @@ void __time_critical_func(ClimateExtension::onPacer)()
     pio_sm_exec(pio1, 0U, pio_encode_set(pio_src_dest::pio_pins, 0U));
     pio_sm_exec(pio1, 0U, pio_encode_jmp(0U));
     pio_sm_set_enabled(pio1, 0U, true);
+}
+
+void ClimateExtension::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_humidity")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::device_class].set("humidity");
+        component[HomeAssistantAbbreviations::name].set("Humidity");
+        component[HomeAssistantAbbreviations::platform].set("sensor");
+        component[HomeAssistantAbbreviations::state_class].set("measurement");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+        component[HomeAssistantAbbreviations::unit_of_measurement].set("%");
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.humidity}}");
+    }
+    {
+        const std::string id{std::string(name).append("_temperature")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::device_class].set("temperature");
+        component[HomeAssistantAbbreviations::name].set("Temperature");
+        component[HomeAssistantAbbreviations::platform].set("sensor");
+        component[HomeAssistantAbbreviations::state_class].set("measurement");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+#ifdef TEMPERATURE_UNIT
+        component[HomeAssistantAbbreviations::unit_of_measurement].set(TEMPERATURE_UNIT);
+#else
+        component[HomeAssistantAbbreviations::unit_of_measurement].set("°C");
+#endif // TEMPERATURE_UNIT
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.temperature}}");
+    }
 }
 
 void __time_critical_func(ClimateExtension::onSampler)()

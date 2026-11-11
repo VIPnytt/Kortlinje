@@ -1,6 +1,7 @@
 #include "extensions/PhotocellExtension.h"
 
 #include "config/secrets.h"
+#include "extensions/MqttExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "pio/photocell.pio.h"
 #include "services/DeviceService.h"
@@ -88,6 +89,48 @@ int64_t __time_critical_func(PhotocellExtension::onAlarm)(alarm_id_t id, void *u
     detected = false;
     pending = true;
     return 0LL;
+}
+
+/**
+ * @brief Adds Home Assistant discovery entries for photocell activation and illuminance.
+ *
+ * @param discovery JSON document receiving the discovery configuration.
+ * @param topic Base topic for the generated entities.
+ * @param unique Prefix used to generate unique entity identifiers.
+ */
+void PhotocellExtension::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_detected")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::device_class].set("light");
+        component[HomeAssistantAbbreviations::enabled_by_default].set(false);
+        component[HomeAssistantAbbreviations::icon].set("mdi:brightness-5");
+        component[HomeAssistantAbbreviations::name].set(name);
+        component[HomeAssistantAbbreviations::payload_off].set("False");
+        component[HomeAssistantAbbreviations::payload_on].set("True");
+        component[HomeAssistantAbbreviations::platform].set("binary_sensor");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.detected}}");
+    }
+    {
+        const std::string id{std::string(name).append("_enabled")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::command_template].set(R"({"enabled":{{value}}})");
+        component[HomeAssistantAbbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistantAbbreviations::icon].set("mdi:brightness-auto");
+        component[HomeAssistantAbbreviations::name].set(name);
+        component[HomeAssistantAbbreviations::payload_off].set("false");
+        component[HomeAssistantAbbreviations::payload_on].set("true");
+        component[HomeAssistantAbbreviations::platform].set("switch");
+        component[HomeAssistantAbbreviations::state_off].set("False");
+        component[HomeAssistantAbbreviations::state_on].set("True");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.enabled}}");
+    }
 }
 
 void __time_critical_func(PhotocellExtension::onPio)()

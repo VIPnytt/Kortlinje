@@ -21,5 +21,6 @@ public:
     virtual void begin();
     virtual void handle();
     virtual void end();
+    virtual void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
     virtual void onReceive(JsonObjectConst payload, std::string_view source);
 };
