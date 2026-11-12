@@ -5,6 +5,7 @@ import { batch, createEffect, type ParentComponent } from "solid-js";
 import { HOSTNAME } from "../config/constants";
 import { name as ModeTickerName, receiver as ModeTickerReceiver } from "../modes/Ticker";
 import { name as ModeWeatherName, receiver as ModeWeatherReceiver } from "../modes/Weather";
+import { name as ConnectivityName, receiver as ConnectivityReceiver } from "../services/Connectivity";
 import { name as DisplayName, receiver as DisplayReceiver } from "../services/Display";
 import { name as FontsName, receiver as FontsReceiver } from "../services/Fonts";
 import { name as ModesName, receiver as ModesReceiver } from "../services/Modes";
@@ -42,6 +43,7 @@ export const WebSocketmessages: ParentComponent = (props) => {
         }
         const json = JSON.parse(raw);
         batch(() => {
+            json[ConnectivityName] && ConnectivityReceiver(json[ConnectivityName]);
             json[DisplayName] && DisplayReceiver(json[DisplayName]);
             json[ExtensionAlarmName] && ExtensionAlarmReceiver(json[ExtensionAlarmName]);
             json[ExtensionPhotocellName] && ExtensionPhotocellReceiver(json[ExtensionPhotocellName]);

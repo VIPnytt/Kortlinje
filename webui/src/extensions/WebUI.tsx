@@ -8,6 +8,12 @@ import { Tooltip } from "../components/Tooltip";
 import { HOSTNAME, NAME } from "../config/constants";
 import { Device } from "../config/devices";
 import { VERSION } from "../config/version";
+import {
+    name as ConnectivityName,
+    SidebarSecondaryComponent as ConnectivitySecondarySidebarComponent,
+    MainThird as ConnectivityThird,
+    SidebarThird as ConnectivityThirdSidebar,
+} from "../services/Connectivity";
 import { Main as DisplayMain, DisplayPower, Sidebar as DisplaySidebar } from "../services/Display";
 import {
     Footer as ExtensionsFooter,
@@ -103,6 +109,9 @@ const Secondary: Component = () => (
     <Layout
         main={
             <Switch fallback={<MainSecondary />}>
+                <Match when={WebUIPath().startsWith(`/${ConnectivityName.toLowerCase()}`)}>
+                    <ConnectivityThird />
+                </Match>
                 <Match when={WebUIPath().startsWith(`/${ExtensionsName.toLowerCase()}`)}>
                     <ExtensionsThird />
                 </Match>
@@ -116,11 +125,19 @@ const Secondary: Component = () => (
                 <Switch
                     fallback={
                         <>
+                            <SidebarSectionSecondary title="Kortlinje">
+                                <div class="space-y-3">
+                                    <ConnectivitySecondarySidebarComponent />
+                                </div>
+                            </SidebarSectionSecondary>
                             <ExtensionsSecondarySidebar />
                             <ModesSecondarySidebar />
                         </>
                     }
                 >
+                    <Match when={WebUIPath().startsWith(`/${ConnectivityName.toLowerCase()}`)}>
+                        <ConnectivityThirdSidebar />
+                    </Match>
                     <Match when={WebUIPath().startsWith(`/${ExtensionsName.toLowerCase()}`)}>
                         <ExtensionsThirdSidebar />
                     </Match>

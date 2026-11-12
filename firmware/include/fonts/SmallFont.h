@@ -1026,16 +1026,12 @@ private:
         0b01010U,
     };
 
-    // U+1F4F6 📶 ANTENNA WITH BARS — SoftAP cue (7×8): outer arc 3px (mid-3×2 + tips), single base dot
-    static constexpr std::array<uint8_t, 8U> antennaWithBars{
-        0b0011100U,
-        0b0111110U,
-        0b1000001U,
-        0b0000000U,
-        0b0011100U,
-        0b0100010U,
-        0b0000000U,
-        0b0001000U,
+    // U+1F4F6 📶 ANTENNA WITH BARS
+    static constexpr std::array<uint8_t, 4U> antennaWithBars{
+        0b0000001U,
+        0b0000101U,
+        0b0010101U,
+        0b1010101U,
     };
 
 public:

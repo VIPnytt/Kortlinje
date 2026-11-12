@@ -1,6 +1,7 @@
 #pragma once
 
 #include "modules/ServiceModule.h"
+#include "services/ConnectivityService.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
 #include "services/FontsService.h"
@@ -34,6 +35,8 @@ private:
     float temperature{.0F};
 
     float voltage{.0F};
+
+    ConnectivityService connectivity{};
 
     DisplayService display{};
 

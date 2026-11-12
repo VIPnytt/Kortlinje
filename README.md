@@ -93,20 +93,12 @@ Using PlatformIO, run **Upload** to compile and flash the firmware to the RP2350
 
 ## 🤖 Connectivity & API
 
-Kortlinje provides local network control and telemetry through a built-in web application and a unified, bidirectional API.
+Provides local network control and telemetry through a built-in Web UI and a unified, bidirectional API:
 
-### Smart-Home & Web Control
-
-- **Web UI:** Access the device in your browser for a live display preview and interactive controls.
-- **Home Assistant:** Native support via MQTT device discovery, automatically exposing device controls, display modes, and onboard sensors.
-
-### API Interfaces
-
-All three API interfaces serve the same endpoints and support full two-way communication for both reading state and controlling the device:
-
-- **HTTP REST:** Request-based access for querying state and sending commands.
-- **MQTT:** Topic-based state publishing and command subscriptions (including Home Assistant discovery).
-- **WebSocket:** Persistent connection for real-time two-way state updates and control.
+- **Web UI:** Browser-based control panel with a live display preview, interactive controls, and multi-network Wi-Fi management.
+- **Hotspot Mode:** Hold the rear cogwheel button if no known networks are available to connect directly to the device and configure Wi-Fi credentials.
+- **Home Assistant:** Native integration via MQTT device discovery for automatic setup of controls and sensor telemetry.
+- **Unified API:** Full two-way state reporting and control across **HTTP REST**, **MQTT**, and **WebSocket**.
 
 ## 🤝 Contributing
 

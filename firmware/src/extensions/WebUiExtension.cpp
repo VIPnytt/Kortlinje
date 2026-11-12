@@ -1,6 +1,5 @@
 #include "extensions/WebUiExtension.h"
 
-#include "extensions/ProvisioningExtension.h"
 #include "extensions/WebSocketExtension.h"
 #include "handlers/EmbedHandler.h"
 #include "services/DeviceService.h"
@@ -130,11 +129,6 @@ void WebUiExtension::onGetSvg(AsyncWebServerRequest *request)
 
 void WebUiExtension::onHtml(AsyncWebServerRequest *request)
 {
-    // Serve portal HTML directly (no 302) — some captive detectors do not follow redirects.
-    if (ProvisioningExtension::handleNotFound(request))
-    {
-        return;
-    }
     static constexpr auto content{EmbedHandler::embed<uint8_t>({
 #embed "../../../webui/dist/index.html.gz"
     })};

@@ -2,6 +2,7 @@
 
 #include "config/secrets.h"
 #include "config/version.h"
+#include "services/ConnectivityService.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
@@ -28,6 +29,7 @@ void MqttExtension::begin()
     const std::string topic{std::string("kortlinje/" HOSTNAME "/")};
     const std::string unique{std::format("0x{}_", rp2040.getChipID())};
     JsonDocument discovery{};
+    ConnectivityService::onHomeAssistant(discovery, topic, unique);
     DeviceService::onHomeAssistant(discovery, topic, unique);
     DisplayService::onHomeAssistant(discovery, topic, unique);
     ModesService::onHomeAssistant(discovery, topic, unique);

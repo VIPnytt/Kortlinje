@@ -5,7 +5,6 @@
 #include "config/version.h"
 #include "extensions/AlarmExtension.h"
 #include "extensions/ButtonExtension.h"
-#include "extensions/ProvisioningExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
@@ -21,40 +20,20 @@
 
 void DeviceService::begin0()
 {
-    Serial.begin(115200);
-    Serial.println("[boot] core0");
-    // Only core0 mounts LittleFS (never on core1 — dual mount races).
-    const bool fsOk{LittleFS.begin()};
-    Serial.printf("[boot] LittleFS %s\n", fsOk ? "ok" : "FAIL");
-#if defined(PROVISION_CLEAR_WIFI) && PROVISION_CLEAR_WIFI
-    static_cast<void>(ConfigHandler::remove("Wifi", "ssid"));
-    static_cast<void>(ConfigHandler::remove("Wifi", "key"));
-    Serial.println("[provision] cleared LittleFS Wifi (PROVISION_CLEAR_WIFI)");
-#endif
+    LittleFS.begin();
     extensions.configure();
-    Serial.println("[boot] configured");
-    WiFi.setHostname(HOSTNAME);
-    setenv("TZ", TIME_ZONE_POSIX, 1);
-    tzset();
-    // Join WiFi before the web server binds — lwIP/DHCP is happier on a cold STA bring-up.
-    const bool station{ProvisioningExtension::beginStation()};
-    Serial.printf("[boot] station=%d\n", station ? 1 : 0);
+    connectivity.begin();
     webServer.begin();
     extensions.begin();
-    Serial.println("[boot] extensions ready");
-    rp2040.fifo.push(1UL);
-    if (station)
+    if (WiFi.getMode() == WIFI_STA && WiFi.connected())
     {
-        NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
         NTP.waitSet(&onWaitSet);
     }
-    Serial.println("[boot] core0 done");
+    rp2040.fifo.push(1UL);
 }
 
 void DeviceService::begin1()
 {
-    // Display must not wait on FS/WiFi — otherwise a LittleFS hang leaves a black panel forever.
-    // display.begin() already loads saved brightness from LittleFS — do not force DUTY14 here.
     display.begin();
     fonts.begin();
     static_cast<void>(rp2040.fifo.pop());
@@ -63,6 +42,7 @@ void DeviceService::begin1()
 
 void DeviceService::handle0()
 {
+    connectivity.handle();
     extensions.handle();
     if (!ButtonExtension::isEnabled())
     {
@@ -176,6 +156,11 @@ void DeviceService::receive(JsonObjectConst payload, std::string_view source, st
     if (name == destination)
     {
         onReceive(payload, source);
+        return;
+    }
+    if (ConnectivityService::name == destination)
+    {
+        ConnectivityService::onReceive(payload, source);
         return;
     }
     if (DisplayService::name == destination)
