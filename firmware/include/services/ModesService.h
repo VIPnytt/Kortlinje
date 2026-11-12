@@ -46,6 +46,7 @@ public:
     void setModeNext();
     void setModePrevious();
 
+    static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
     static void onReceive(JsonObjectConst payload, std::string_view source);
     static void setMode(std::string_view modeName, bool power = true);
 

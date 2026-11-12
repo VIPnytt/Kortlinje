@@ -115,6 +115,35 @@ void ModesService::setMode(std::string_view modeName, bool power)
 
 ModeModule *ModesService::getMode() { return mode.get(); }
 
+/**
+ * @brief Adds Home Assistant discovery metadata for selecting the device mode.
+ *
+ * @param discovery JSON document to populate with the select component configuration.
+ * @param topic Base MQTT topic for mode commands and state updates.
+ * @param unique Identifier used to create a unique component ID.
+ */
+void ModesService::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_mode")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::command_template].set(R"({"mode":"{{value}}"})");
+        component[HomeAssistantAbbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistantAbbreviations::icon].set("mdi:format-list-bulleted");
+        component[HomeAssistantAbbreviations::name].set("Mode");
+        JsonArray options{component[HomeAssistantAbbreviations::options].to<JsonArray>()};
+        for (const std::string_view _name : names)
+        {
+            options.add(_name);
+        }
+        component[HomeAssistantAbbreviations::platform].set("select");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.mode}}");
+    }
+}
+
 void ModesService::onReceive(JsonObjectConst payload, std::string_view source)
 {
     if (payload["mode"].is<std::string_view>())

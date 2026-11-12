@@ -11,7 +11,6 @@ Built upon the modular architecture of the [Frekvens](https://github.com/VIPnytt
 
 - [Features](#-features)
 - [Display modes](#️-display-modes)
-- [Subsystem status](#-subsystem-status)
 - [Hardware](#️-hardware)
 - [Getting started](#️-getting-started)
 - [Upload to the device](#️-upload-to-the-device)
@@ -35,7 +34,7 @@ Kortlinje retains the clock's original bedside functionality while expanding it 
   - Live temperature and humidity readings
   - Ambient light sensing
   - 8-step display brightness control
-  - Dual-rail power management (USB-C + AAA battery standby)
+  - Dual-rail power management (USB-C + AAA standby)
 - **Web UI** with live display preview
 - **API interfaces** (HTTP/REST and MQTT)
 - Step-by-step [modding documentation](https://github.com/VIPnytt/Kortlinje/wiki)
@@ -50,6 +49,7 @@ The firmware includes 12 standalone render modes switchable directly via the on-
 - **Equalizer:** Autonomous simulated spectrum visualizer.
 - **Humidity:** Displays live ambient humidity telemetry from the onboard sensor.
 - **Ping-pong:** Autonomous, self-playing demo animation.
+- **Scan:** Autonomous, self-playing demo animation.
 - **Snake:** Autonomous, self-playing demo animation.
 - **Temperature:** Displays live ambient temperature telemetry from the onboard sensor.
 - **Text Ticker:** Horizontal scrolling marquee displaying custom text.
@@ -68,9 +68,9 @@ Unlike pure LED matrix panels, the IKEA Kortlinje includes several integrated pe
 
 - **Display:** 3× VK1640 LED controller ICs
 - **Climate sensor:** Dedicated onboard temperature and humidity module
-- **Photocell:** Ambient light sensor for brightness adaptation
+- **Photocell:** Ambient light sensor for display adaptation
 - **Buzzer:** Internal piezo transducer for alarms and timer alerts
-- **Buttons:** 4 top and 4 rear control buttons (resistor ladder)
+- **Buttons:** 4 top and 4 rear control buttons (resistor ladders)
 - **Battery backup:** 2× AAA compartment for low-power standby
 
 ### Wiring & Modding
@@ -93,16 +93,24 @@ Using PlatformIO, run **Upload** to compile and flash the firmware to the RP2350
 
 ## 🤖 Connectivity & API
 
-Kortlinje includes local network interfaces for remote control and smart-home automation:
+Kortlinje provides local network control and telemetry through a built-in web application and a unified, bidirectional API.
 
-* **Web UI:** Access the device in your browser for live display reflection and mode control.
-* **HTTP REST:** Local endpoints for querying telemetry and switching states.
-* **WebSocket:** Live push updates for display and mode changes.
-* **MQTT:** Publish sensor telemetry and control the clock from platforms like Home Assistant.
+### Smart-Home & Web Control
+
+- **Web UI:** Access the device in your browser for a live display preview and interactive controls.
+- **Home Assistant:** Native support via MQTT device discovery, automatically exposing device controls, display modes, and onboard sensors.
+
+### API Interfaces
+
+All three API interfaces serve the same endpoints and support full two-way communication for both reading state and controlling the device:
+
+- **HTTP REST:** Request-based access for querying state and sending commands.
+- **MQTT:** Topic-based state publishing and command subscriptions (including Home Assistant discovery).
+- **WebSocket:** Persistent connection for real-time two-way state updates and control.
 
 ## 🤝 Contributing
 
 Kortlinje is open to makers, testers, and contributors. If you have modded a unit:
 
-* **Issues & Bugs:** Found a bug or unexpected behavior? Please [open an issue](https://github.com/VIPnytt/Kortlinje/issues).
-* **Discussions & Ideas:** Have questions about wiring or want to coordinate on new features? Jump into [GitHub Discussions](https://github.com/VIPnytt/Kortlinje/discussions).
+- **Issues & Bugs:** Found a bug or unexpected behavior? Please [open an issue](https://github.com/VIPnytt/Kortlinje/issues).
+- **Discussions & Ideas:** Have questions about wiring or want to coordinate on new features? Jump into [GitHub Discussions](https://github.com/VIPnytt/Kortlinje/discussions).

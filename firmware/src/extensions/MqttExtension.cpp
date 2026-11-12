@@ -28,7 +28,9 @@ void MqttExtension::begin()
     const std::string topic{std::string("kortlinje/" HOSTNAME "/")};
     const std::string unique{std::format("0x{}_", rp2040.getChipID())};
     JsonDocument discovery{};
+    DeviceService::onHomeAssistant(discovery, topic, unique);
     DisplayService::onHomeAssistant(discovery, topic, unique);
+    ModesService::onHomeAssistant(discovery, topic, unique);
     for (ExtensionModule *extension : ExtensionsService::getAll())
     {
         extension->onHomeAssistant(discovery, topic, unique);

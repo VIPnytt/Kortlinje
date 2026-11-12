@@ -141,6 +141,37 @@ int64_t __time_critical_func(PlaylistExtension::onAlarm)(alarm_id_t id, void *us
     return 0LL;
 }
 
+/**
+ * @brief Adds Home Assistant switch discovery configuration for the playlist.
+ *
+ * @param discovery JSON document receiving the discovery configuration.
+ * @param topic Base topic used for playlist commands and state.
+ * @param unique Unique identifier prefix for the Home Assistant entity.
+ */
+void PlaylistExtension::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_enabled")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::command_template].set(R"({"enabled":{{value}}})");
+        component[HomeAssistantAbbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistantAbbreviations::icon].set("mdi:format-list-bulleted");
+        component[HomeAssistantAbbreviations::json_attributes_template].set(
+            "{%set ns=namespace(d={})%}{%for i in value_json.schedule%}{%set ns.d=ns.d|combine({i.mode:i.duration})%}{%endfor%}{{ns.d}}");
+        component[HomeAssistantAbbreviations::json_attributes_topic].set(topic);
+        component[HomeAssistantAbbreviations::name].set(name);
+        component[HomeAssistantAbbreviations::payload_off].set("false");
+        component[HomeAssistantAbbreviations::payload_on].set("true");
+        component[HomeAssistantAbbreviations::platform].set("switch");
+        component[HomeAssistantAbbreviations::state_off].set("False");
+        component[HomeAssistantAbbreviations::state_on].set("True");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.enabled}}");
+    }
+}
+
 void PlaylistExtension::onReceive(JsonObjectConst payload, std::string_view source)
 {
     static_cast<void>(source);

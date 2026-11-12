@@ -4,7 +4,7 @@
 #include "modules/ExtensionModule.h"
 
 #include <Arduino.h>
-#include <MQTT.h>
+#include <MQTTClient.h>
 #include <WiFi.h>
 #include <format>
 #include <string>

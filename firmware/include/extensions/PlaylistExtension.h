@@ -21,6 +21,7 @@ public:
 
     void begin() override;
     void handle() override;
+    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
     void onReceive(JsonObjectConst payload, std::string_view source) override;
     void onTransmit(JsonObjectConst payload, std::string_view source) override;
 

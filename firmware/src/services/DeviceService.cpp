@@ -122,6 +122,51 @@ uint16_t DeviceService::getSamples()
 
 JsonObjectConst DeviceService::getTransmits() { return transmits.as<JsonObjectConst>(); }
 
+/**
+ * @brief Adds Home Assistant discovery definitions for device controls and temperature.
+ *
+ * @param discovery JSON document to receive the discovery components.
+ * @param topic Base topic used for device commands and temperature updates.
+ * @param unique Prefix used to create unique component identifiers.
+ */
+void DeviceService::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_temperature")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::device_class].set("temperature");
+        component[HomeAssistantAbbreviations::enabled_by_default].set(false);
+        component[HomeAssistantAbbreviations::entity_category].set("diagnostic");
+        component[HomeAssistantAbbreviations::name].set("Internal temperature");
+        component[HomeAssistantAbbreviations::platform].set("sensor");
+        component[HomeAssistantAbbreviations::state_class].set("measurement");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+#ifdef TEMPERATURE_UNIT
+        component[HomeAssistantAbbreviations::unit_of_measurement].set(TEMPERATURE_UNIT);
+#else
+        component[HomeAssistantAbbreviations::unit_of_measurement].set("°C");
+#endif // TEMPERATURE_UNIT
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.temperature}}");
+    }
+    {
+        const std::string id{std::string(name).append("_vsys")};
+        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistantAbbreviations::device_class].set("voltage");
+        component[HomeAssistantAbbreviations::enabled_by_default].set(false);
+        component[HomeAssistantAbbreviations::entity_category].set("diagnostic");
+        component[HomeAssistantAbbreviations::icon].set("mdi:current-dc");
+        component[HomeAssistantAbbreviations::name].set("System voltage");
+        component[HomeAssistantAbbreviations::platform].set("sensor");
+        component[HomeAssistantAbbreviations::state_class].set("measurement");
+        component[HomeAssistantAbbreviations::state_topic].set(topic);
+        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
+        component[HomeAssistantAbbreviations::unit_of_measurement].set("V");
+        component[HomeAssistantAbbreviations::value_template].set("{{value_json.voltage}}");
+    }
+}
+
 void DeviceService::onReceive(JsonObjectConst payload, std::string_view source) {}
 
 void DeviceService::onWaitSet() { AlarmExtension::reschedule(); }

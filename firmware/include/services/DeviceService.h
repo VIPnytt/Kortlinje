@@ -22,6 +22,7 @@ public:
     void handle0();
     void handle1();
 
+    static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
     static void receive(JsonObjectConst payload, std::string_view source, std::string_view destination);
     static void transmit(JsonObjectConst payload, std::string_view source, bool retain = true);
 
