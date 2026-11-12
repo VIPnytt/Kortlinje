@@ -22,7 +22,7 @@ void MqttExtension::begin()
     client.setWill("kortlinje/" HOSTNAME "/availability", "", true, 1);
     client.begin(net);
     client.setHost(MQTT_HOST, 1'883);
-    if (client.connect(HOSTNAME, MQTT_USER, MQTT_KEY))
+    if (client.connect(HOSTNAME, MQTT_USER, MQTT_PASS))
     {
         onConnect();
     }
@@ -82,7 +82,7 @@ void MqttExtension::handle()
     else if (WiFi.isConnected() && millis() - lastMillis > 0b1UL << 16U)
     {
         lastMillis = millis();
-        if (client.connect(HOSTNAME, MQTT_USER, MQTT_KEY))
+        if (client.connect(HOSTNAME, MQTT_USER, MQTT_PASS))
         {
             onConnect();
         }

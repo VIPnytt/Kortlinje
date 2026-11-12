@@ -17,13 +17,13 @@ void AlarmExtension::configure()
 void AlarmExtension::begin()
 {
     pio_sm_config config{alarm_program_get_default_config(0U)};
-    sm_config_set_sideset_pins(&config, PIN_BUZ);
-    sm_config_set_set_pins(&config, PIN_BUZ, 1U);
+    sm_config_set_sideset_pins(&config, PIN_BUZZER);
+    sm_config_set_set_pins(&config, PIN_BUZZER, 1U);
     sm_config_set_clkdiv_int_frac8(&config, static_cast<uint32_t>(F_CPU) / (0b1UL << 13U), 0U);
-    pio_gpio_init(pio2, PIN_BUZ);
-    gpio_disable_pulls(PIN_BUZ);
-    gpio_set_drive_strength(PIN_BUZ, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
-    pio_sm_set_consecutive_pindirs(pio2, 0U, PIN_BUZ, 1U, true);
+    pio_gpio_init(pio2, PIN_BUZZER);
+    gpio_disable_pulls(PIN_BUZZER);
+    gpio_set_drive_strength(PIN_BUZZER, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
+    pio_sm_set_consecutive_pindirs(pio2, 0U, PIN_BUZZER, 1U, true);
     pio_sm_init(pio2, 0U, 0U, &config);
     pio_sm_clear_fifos(pio2, 0U);
     pio_sm_put_blocking(pio2, 0U, 0b1UL << 12U);

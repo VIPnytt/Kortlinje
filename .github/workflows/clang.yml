@@ -75,20 +75,23 @@ jobs:
         run: |
           cat <<'EOL' > firmware/include/config/secrets.h
           #pragma once
-          #define PIN_BUZ 1
-          #define PIN_CDS 2
-          #define PIN_CLK1 3
-          #define PIN_CLK2 4
-          #define PIN_CLK3 5
-          #define PIN_DA1 6
-          #define PIN_DA2 7
-          #define PIN_DA3 8
-          #define PIN_EN 9
-          #define PIN_PDM 10
-          #define PIN_WAKE 11
+          #define MQTT_HOST "127.0.0.1"
+          #define MQTT_PASS "redacted"
+          #define MQTT_USER "redacted"
+          #define PIN_BUZZER 1
+          #define PIN_EN 2
+          #define PIN_LIGHT 3
+          #define PIN_PDM 4
+          #define PIN_POWER 5
           #define PIN_REAR 26
+          #define PIN_SCLK1 6
+          #define PIN_SCLK2 7
+          #define PIN_SCLK3 8
+          #define PIN_SDA1 9
+          #define PIN_SDA2 10
+          #define PIN_SDA3 11
           #define PIN_TOP 27
-          #define WIFI_KEY "redacted"
+          #define WIFI_PSK "redacted"
           #define WIFI_SSID "redacted"
           EOL
           uv run --only-group platformio pio run -t compiledb -e "$PIO_ENVIRONMENT"

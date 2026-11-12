@@ -260,7 +260,7 @@ void ConnectivityService::initStation()
     }
     if (doc[WIFI_SSID].isUnbound())
     {
-        doc[WIFI_SSID].set(WIFI_KEY);
+        doc[WIFI_SSID].set(WIFI_PSK);
         json.clear();
         serializeJson(doc, json);
         ConfigHandler::set(name, "Wi-Fi", json);

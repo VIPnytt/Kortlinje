@@ -75,7 +75,7 @@ Unlike pure LED matrix panels, the IKEA Kortlinje includes several integrated pe
 
 ### Wiring & Modding
 
-Modding the device requires opening the enclosure, isolating the stock MCU lines, and soldering connections to the VK1640 clock/data buses, button ladders, buzzer driver, and sensor lines.
+Modding the device requires removing the stock MCU, and soldering connections to the VK1640 clock/data buses, button ladders, buzzer driver, and sensor lines.
 
 - See the **[Kortlinje Wiki](https://github.com/VIPnytt/Kortlinje/wiki)** for complete, step-by-step disassembly and wiring diagrams.
 
@@ -105,4 +105,4 @@ Provides local network control and telemetry through a built-in Web UI and a uni
 Kortlinje is open to makers, testers, and contributors. If you have modded a unit:
 
 - **Issues & Bugs:** Found a bug or unexpected behavior? Please [open an issue](https://github.com/VIPnytt/Kortlinje/issues).
-- **Discussions & Ideas:** Have questions about wiring or want to coordinate on new features? Jump into [GitHub Discussions](https://github.com/VIPnytt/Kortlinje/discussions).
+- **Discussions & Ideas:** Have questions about wiring or want to coordinate on new features? Jump into the [discussions](https://github.com/VIPnytt/Kortlinje/discussions) section.

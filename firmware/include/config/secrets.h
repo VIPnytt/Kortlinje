@@ -1,28 +1,28 @@
 #pragma once
 
-#define PIN_CLK1 1
-#define PIN_CLK2 2
-#define PIN_CLK3 3
+#define PIN_SCLK1 1
+#define PIN_SCLK2 2
+#define PIN_SCLK3 3
 
-#define PIN_DA1 4
-#define PIN_DA2 5
-#define PIN_DA3 6
+#define PIN_SDA1 4
+#define PIN_SDA2 5
+#define PIN_SDA3 6
 
 #define PIN_PDM 7
 #define PIN_EN 8
 
-#define PIN_BUZ 9
+#define PIN_BUZZER 9
 
-#define PIN_CDS 10
+#define PIN_LIGHT 10
 
-#define PIN_WAKE 11
+#define PIN_POWER 11
 
 #define PIN_TOP 26
 #define PIN_REAR 27
 
 #define WIFI_SSID "name"
-#define WIFI_KEY "password"
+#define WIFI_PSK "password"
 
 #define MQTT_HOST "mqtt.local"
 #define MQTT_USER "username"
-#define MQTT_KEY "password"
+#define MQTT_PASS "password"

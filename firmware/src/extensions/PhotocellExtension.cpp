@@ -26,19 +26,19 @@ void PhotocellExtension::begin()
     ConfigHandler::get(name, "enabled", enabled);
 #ifdef RP2350_ERRATA_E9
     pio_sm_config config{photocell_e9_program_get_default_config(PIO_INSTRUCTION_COUNT - photocell_e9_program.length)};
-    sm_config_set_set_pins(&config, PIN_CDS, 1U);
+    sm_config_set_set_pins(&config, PIN_LIGHT, 1U);
 #else
     pio_sm_config config{photocell_program_get_default_config(PIO_INSTRUCTION_COUNT - photocell_program.length)};
 #endif // RP2350_ERRATA_E9
-    sm_config_set_in_pins(&config, PIN_CDS);
+    sm_config_set_in_pins(&config, PIN_LIGHT);
     sm_config_set_clkdiv_int_frac8(&config, static_cast<uint32_t>(F_CPU) / (0b1UL << 21U), 0U);
     sm_config_set_in_shift(&config, false, false, 0U);
-    pio_gpio_init(pio0, PIN_CDS);
-    gpio_disable_pulls(PIN_CDS);
-    gpio_set_input_enabled(PIN_CDS, true);
+    pio_gpio_init(pio0, PIN_LIGHT);
+    gpio_disable_pulls(PIN_LIGHT);
+    gpio_set_input_enabled(PIN_LIGHT, true);
 #ifdef RP2350_ERRATA_E9
-    gpio_set_drive_strength(PIN_CDS, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
-    pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, PIN_CDS, 1U, false);
+    gpio_set_drive_strength(PIN_LIGHT, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
+    pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, PIN_LIGHT, 1U, false);
     pio_sm_init(pio0, NUM_PIO_STATE_MACHINES - 1U, PIO_INSTRUCTION_COUNT - photocell_e9_program.length, &config);
 #else
     pio_sm_init(pio0, NUM_PIO_STATE_MACHINES - 1U, PIO_INSTRUCTION_COUNT - photocell_program.length, &config);
@@ -189,7 +189,7 @@ void PhotocellExtension::setEnabled(bool enable)
 #ifdef RP2350_ERRATA_E9
     else
     {
-        pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, PIN_CDS, 1U, false);
+        pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, PIN_LIGHT, 1U, false);
     }
 #endif // RP2350_ERRATA_E9
     ConfigHandler::set(name, "enabled", enabled);

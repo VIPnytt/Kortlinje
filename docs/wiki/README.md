@@ -31,12 +31,12 @@ CLK2 ─┼─┤ ├   ┤ ├                     3 ┤
       │ ┤ ├   ┤ ├   ┤ ├  └┬─┬┘└┬┘       │
       │ └─┘   ┤ ├   ┤ ├     └──┴────────┼─ +4.7 V DC
       │       ┤ ├   ┤ ├                 │
-      ├ K1    ┤ ├   ┤ ├─────────────────┼─ PDM
+      ├ K1    ┤ ├   ┤ ├─────────────────┼─ Data
       ├ K2    ┤ ├   ┤ ├─────────────────┼─ Enable
       ├ K3    ┤ ├   └─┘ R32 ┌─┐         │
-      │       └─┘          ─┤ ├┬────────┼─ Wake
+      │       └─┘          ─┤ ├┬────────┼─ Power
  DA3 ─┼────────┐            └─┘│        │
-CLK3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───┼─ CdS
+CLK3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───┼─ Light
       │┌┴┴┴┴┴┴┴┴┴┴┴┴┴┴┐    ─┤ ├┘  ┌─┴─┐ │
       │└┬┬┬┬┬┬┬┬┬┬┬┬┬┬┘U4   └─┘   └┬─┬┘ │
       └─────────────────────────────────┘
@@ -97,17 +97,17 @@ Green ┼─ USB CC
 │  ADC ├─ Buttons top
 │  ADC ├─ Buttons rear
 │      │
-│   GP ├─ CLK1
-│   GP ├─ CLK2
-│   GP ├─ CLK3
-│   GP ├─ DA1
-│   GP ├─ DA2
-│   GP ├─ DA3
+│   GP ├─ SCLK1
+│   GP ├─ SCLK2
+│   GP ├─ SCLK3
+│   GP ├─ SDA1
+│   GP ├─ SDA2
+│   GP ├─ SDA3
 │   GP ├─ Buzzer
-│   GP ├─ CdS
+│   GP ├─ Light
 │   GP ├─ Enable
-│   GP ├─ PDM
-│   GP ├─ Wake
+│   GP ├─ Data
+│   GP ├─ Power
 └──────┘              
 ```
 
@@ -121,7 +121,7 @@ It is recommended to desolder the various wiring harnesses from the main PCB to 
 
 ### Removing the `U3` chip
 
-The `U3` chip handles display outputs, buzzer output, button inputs, and CdS input. It is necessary to remove this chip as the RP2350 will be taking over these functions. The `U3` chip can be removed by heating the pins with a soldering iron and gently prying it off the PCB.
+The `U3` chip handles display outputs, buzzer output, button inputs, and light input. It is necessary to remove this chip as the RP2350 will be taking over these functions. The `U3` chip can be removed by heating the pins with a soldering iron and gently prying it off the PCB.
 
 ### Battery backup
 
@@ -130,28 +130,28 @@ For RP2350 boards with both `VBUS` and `VSYS` pins, offline battery backup is po
 For simplified wiring without battery backup, these deviations take place:
 
 - Connect 5 V to `VDD`
-- Do not connect power to `Q2`/`D43`
-- Skip the *Wake* line to `R32`/`R33`
+- Do not connect 4.7 V to `Q2`/`D43`
+- Skip the *Power* sensing line to `R32`/`R33`
 
 ### Wiring
 
-Wire up everything in accordance with diagrams. The CdS ambient light sensor and buzzer are optional, and it’s advised to defer the USB cable, buttons and environmental sensors to the end.
+Wire up everything in accordance with diagrams. It’s advised to defer the USB cable, buttons and environmental sensors to the end.
 
 ## 🔧 Configuration
 
 | Label        | Type           | Constant     |
 | ------------ | -------------- | ------------ |
-| `CLK1`       | Digital output | `PIN_CLK1`   |
-| `CLK2`       | Digital output | `PIN_CLK2`   |
-| `CLK3`       | Digital output | `PIN_CLK3`   |
-| `DA1`        | Digital output | `PIN_DA1`    |
-| `DA2`        | Digital output | `PIN_DA2`    |
-| `DA3`        | Digital output | `PIN_DA3`    |
-| Buzzer       | Digital output | `PIN_BUZ`    |
+| `SCLK1`      | Digital output | `PIN_SCLK1`  |
+| `SCLK2`      | Digital output | `PIN_SCLK2`  |
+| `SCLK3`      | Digital output | `PIN_SCLK3`  |
+| `SDA1`       | Digital output | `PIN_SDA1`   |
+| `SDA2`       | Digital output | `PIN_SDA2`   |
+| `SDA3`       | Digital output | `PIN_SDA3`   |
+| Buzzer       | Digital output | `PIN_BUZZER` |
 | Enable       | Digital output | `PIN_EN`     |
-| `PDM`        | Digital input  | `PIN_PDM`    |
-| CdS          | Digital input  | `PIN_CDS`    |
-| Wake         | Digital input  | `PIN_WAKE`   |
+| Data         | Digital input  | `PIN_PDM`    |
+| Light        | Digital input  | `PIN_LIGHT`  |
+| Power        | Digital input  | `PIN_POWER`  |
 | Buttons top  | Analog input   | `PIN_TOP`    |
 | Buttons rear | Analog input   | `PIN_REAR`   |
 
@@ -170,9 +170,9 @@ Any 5 V tolerant GPIO pin can be used for the `VK1640` `SCLK` clock lines.
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_CLK1 1
-#define PIN_CLK2 2
-#define PIN_CLK3 3
+#define PIN_SCLK1 1
+#define PIN_SCLK2 2
+#define PIN_SCLK3 3
 ```
 
 ### LED driver data
@@ -182,19 +182,19 @@ Any 5 V tolerant GPIO pin can be used for the `VK1640` `DIN` data lines.
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_DA1 4
-#define PIN_DA2 5
-#define PIN_DA3 6
+#define PIN_SDA1 4
+#define PIN_SDA2 5
+#define PIN_SDA3 6
 ```
 
 ### Buzzer
 
-Optional to connect. Any GPIO pin can be used for control signals to the buzzer.
+Any GPIO pin can be used for control signals to the buzzer.
 
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_BUZ 7
+#define PIN_BUZZER 7
 ```
 
 ### Environment sensor enable
@@ -207,7 +207,7 @@ Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware
 #define PIN_EN 8
 ```
 
-### Environment sensor PDM
+### Environment sensor data
 
 Any 5 V tolerant GPIO pin can be used to read temperature and humidity data from the `U6` chip.
 
@@ -217,17 +217,17 @@ Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware
 #define PIN_PDM 9
 ```
 
-### CdS ambient light sensor
+### Ambient light sensor
 
-Optional to connect. Any 5 V tolerant GPIO pin can be used to detect ambient light presence.
+Any 5 V tolerant GPIO pin can be used to detect ambient light presence.
 
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_CDS 10
+#define PIN_LIGHT 10
 ```
 
-### Wake-up and sleep
+### Power source detection
 
 - `R32` and `R33` are interconnected on the right side, attach a wire to either of them.
 
@@ -238,7 +238,7 @@ Any 5 V tolerant GPIO pin can be used to detect the presence of USB power.
 Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
 
 ```h
-#define PIN_WAKE 11
+#define PIN_POWER 11
 ```
 
 ### Snooze, brightness, cycle and alarm buttons

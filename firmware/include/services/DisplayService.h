@@ -81,8 +81,8 @@ private:
 
     static inline std::array<bool, pixels.size()> frame{};
 
-    std::array<pin_size_t, chips> sclk{PIN_CLK1, PIN_CLK2, PIN_CLK3};
-    std::array<pin_size_t, chips> sda{PIN_DA1, PIN_DA2, PIN_DA3};
+    std::array<pin_size_t, chips> sclk{PIN_SCLK1, PIN_SCLK2, PIN_SCLK3};
+    std::array<pin_size_t, chips> sda{PIN_SDA1, PIN_SDA2, PIN_SDA3};
 
     alignas(4U) std::array<std::array<uint8_t, 16U>, chips> vkBuffer{};
 
