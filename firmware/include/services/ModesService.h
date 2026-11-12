@@ -1,10 +1,12 @@
 #pragma once
 
+#include "modes/BreakoutMode.h"    //NOLINT(misc-include-cleaner)
 #include "modes/ClockMode.h"       //NOLINT(misc-include-cleaner)
 #include "modes/DateMode.h"        //NOLINT(misc-include-cleaner)
 #include "modes/EqualizerMode.h"   //NOLINT(misc-include-cleaner)
 #include "modes/HumidityMode.h"    //NOLINT(misc-include-cleaner)
 #include "modes/PingPongMode.h"    //NOLINT(misc-include-cleaner)
+#include "modes/ScanMode.h"        //NOLINT(misc-include-cleaner)
 #include "modes/SnakeMode.h"       //NOLINT(misc-include-cleaner)
 #include "modes/TemperatureMode.h" //NOLINT(misc-include-cleaner)
 #include "modes/TickerMode.h"      //NOLINT(misc-include-cleaner)
@@ -22,12 +24,14 @@ class ModesService final : public ServiceModule
 public:
     static constexpr std::string_view name{"Modes"};
 
-    static constexpr std::array<std::string_view, 10U> names{
+    static constexpr std::array<std::string_view, 12U> names{
+        BreakoutMode::name,
         ClockMode::name,
         DateMode::name,
         EqualizerMode::name,
         HumidityMode::name,
         PingPongMode::name,
+        ScanMode::name,
         SnakeMode::name,
         TickerMode::name,
         TemperatureMode::name,

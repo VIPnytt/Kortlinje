@@ -3,32 +3,37 @@
 #include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
 
-#include <bits/unique_ptr.h>
-#include <deque>
+#include <pico/time.h>
 
 class PingPongMode final : public ModeModule
 {
 private:
-    static constexpr float speed{5e-5F * GRID_COLUMNS};
+    volatile bool tick{false};
 
-    float xDec{.0F};
-    float yDec{.0F};
-
-    std::deque<uint8_t> paddleL{};
-    std::deque<uint8_t> paddleR{};
-
+    uint8_t paddleL{GRID_ROWS / 2U};
+    uint8_t paddleR{GRID_ROWS / 2U};
     uint8_t x{GRID_COLUMNS - 2U};
     uint8_t y{GRID_ROWS / 2U};
 
     uint16_t deg{135U};
 
-    unsigned long lastMillis{0UL};
+    float xDec{.0F};
+    float yDec{.0F};
+
+    alarm_id_t alarmId{0L};
+
+    void startAlarm();
+    void stopAlarm();
+
+    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
     static constexpr std::string_view name{"Ping-pong"};
 
     explicit PingPongMode() : ModeModule(name) {};
+    ~PingPongMode() override;
 
     void begin() override;
     void handle() override;
+    void end() override;
 };

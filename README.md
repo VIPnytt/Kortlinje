@@ -1,29 +1,50 @@
 # 💡 Kortlinje
 
-An open-source firmware port for the IKEA Kortlinje LED display alarm clock.
+**Kortlinje** is an open-source RP2350 firmware mod for the *IKEA Kortlinje* LED display alarm clock, adding Wi-Fi connectivity, a web interface, smart-home integrations, and custom display modes.
 
-This project is built upon the architecture of the [Frekvens](https://github.com/VIPnytt/Frekvens) framework. With the hardware interface and communication protocols fully solved, core subsystems, graphics pipelines, and connectivity modules are being incrementally ported over to bring up the custom firmware.
+Built upon the modular architecture of the [Frekvens](https://github.com/VIPnytt/Frekvens) framework, this project replaces the stock controller to unlock full control over the display, onboard sensors, and alarm subsystems.
 
 > [!NOTE]
-> **Early Access:** An initial [hardware modding guide](https://github.com/VIPnytt/Kortlinje/wiki) is available for makers. However, the firmware remains in an active development stage.
+> **Ready for Modders:** The [hardware modding guide](https://github.com/VIPnytt/Kortlinje/wiki) and core firmware are ready for makers to flash, use, and tinker with. Because the project is under active pre-release development, some areas are still being refined and breaking changes may occur. Testing, feedback, and contributions are very welcome!
 
-## Subsystem Status
+## 📋 Table of Contents
 
-| Subsystem | Status | Details |
-| :--- | :--- | :--- |
-| **Audio** | Operational | Alarm-clock with repeating timers and snooze functionality available. |
-| **Buttons** | Operational | All buttons are mapped to available functionality. |
-| **Display** | Operational | Fully solved driver with 8-step brightness control. |
-| **Networking** | Work in Progress | Framework initialized; local HTTP, REST, and MQTT control APIs are not yet exposed. |
-| **Power** | Experimental | Sleep and USB-restore wake logic implemented. Dual-rail battery backup and USB operation supported. |
-| **Sensors** | Operational | Temperature and humidity live readings are piped to the display. Ambient light sensor is operational. |
-| **Web UI** | Work in Progress | Functional with live display-preview, pending tighter device integration. |
-| **Build Environment** | Work in Progress | Python build automation initialized, integration and configuration options pending. |
+- [Features](#-features)
+- [Display modes](#️-display-modes)
+- [Subsystem status](#-subsystem-status)
+- [Hardware](#️-hardware)
+- [Getting started](#️-getting-started)
+- [Upload to the device](#️-upload-to-the-device)
+- [Connectivity & API](#-connectivity--api)
+- [Contributing](#-contributing)
 
-## Active Display Modes
+## ✨ Features
 
-The firmware currently includes the following standalone render modes switchable via on-device buttons:
+Kortlinje retains the clock's original bedside functionality while expanding it into a connected, customizable smart display.
 
+### Key Highlights
+
+- **12 display modes**:
+  - Time & Date
+  - Environmental telemetry
+  - Autonomous games & animations
+  - Scrolling text
+  - Live weather
+- **Full onboard hardware support**:
+  - Alarm clock with repeating timers and snooze
+  - Live temperature and humidity readings
+  - Ambient light sensing
+  - 8-step display brightness control
+  - Dual-rail power management (USB-C + AAA battery standby)
+- **Web UI** with live display preview
+- **API interfaces** (HTTP/REST and MQTT)
+- Step-by-step [modding documentation](https://github.com/VIPnytt/Kortlinje/wiki)
+
+## 🖥️ Display modes
+
+The firmware includes 12 standalone render modes switchable directly via the on-device buttons or the web interface:
+
+- **Breakout:** Autonomous, self-playing demo animation.
 - **Clock:** Displays the current time in hours and minutes.
 - **Date:** Displays the current month and day of the month.
 - **Equalizer:** Autonomous simulated spectrum visualizer.
@@ -31,13 +52,57 @@ The firmware currently includes the following standalone render modes switchable
 - **Ping-pong:** Autonomous, self-playing demo animation.
 - **Snake:** Autonomous, self-playing demo animation.
 - **Temperature:** Displays live ambient temperature telemetry from the onboard sensor.
-- **Text Ticker:** Horizontal scrolling marquee displaying text.
+- **Text Ticker:** Horizontal scrolling marquee displaying custom text.
 - **Weather:** Displays live weather telemetry from a configured provider.
 - **Weekday:** Displays the current day of the week.
 
-## Hardware & Modding
+## ⚙️ Hardware
 
-- **Modding Documentation:** Step-by-step disassembly and wiring instructions are documented in the [Wiki](https://github.com/VIPnytt/Kortlinje/wiki).
-- **Power Requirements:** Designed for 5V USB-C operation with support for low-power battery standby (2× AAA).
-- **Firmware Build:** Built with PlatformIO targeting RP2350 Arduino framework environments.
-- **Hardware Modifications:** Requires opening the enclosure, isolating stock MCU lines, and soldering connections to the VK1640 clock/data buses, button ladder, buzzer driver, and sensor lines.
+### Microcontroller
+
+Kortlinje targets the **RP2350** architecture with Wi-Fi support (such as the *Raspberry Pi Pico 2 W*).
+
+### Built-in Peripherals
+
+Unlike pure LED matrix panels, the IKEA Kortlinje includes several integrated peripherals that the firmware natively drives:
+
+- **Display:** 3× VK1640 LED controller ICs
+- **Climate sensor:** Dedicated onboard temperature and humidity module
+- **Photocell:** Ambient light sensor for brightness adaptation
+- **Buzzer:** Internal piezo transducer for alarms and timer alerts
+- **Buttons:** 4 top and 4 rear control buttons (resistor ladder)
+- **Battery backup:** 2× AAA compartment for low-power standby
+
+### Wiring & Modding
+
+Modding the device requires opening the enclosure, isolating the stock MCU lines, and soldering connections to the VK1640 clock/data buses, button ladders, buzzer driver, and sensor lines.
+
+- See the **[Kortlinje Wiki](https://github.com/VIPnytt/Kortlinje/wiki)** for complete, step-by-step disassembly and wiring diagrams.
+
+## 🏗️ Getting started
+
+[PlatformIO IDE](https://platformio.org/platformio-ide) are required to build the project. PlatformIO provides [integrations](https://platformio.org/install/integration) for a wide range of code editors.
+
+### Configuration
+
+Wi-Fi credentials and pins are set in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h), while weather coordinates and device settings are set in the [.env](https://github.com/VIPnytt/Kortlinje/blob/main/.env) config file.
+
+## ⬆️ Upload to the device
+
+Using PlatformIO, run **Upload** to compile and flash the firmware to the RP2350.
+
+## 🤖 Connectivity & API
+
+Kortlinje includes local network interfaces for remote control and smart-home automation:
+
+* **Web UI:** Access the device in your browser for live display reflection and mode control.
+* **HTTP REST:** Local endpoints for querying telemetry and switching states.
+* **WebSocket:** Live push updates for display and mode changes.
+* **MQTT:** Publish sensor telemetry and control the clock from platforms like Home Assistant.
+
+## 🤝 Contributing
+
+Kortlinje is open to makers, testers, and contributors. If you have modded a unit:
+
+* **Issues & Bugs:** Found a bug or unexpected behavior? Please [open an issue](https://github.com/VIPnytt/Kortlinje/issues).
+* **Discussions & Ideas:** Have questions about wiring or want to coordinate on new features? Jump into [GitHub Discussions](https://github.com/VIPnytt/Kortlinje/discussions).

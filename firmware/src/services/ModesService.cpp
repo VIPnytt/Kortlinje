@@ -42,6 +42,10 @@ void ModesService::handle()
 
 std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
 {
+    if (modeName == BreakoutMode::name)
+    {
+        return std::make_unique<BreakoutMode>();
+    }
     if (modeName == ClockMode::name)
     {
         return std::make_unique<ClockMode>();
@@ -61,6 +65,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     if (modeName == PingPongMode::name)
     {
         return std::make_unique<PingPongMode>();
+    }
+    if (modeName == ScanMode::name)
+    {
+        return std::make_unique<ScanMode>();
     }
     if (modeName == SnakeMode::name)
     {

@@ -41,7 +41,6 @@ public:
     void drawEllipseOutline(float x, float y, float radius, bool lit);
     void drawEllipseSolid(float x, float y, float radius, bool lit);
     void drawRectangleOutline(size_t minX, size_t columns, size_t minY, size_t maxY, bool lit);
-    void fillColumn(uint8_t x, bool lit);
     void fillRow(uint8_t y, bool lit);
     void fillRows(size_t minY, size_t rows, bool lit);
     void flush();
@@ -52,6 +51,7 @@ public:
     static void drawLineHorizontal(uint8_t xMin, size_t columns, uint8_t y, bool lit);
     static void drawLineVertical(uint8_t x, uint8_t yMin, uint8_t yMax, bool lit);
     static void drawRectangleSolid(uint8_t minX, uint8_t columns, uint8_t minY, uint8_t maxY, bool lit);
+    static void fillColumn(uint8_t x, bool lit);
     static void fillFrame(bool lit);
     static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
     static void onReceive(JsonObjectConst payload, std::string_view source);
@@ -62,7 +62,7 @@ public:
     static void setPower(bool enable);
 
     [[nodiscard]] bool getPixel(size_t idx);
-    [[nodiscard]] bool getPixel(uint8_t x, uint8_t y);
+    [[nodiscard]] static bool getPixel(uint8_t x, uint8_t y);
     [[nodiscard]] static bool getPixel(Symbol symbol);
     [[nodiscard]] static bool getPower();
 
