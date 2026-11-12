@@ -2,24 +2,12 @@ import { mdiBriefcase } from "@mdi/js";
 import { type Component, Match, Switch } from "solid-js";
 
 import { Icon } from "../components/Icon";
-import { EXTENSION_MESSAGE, EXTENSION_MIRROR } from "../config/modules";
 import {
     Actions as ExtensionAlarmActions,
     Link as ExtensionAlarmLink,
     name as ExtensionAlarmName,
     MainThird as ExtensionAlarmThird,
 } from "../extensions/Alarm";
-import {
-    Link as ExtensionMessageLink,
-    name as ExtensionMessageName,
-    MainThird as ExtensionMessageThird,
-} from "../extensions/Message";
-import {
-    Actions as ExtensionMirrorActions,
-    Link as ExtensionMirrorLink,
-    name as ExtensionMirrorName,
-    MainThird as ExtensionMirrorThird,
-} from "../extensions/Mirror";
 import { Link as ExtensionOtaLink, name as ExtensionOtaName, MainThird as ExtensionOtaThird } from "../extensions/Ota";
 import {
     Actions as ExtensionPhotocellActions,
@@ -56,7 +44,6 @@ export const SidebarSecondary: Component = () => (
             <ExtensionAlarmActions />
             <ExtensionPhotocellActions />
             <ExtensionPlaylistActions />
-            {EXTENSION_MIRROR && <ExtensionMirrorActions />}
             <a
                 class="link"
                 href={`#/${name.toLowerCase()}`}
@@ -88,16 +75,6 @@ export const MainThird: Component = () => (
         <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionProvisioningName.toLowerCase()}`}>
             <ExtensionProvisioningThird />
         </Match>
-        {EXTENSION_MESSAGE && (
-            <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMessageName.toLowerCase()}`}>
-                <ExtensionMessageThird />
-            </Match>
-        )}
-        {EXTENSION_MIRROR && (
-            <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMirrorName.toLowerCase()}`}>
-                <ExtensionMirrorThird />
-            </Match>
-        )}
     </Switch>
 );
 
@@ -108,7 +85,5 @@ export const SidebarThird: Component = () => (
         <ExtensionPhotocellLink />
         <ExtensionPlaylistLink />
         <ExtensionProvisioningLink />
-        {EXTENSION_MESSAGE && <ExtensionMessageLink />}
-        {EXTENSION_MIRROR && <ExtensionMirrorLink />}
     </SidebarSectionSecondary>
 );

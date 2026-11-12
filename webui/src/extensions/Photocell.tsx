@@ -47,16 +47,18 @@ export const Actions: Component = () => (
 );
 
 export const Link: Component = () => (
-    <a
-        class="link"
-        href={`#/${ExtensionsName.toLowerCase()}/${name.toLowerCase()}`}
-    >
-        <Icon
-            class="mr-2"
-            path={mdiBrightnessAuto}
-        />
-        {name}
-    </a>
+    <Tooltip text="Ambient light detection">
+        <a
+            class="link"
+            href={`#/${ExtensionsName.toLowerCase()}/${name.toLowerCase()}`}
+        >
+            <Icon
+                class="mr-2"
+                path={mdiThemeLightDark}
+            />
+            {name}
+        </a>
+    </Tooltip>
 );
 
 export const MainThird: Component = () => (
