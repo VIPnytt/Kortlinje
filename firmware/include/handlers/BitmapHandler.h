@@ -5,7 +5,6 @@
 #include "services/DisplayService.h" // NOLINT(misc-include-cleaner)
 
 #include <span>
-#include <string_view>
 
 template <typename T>
     requires std::is_unsigned_v<T>

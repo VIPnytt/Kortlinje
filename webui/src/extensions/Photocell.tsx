@@ -1,4 +1,4 @@
-import { mdiBrightnessAuto, mdiBrightness6 } from "@mdi/js";
+import { mdiBrightness6, mdiBrightnessAuto, mdiThemeLightDark } from "@mdi/js";
 import { type Component, createSignal } from "solid-js";
 
 import { Icon } from "../components/Icon";
@@ -30,7 +30,7 @@ export const Actions: Component = () => (
         <a href={`#/${ExtensionsName.toLowerCase()}/${name.toLowerCase()}`}>
             <Icon
                 class="mr-2"
-                path={mdiBrightnessAuto}
+                path={mdiThemeLightDark}
             />
             {name}
         </a>

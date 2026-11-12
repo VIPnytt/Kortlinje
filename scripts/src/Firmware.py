@@ -51,7 +51,9 @@ class Firmware:
                         "°F": "TEMPERATURE_FAHRENHEIT",
                     }.get(value)
                     if _option is None:
-                        logging.warning("%s %r is unsupported. Valid values are '°C', '°F' and 'K'.", option, value)
+                        logging.getLogger(__name__).warning(
+                            "%s %r is unsupported. Valid values are '°C', '°F' and 'K'.", option, value
+                        )
                     else:
                         self.project.env.Append(
                             CPPDEFINES=[

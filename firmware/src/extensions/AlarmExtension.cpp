@@ -6,6 +6,8 @@
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 
+#include <time.h>
+
 void AlarmExtension::configure()
 {
     pio_add_program_at_offset(pio2, &alarm_program, 0U);

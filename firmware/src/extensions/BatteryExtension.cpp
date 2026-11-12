@@ -7,6 +7,7 @@
 #include <hardware/clocks.h>
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
+#include <hardware/pio.h>
 #include <hardware/pll.h>
 #include <hardware/xosc.h>
 #include <pico/cyw43_arch.h>

@@ -22,7 +22,7 @@ private:
     void startTimer();
     void stopTimer();
 
-    static bool onTimer(repeating_timer *rt);
+    [[nodiscard]] static bool onTimer(repeating_timer *rt);
 
 public:
     static constexpr std::string_view name{"Equalizer"};

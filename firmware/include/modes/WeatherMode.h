@@ -164,7 +164,7 @@ private:
 
     [[nodiscard]] static int fetch(const char *url, std::vector<char> &body);
 
-    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *userData);
+    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
     [[nodiscard]] static std::span<const uint16_t> getSign(Condition cond);
 

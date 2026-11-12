@@ -31,7 +31,7 @@ private:
         requires std::is_unsigned_v<T>
     [[nodiscard]] uint8_t calcMsbMax(std::span<const T> bitmap) const;
 
-    bool nextCodepoint(size_t &index, char32_t &out) const;
+    [[nodiscard]] bool nextCodepoint(size_t &index, char32_t &out) const;
 
-    static std::array<char, 5U> encode(char32_t codepoint);
+    [[nodiscard]] static std::array<char, 5U> encode(char32_t codepoint);
 };

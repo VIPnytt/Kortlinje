@@ -11,19 +11,18 @@
 class TickerMode final : public ModeModule
 {
 private:
-    static inline std::string message{"Kortlinje"};
-
     static inline bool pending{false};
+    bool timerRunning{false};
+    static inline volatile bool tick{false};
 
     int8_t offsetY{static_cast<int8_t>(GRID_ROWS / 2U)};
 
     int16_t offsetX{GRID_COLUMNS};
     int16_t width{0};
 
-    bool timerRunning{false};
-    static inline volatile bool tick{false};
-
     repeating_timer timer{};
+
+    static inline std::string message{NAME};
 
     std::unique_ptr<const FontModule> font{};
 
@@ -35,7 +34,7 @@ private:
     void stopTimer();
     void transmit();
 
-    static bool onTimer(repeating_timer *rt);
+    [[nodiscard]] static bool onTimer(repeating_timer *rt);
 
 public:
     static constexpr std::string_view name{"Ticker"};

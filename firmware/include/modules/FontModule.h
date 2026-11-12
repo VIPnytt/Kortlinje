@@ -1,6 +1,7 @@
 #pragma once
 
-#include <Arduino.h>
+#include <array>
+#include <cstdint>
 #include <span>
 #include <string_view>
 #include <variant>

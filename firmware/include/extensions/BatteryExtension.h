@@ -2,8 +2,6 @@
 
 #include "modules/ExtensionModule.h"
 
-#include <hardware/pio.h>
-
 class BatteryExtension final : public ExtensionModule
 {
 private:

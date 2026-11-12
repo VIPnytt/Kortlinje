@@ -53,7 +53,7 @@ class Time:
                 "24": "CLOCK_24H",
             }.get(format)
             if clock is None:
-                logging.warning("CLOCK_FORMAT %r is unsupported. Valid values are '12' and '24'.", format)
+                logging.getLogger(__name__).warning("CLOCK_FORMAT %r is unsupported. Valid values are '12' and '24'.", format)
             else:
                 self.project.dotenv[clock] = "true"
 
@@ -97,5 +97,5 @@ class Time:
                     posix = zone.rsplit(b"\n", 2)[-2].decode("ascii", errors="strict")
                     if posix:
                         return posix
-        logging.warning("Unknown timezone: %r", iana)
+        logging.getLogger(__name__).warning("Unknown timezone: %r", iana)
         return None

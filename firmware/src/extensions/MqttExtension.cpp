@@ -110,8 +110,6 @@ void MqttExtension::onConnect()
     client.publish("kortlinje/" HOSTNAME "/availability", "online", true, 1);
 }
 
-
-
 /**
  * @brief Processes an MQTT message and forwards valid JSON payloads to the device.
  *

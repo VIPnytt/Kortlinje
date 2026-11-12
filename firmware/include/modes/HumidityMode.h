@@ -1,6 +1,5 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
 
 class HumidityMode final : public ModeModule

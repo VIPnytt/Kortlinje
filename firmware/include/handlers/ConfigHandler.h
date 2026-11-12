@@ -4,10 +4,8 @@
 
 #include <LittleFS.h>
 #include <array>
-#include <concepts>
 #include <cstring>
 #include <span>
-#include <string>
 #include <string_view>
 #include <type_traits>
 

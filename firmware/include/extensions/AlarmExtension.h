@@ -5,7 +5,6 @@
 #include <hardware/pio.h>
 #include <pico/time.h>
 #include <string_view>
-#include <time.h>
 
 class AlarmExtension final : public ExtensionModule
 {

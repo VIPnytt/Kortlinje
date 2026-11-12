@@ -28,9 +28,7 @@ class Dependency:
 
         The update check is skipped for the ``compiledb`` command-line target.
         """
-        if COMMAND_LINE_TARGETS in [
-            ["compiledb"],
-        ]:
+        if COMMAND_LINE_TARGETS == ["compiledb"]:
             self.project.dependency = None
             return
         try:
@@ -54,4 +52,4 @@ class Dependency:
                 )
                 print(f"Release notes: https://github.com/VIPnytt/Kortlinje/releases/tag/{tag}")
         except urllib.error.URLError as e:
-            logging.debug("Update check failed: %s", e)
+            logging.getLogger(__name__).debug("Update check failed: %s", e)
