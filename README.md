@@ -2,15 +2,9 @@
 
 **Kortlinje** is an open-source RP2350 firmware mod for the *IKEA Kortlinje* LED display alarm clock, adding Wi-Fi connectivity, a web interface, smart-home integrations, and custom display modes.
 
-Built upon the modular architecture of the [Frekvens](https://github.com/VIPnytt/Frekvens) framework, this project replaces the stock controller to unlock full control over the display, onboard sensors, and alarm subsystems.
-
-> [!NOTE]
-> **Ready for Modders:** The [hardware modding guide](https://github.com/VIPnytt/Kortlinje/wiki) and core firmware are ready for makers to flash, use, and tinker with. Because the project is under active pre-release development, some areas are still being refined and breaking changes may occur. Testing, feedback, and contributions are very welcome!
-
 ## 📋 Table of Contents
 
 - [Features](#-features)
-- [Display modes](#️-display-modes)
 - [Hardware](#️-hardware)
 - [Getting started](#️-getting-started)
 - [Upload to the device](#️-upload-to-the-device)
@@ -23,12 +17,12 @@ Kortlinje retains the clock's original bedside functionality while expanding it 
 
 ### Key Highlights
 
-- **12 display modes**:
-  - Time & Date
-  - Environmental telemetry
-  - Autonomous games & animations
-  - Scrolling text
+- **29 display modes**:
+  - Time & date
   - Live weather
+  - Animations & autonomous games
+  - Scrolling text
+  - Streaming
 - **Full onboard hardware support**:
   - Alarm clock with repeating timers and snooze
   - Live temperature and humidity readings
@@ -39,39 +33,11 @@ Kortlinje retains the clock's original bedside functionality while expanding it 
 - **API interfaces** (HTTP/REST and MQTT)
 - Step-by-step [modding documentation](https://github.com/VIPnytt/Kortlinje/wiki)
 
-## 🖥️ Display modes
-
-The firmware includes 12 standalone render modes switchable directly via the on-device buttons or the web interface:
-
-- **Breakout:** Autonomous, self-playing demo animation.
-- **Clock:** Displays the current time in hours and minutes.
-- **Date:** Displays the current month and day of the month.
-- **Equalizer:** Autonomous simulated spectrum visualizer.
-- **Humidity:** Displays live ambient humidity telemetry from the onboard sensor.
-- **Ping-pong:** Autonomous, self-playing demo animation.
-- **Scan:** Autonomous, self-playing demo animation.
-- **Snake:** Autonomous, self-playing demo animation.
-- **Temperature:** Displays live ambient temperature telemetry from the onboard sensor.
-- **Text Ticker:** Horizontal scrolling marquee displaying custom text.
-- **Weather:** Displays live weather telemetry from a configured provider.
-- **Weekday:** Displays the current day of the week.
-
 ## ⚙️ Hardware
 
 ### Microcontroller
 
 Kortlinje targets the **RP2350** architecture with Wi-Fi support (such as the *Raspberry Pi Pico 2 W*).
-
-### Built-in Peripherals
-
-Unlike pure LED matrix panels, the IKEA Kortlinje includes several integrated peripherals that the firmware natively drives:
-
-- **Display:** 3× VK1640 LED controller ICs
-- **Climate sensor:** Dedicated onboard temperature and humidity module
-- **Photocell:** Ambient light sensor for display adaptation
-- **Buzzer:** Internal piezo transducer for alarms and timer alerts
-- **Buttons:** 4 top and 4 rear control buttons (resistor ladders)
-- **Battery backup:** 2× AAA compartment for low-power standby
 
 ### Wiring & Modding
 
