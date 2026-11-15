@@ -39,28 +39,18 @@ void BreakoutMode::handle()
         now = time(nullptr);
         if (localtime_r(&now, &local) != nullptr && (minute != local.tm_min || hour != local.tm_hour))
         {
-            pending = false;
             hour = local.tm_hour;
             minute = local.tm_min;
 #if CLOCK_12H
-            const int hour{(local.tm_hour + 11) % 12 + 1};
+            const int _hour{(local.tm_hour + 11) % 12 + 1};
             DisplayService::setPixel(DisplayService::Symbol::AM, local.tm_hour < 12);
             DisplayService::setPixel(DisplayService::Symbol::PM, local.tm_hour >= 12);
+#else
+            const int _hour{hour};
 #endif // CLOCK_12H
-            uint8_t cursorX{0U};
-            const uint8_t hh1{static_cast<uint8_t>(hour / 10)};
-            BitmapHandler(KortlinjeFont::digitZero_digitNine[hh1]).draw(cursorX, (GRID_ROWS / 2U) - 4U);
-            cursorX += hh1 == 1U ? 7U : 8U;
-            const uint8_t hh2{static_cast<uint8_t>(hour % 10)};
-            BitmapHandler(KortlinjeFont::digitZero_digitNine[hh2]).draw(cursorX, (GRID_ROWS / 2U) - 4U);
-            cursorX += hh2 == 1U ? 7U : 8U;
-            BitmapHandler(KortlinjeFont::colon).draw(cursorX, (GRID_ROWS / 2U) - 3U);
-            cursorX += 3U;
-            const uint8_t mm1{static_cast<uint8_t>(minute / 10)};
-            BitmapHandler(KortlinjeFont::digitZero_digitNine[mm1]).draw(cursorX, (GRID_ROWS / 2U) - 4U);
-            cursorX += mm1 == 1U ? 7U : 8U;
-            const uint8_t mm2{static_cast<uint8_t>(minute % 10)};
-            BitmapHandler(KortlinjeFont::digitZero_digitNine[mm2]).draw(cursorX, (GRID_ROWS / 2U) - 4U);
+            const KortlinjeFont font{};
+            const TextHandler text{std::format("{:02d}:{:02d}", _hour, minute), font};
+            text.draw(0, static_cast<int8_t>((GRID_ROWS - text.getHeight()) / 2U));
         }
     }
     const float rad{static_cast<float>(deg) * static_cast<float>(DEG_TO_RAD)};

@@ -22,7 +22,7 @@ void TemperatureMode::handle()
     {
         pending = false;
         DisplayService::fillFrame(false);
-        KortlinjeFont font{};
+        const KortlinjeFont font{};
 #if TEMPERATURE_FAHRENHEIT
         TextHandler(std::format("{:.0f}°F", temperature), font).draw();
 #elif TEMPERATURE_KELVIN

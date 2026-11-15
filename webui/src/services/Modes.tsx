@@ -8,8 +8,27 @@ import {
     SidebarSection,
     SidebarSectionSecondary,
     MainSecondary as WebUIMain,
+    WebUIPath,
 } from "../extensions/WebUI";
-import { name as ModeTickerName, Sidebar as ModeTickerSidebar } from "../modes/Ticker";
+import {
+    Main as ModeAnimationMain,
+    name as ModeAnimationName,
+    Sidebar as ModeAnimationSidebar,
+} from "../modes/Animation";
+import {
+    Actions as ModeCountdownActions,
+    Link as ModeCountdownLink,
+    Main as ModeCountdownMain,
+    name as ModeCountdownName,
+    Sidebar as ModeCountdownSidebar,
+} from "../modes/Countdown";
+import { Main as ModeDrawMain, name as ModeDrawName, Sidebar as ModeDrawSidebar } from "../modes/Draw";
+import {
+    Link as ModeTickerLink,
+    Main as ModeTickerMain,
+    name as ModeTickerName,
+    Sidebar as ModeTickerSidebar,
+} from "../modes/Ticker";
 import { name as ModeWeatherName, Sidebar as ModeWeatherSidebar } from "../modes/Weather";
 import { DisplayPowerSet } from "./Display";
 
@@ -28,7 +47,12 @@ export const receiver = (json: { list?: string[]; mode?: string }) => {
 
 export const Main: Component = () => (
     <Switch fallback={<ExtensionWebUIMain />}>
-        <></>
+        <Match when={getMode() === ModeAnimationName}>
+            <ModeAnimationMain />
+        </Match>
+        <Match when={getMode() === ModeDrawName}>
+            <ModeDrawMain />
+        </Match>
     </Switch>
 );
 
@@ -61,6 +85,15 @@ export const Sidebar: Component = () => {
                 </div>
             </SidebarSection>
             <Switch>
+                <Match when={getMode() === ModeAnimationName}>
+                    <ModeAnimationSidebar />
+                </Match>
+                <Match when={getMode() === ModeCountdownName}>
+                    <ModeCountdownSidebar />
+                </Match>
+                <Match when={getMode() === ModeDrawName}>
+                    <ModeDrawSidebar />
+                </Match>
                 <Match when={getMode() === ModeTickerName}>
                     <ModeTickerSidebar />
                 </Match>
@@ -75,6 +108,7 @@ export const Sidebar: Component = () => {
 export const SidebarSecondary: Component = () => (
     <SidebarSectionSecondary title={name}>
         <div class="space-y-3">
+            <ModeCountdownActions />
             <a
                 class="link"
                 href={`#/${name.toLowerCase()}`}
@@ -89,47 +123,37 @@ export const SidebarSecondary: Component = () => (
     </SidebarSectionSecondary>
 );
 
-export const MainThird: Component = () => <WebUIMain />;
+export const MainThird: Component = () => (
+    <Switch fallback={<WebUIMain />}>
+        <Match when={WebUIPath() === `/${name.toLowerCase()}/${ModeCountdownName.toLowerCase()}`}>
+            <ModeCountdownMain />
+        </Match>
+        <Match when={WebUIPath() === `/${name.toLowerCase()}/${ModeTickerName.toLowerCase()}`}>
+            <ModeTickerMain />
+        </Match>
+    </Switch>
+);
 
 export const SidebarThird: Component = () => (
     <SidebarSectionSecondary title={name}>
-        <></>
+        <ModeCountdownLink />
+        <ModeTickerLink />
     </SidebarSectionSecondary>
 );
 
-export const DescriptionComponent: Component<{
-    icon?: string;
-    internal?: boolean;
-    text?: string;
-}> = (props) => (
-    <div class="main">
-        <h1>
-            <Icon path={props.icon || mdiClockDigital} />
-        </h1>
-        <a
-            class="mode-title"
-            href={`${props.internal ? `#/${name.toLowerCase()}/` : `https://github.com/VIPnytt/Kortlinje/wiki/${name}#-`}${getMode().toLowerCase().replace(/\s+/g, "-")}`}
-            target={props.internal ? "_self" : "_blank"}
-        >
-            {getMode()}
-        </a>
-        {props.text && <div class="mode-subtitle">{props.text}</div>}
-    </div>
-);
-
 export const MainComponent: Component<{
-    icon?: string;
+    icon: string;
     internal?: boolean;
     text?: string;
 }> = (props) => (
     <div class="main">
         <h1>
-            <Icon path={props.icon || mdiClockDigital} />
+            <Icon path={props.icon} />
         </h1>
         <a
             class="mode-title"
-            href={`${props.internal ? `#/${name.toLowerCase()}/` : `https://github.com/VIPnytt/Kortlinje/wiki/${name}#-`}${getMode().toLowerCase().replace(/\s+/g, "-")}`}
-            target={props.internal ? "_self" : "_blank"}
+            href="https://github.com/VIPnytt/Kortlinje/wiki"
+            target="_blank"
         >
             {getMode()}
         </a>

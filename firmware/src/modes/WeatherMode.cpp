@@ -454,10 +454,6 @@ void WeatherMode::setProvider(std::string_view providerName)
             urls.assign(entry.urls.begin(), entry.urls.end());
             condition.reset();
             temperature.reset();
-            DisplayService::fillFrame(false);
-            SmallFont font{};
-            TextHandler text(std::string(provider->name), font);
-            text.draw((GRID_COLUMNS - min(GRID_COLUMNS, text.getWidth())) / 2U, (GRID_ROWS - text.getHeight()) / 2U);
             pending = true;
             ConfigHandler::set(name, "provider", provider->name);
             transmit();

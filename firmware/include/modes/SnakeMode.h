@@ -20,8 +20,7 @@ private:
         REMOVE,
     };
 
-    bool timerRunning{false};
-    static inline volatile bool tick{false};
+    volatile bool tick{false};
 
     uint8_t blinkCount{0U};
 
@@ -45,10 +44,8 @@ private:
     void setTarget();
     void snakeReset(size_t start);
     void snakeClear();
-    void startTimer();
-    void stopTimer();
 
-    static bool onTimer(repeating_timer *rt);
+    [[nodiscard]] static bool onTimer(repeating_timer *rt);
 
     [[nodiscard]] bool snakePushBack(size_t pixel);
 
@@ -66,5 +63,4 @@ public:
 
     void begin() override;
     void handle() override;
-    void end() override;
 };

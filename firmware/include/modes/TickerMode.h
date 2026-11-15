@@ -13,7 +13,7 @@ class TickerMode final : public ModeModule
 private:
     static inline bool pending{false};
     bool timerRunning{false};
-    static inline volatile bool tick{false};
+    volatile bool tick{false};
 
     int8_t offsetY{static_cast<int8_t>(GRID_ROWS / 2U)};
 

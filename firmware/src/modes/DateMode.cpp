@@ -15,7 +15,7 @@ void DateMode::handle()
         day = local.tm_mday;
         month = local.tm_mon;
         DisplayService::fillFrame(false);
-        KortlinjeFont font{};
+        const KortlinjeFont font{};
         TextHandler(std::string(names[month]).append(" ").append(std::to_string(day)), font).draw();
     }
 }

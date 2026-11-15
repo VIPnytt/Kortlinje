@@ -11,7 +11,6 @@
 class BreakoutMode final : public ModeModule
 {
 private:
-    bool pending{false};
     volatile bool tick{false};
 
     uint8_t paddleY{GRID_ROWS / 2U};

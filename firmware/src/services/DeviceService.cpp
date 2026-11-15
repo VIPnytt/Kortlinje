@@ -13,6 +13,7 @@
 #include "services/WebServerService.h"
 
 #include <LittleFS.h>
+#include <SimpleMDNS.h>
 #include <WiFi.h>
 #include <hardware/adc.h>
 #include <pico/cyw43_arch.h>

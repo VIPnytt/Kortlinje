@@ -1,10 +1,10 @@
 #include "services/ModesService.h"
 
+#include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
+#include "handlers/TextHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
-
-#include <vector>
 
 void ModesService::begin()
 {
@@ -21,37 +21,142 @@ void ModesService::begin()
 
 void ModesService::handle()
 {
-    if (mode != nullptr)
+    if (!active || mode == nullptr)
     {
-        mode->handle();
+        return;
     }
+    busy = true;
+    if (active)
+    {
+        if (pending)
+        {
+            pending = false;
+            scheduled = true;
+            DisplayService::fillFrame(false);
+            const SmallFont font{};
+            TextHandler(std::string(mode->name), font).draw();
+            cancelAlarm();
+            alarmId = add_alarm_in_ms(0b1UL << 11U, &onAlarm, nullptr, true);
+        }
+        else if (scheduled)
+        {
+            if (tick)
+            {
+                scheduled = false;
+                tick = false;
+                mode->begin();
+                begun = true;
+                ConfigHandler::set(name, "mode", mode->name);
+                transmit();
+            }
+        }
+        else
+        {
+            mode->handle();
+        }
+    }
+    busy = false;
 }
+
+void ModesService::cancelAlarm()
+{
+    if (alarmId > 0)
+    {
+        cancel_alarm(alarmId);
+        alarmId = 0;
+    }
+    tick = false;
+}
+
+bool ModesService::getActive() { return active; }
+
+ModeModule *ModesService::getMode() { return mode.get(); }
 
 std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
 {
+    if (modeName == AnimationMode::name)
+    {
+        return std::make_unique<AnimationMode>();
+    }
+    if (modeName == BlindsMode::name)
+    {
+        return std::make_unique<BlindsMode>();
+    }
+    if (modeName == BlinkMode::name)
+    {
+        return std::make_unique<BlinkMode>();
+    }
     if (modeName == BreakoutMode::name)
     {
         return std::make_unique<BreakoutMode>();
+    }
+    if (modeName == BrightMode::name)
+    {
+        return std::make_unique<BrightMode>();
+    }
+    if (modeName == CircleMode::name)
+    {
+        return std::make_unique<CircleMode>();
     }
     if (modeName == ClockMode::name)
     {
         return std::make_unique<ClockMode>();
     }
+    if (modeName == CountdownMode::name)
+    {
+        return std::make_unique<CountdownMode>();
+    }
     if (modeName == DateMode::name)
     {
         return std::make_unique<DateMode>();
+    }
+    if (modeName == DrawMode::name)
+    {
+        return std::make_unique<DrawMode>();
+    }
+    if (modeName == EpochCounterMode::name)
+    {
+        return std::make_unique<EpochCounterMode>();
     }
     if (modeName == EqualizerMode::name)
     {
         return std::make_unique<EqualizerMode>();
     }
+    if (modeName == FireworkMode::name)
+    {
+        return std::make_unique<FireworkMode>();
+    }
+    if (modeName == GlitterMode::name)
+    {
+        return std::make_unique<GlitterMode>();
+    }
+    if (modeName == GameOfLifeMode::name)
+    {
+        return std::make_unique<GameOfLifeMode>();
+    }
     if (modeName == HumidityMode::name)
     {
         return std::make_unique<HumidityMode>();
     }
+    if (modeName == LeafFallMode::name)
+    {
+        return std::make_unique<LeafFallMode>();
+    }
+    if (modeName == LinesMode::name)
+    {
+        return std::make_unique<LinesMode>();
+    }
+    if (modeName == NoiseMode::name)
+    {
+        return std::make_unique<NoiseMode>();
+    }
     if (modeName == PingPongMode::name)
     {
         return std::make_unique<PingPongMode>();
+    }
+    if (modeName == RainMode::name)
+    {
+        return std::make_unique<RainMode>();
     }
     if (modeName == ScanMode::name)
     {
@@ -61,6 +166,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     {
         return std::make_unique<SnakeMode>();
     }
+    if (modeName == StarsMode::name)
+    {
+        return std::make_unique<StarsMode>();
+    }
     if (modeName == TemperatureMode::name)
     {
         return std::make_unique<TemperatureMode>();
@@ -68,6 +177,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     if (modeName == TickerMode::name)
     {
         return std::make_unique<TickerMode>();
+    }
+    if (modeName == WaveformMode::name)
+    {
+        return std::make_unique<WaveformMode>();
     }
     if (modeName == WeatherMode::name)
     {
@@ -80,27 +193,14 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     return nullptr;
 }
 
-void ModesService::setMode(std::string_view modeName, bool power)
+int64_t __time_critical_func(ModesService::onAlarm)(alarm_id_t id, void *userData)
 {
-    if (std::unique_ptr<ModeModule> _mode{getMode(modeName)})
-    {
-        if (mode)
-        {
-            mode->end();
-            mode.reset();
-        }
-        mode = std::move(_mode);
-        if (power)
-        {
-            DisplayService::setPower(true);
-        }
-        mode->begin();
-        ConfigHandler::set(name, "mode", modeName);
-        transmit();
-    }
+    static_cast<void>(id);
+    static_cast<void>(userData);
+    alarmId = 0;
+    tick = true;
+    return 0LL;
 }
-
-ModeModule *ModesService::getMode() { return mode.get(); }
 
 /**
  * @brief Adds Home Assistant discovery metadata for selecting the device mode.
@@ -133,15 +233,60 @@ void ModesService::onHomeAssistant(JsonDocument &discovery, std::string topic, s
 
 void ModesService::onReceive(JsonObjectConst payload, std::string_view source)
 {
+    static_cast<void>(source);
     if (payload["mode"].is<std::string_view>())
     {
         setMode(payload["mode"].as<std::string_view>());
     }
 }
 
+void ModesService::setActive(bool _active)
+{
+    active = _active;
+    if (!_active)
+    {
+        while (busy)
+        {
+            tight_loop_contents();
+        }
+    }
+}
+
+void ModesService::setMode(std::string_view modeName, bool power, bool splash)
+{
+    if (std::unique_ptr<ModeModule> _mode{getMode(modeName)})
+    {
+        const bool wasActive{active};
+        setActive(false);
+        cancelAlarm();
+        if (mode)
+        {
+            if (begun)
+            {
+                mode->end();
+                begun = false;
+            }
+            mode.reset();
+        }
+        mode = std::move(_mode);
+        pending = splash;
+        scheduled = !splash;
+        tick = !splash;
+        if (power)
+        {
+            DisplayService::setPower(true);
+        }
+        setActive(wasActive);
+    }
+}
+
 void ModesService::setModeNext()
 {
     DisplayService::setPower(true);
+    if (mode == nullptr)
+    {
+        return;
+    }
     for (size_t idx{0U}; idx < names.size(); ++idx)
     {
         if (names[idx] == mode->name)
@@ -156,6 +301,10 @@ void ModesService::setModeNext()
 void ModesService::setModePrevious()
 {
     DisplayService::setPower(true);
+    if (mode == nullptr)
+    {
+        return;
+    }
     for (size_t idx{0U}; idx < names.size(); ++idx)
     {
         if (names[idx] == mode->name)

@@ -61,7 +61,7 @@ void PlaylistExtension::advance()
     if (std::ranges::find(ModesService::names, item.mode) != ModesService::names.end())
     {
         currentMode = item.mode;
-        ModesService::setMode(currentMode);
+        ModesService::setMode(currentMode, true, false);
     }
     const uint32_t durationMs{static_cast<uint32_t>(item.duration) * 1'000UL};
     step = (step + 1U) % schedule.size();

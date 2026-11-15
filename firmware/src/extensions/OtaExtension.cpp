@@ -11,7 +11,7 @@ void OtaExtension::begin()
     ArduinoOTA.setPasswordHash(OTA_KEY);
 #endif // OTA_KEY
     ArduinoOTA.onStart(&onStart);
-    ArduinoOTA.begin();
+    ArduinoOTA.begin(false);
 }
 
 void OtaExtension::handle() { ArduinoOTA.handle(); }
@@ -19,6 +19,6 @@ void OtaExtension::handle() { ArduinoOTA.handle(); }
 void OtaExtension::onStart()
 {
     DisplayService::fillFrame(false);
-    KortlinjeFont font{};
+    const KortlinjeFont font{};
     TextHandler(std::string("OTA"), font).draw();
 }

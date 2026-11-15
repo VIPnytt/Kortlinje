@@ -14,13 +14,9 @@ private:
 
     std::array<std::pair<uint8_t, uint8_t>, GRID_COLUMNS / (width + 1U)> bars{};
 
-    bool timerRunning{false};
-    static inline volatile bool tick{false};
+    volatile bool tick{false};
 
     repeating_timer timer{};
-
-    void startTimer();
-    void stopTimer();
 
     [[nodiscard]] static bool onTimer(repeating_timer *rt);
 
@@ -32,5 +28,4 @@ public:
 
     void begin() override;
     void handle() override;
-    void end() override;
 };

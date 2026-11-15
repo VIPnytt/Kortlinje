@@ -2,7 +2,7 @@
 
 #include "services/DisplayService.h"
 
-EqualizerMode::~EqualizerMode() { stopTimer(); }
+EqualizerMode::~EqualizerMode() { cancel_repeating_timer(&timer); }
 
 void EqualizerMode::begin()
 {
@@ -13,7 +13,7 @@ void EqualizerMode::begin()
             DisplayService::setPixel(x, y, false);
         }
     }
-    startTimer();
+    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 4U), &onTimer, this, &timer);
 }
 
 void EqualizerMode::handle()
@@ -47,28 +47,8 @@ void EqualizerMode::handle()
     }
 }
 
-void EqualizerMode::end() { stopTimer(); }
-
 bool __time_critical_func(EqualizerMode::onTimer)(repeating_timer *rt)
 {
-    tick = true;
+    static_cast<EqualizerMode *>(rt->user_data)->tick = true;
     return true;
-}
-
-void EqualizerMode::startTimer()
-{
-    if (!timerRunning)
-    {
-        timerRunning = add_repeating_timer_ms(-static_cast<long>(0b1U << 4U), &onTimer, nullptr, &timer);
-    }
-}
-
-void EqualizerMode::stopTimer()
-{
-    if (timerRunning)
-    {
-        cancel_repeating_timer(&timer);
-        timerRunning = false;
-        tick = false;
-    }
 }

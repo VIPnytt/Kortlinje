@@ -26,25 +26,19 @@ void WebUiExtension::handle()
     if (render && pending && WebSocketExtension::server().count() != 0U)
     {
         pending = false;
-        const std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> frame{DisplayService::getFrame()};
+        const auto frame{DisplayService::getFrame()};
         render = false;
         std::array<uint8_t, ((frame.size() + 7U) >> 3U)> bytes{};
-        for (size_t idx{0U}; idx < bytes.size(); ++idx)
+        for (size_t idx{0U}; idx < frame.size(); ++idx)
         {
-            const size_t offset{idx << 3U};
-            uint8_t byte{0U};
-            for (uint8_t bit{0U}; bit < 8U; ++bit)
-            {
-                byte |= static_cast<uint8_t>(frame[offset + bit]) << bit;
-            }
-            bytes[idx] = byte;
+            bytes[idx >> 3U] |= static_cast<uint8_t>(frame[idx]) << (idx & 7U);
         }
         if (WebSocketExtension::server().binaryAll(bytes.data(), bytes.size()) != AsyncWebSocket::SendStatus::ENQUEUED)
         {
             ++interval;
             render = true;
         }
-        alarm = add_alarm_in_ms(interval, &onAlarm, this, true);
+        alarmId = add_alarm_in_ms(interval, &onAlarm, this, true);
     }
 }
 
@@ -53,7 +47,7 @@ int64_t WebUiExtension::onAlarm(alarm_id_t id, void *user_data)
     static_cast<void>(id);
     auto *self{static_cast<WebUiExtension *>(user_data)};
     self->pending = true;
-    self->alarm = 0L;
+    self->alarmId = 0L;
     return 0LL;
 }
 

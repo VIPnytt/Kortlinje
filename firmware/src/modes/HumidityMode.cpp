@@ -20,7 +20,7 @@ void HumidityMode::handle()
     {
         pending = false;
         DisplayService::fillFrame(false);
-        KortlinjeFont font{};
+        const KortlinjeFont font{};
         TextHandler(std::format("{:d}%", humidity), font).draw();
         if (!saved)
         {

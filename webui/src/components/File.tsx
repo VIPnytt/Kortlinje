@@ -14,8 +14,9 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
                 .forEach((row) => {
                     let x = 0;
                     row.split(",").forEach((column) => {
-                        if (column.length && x < Device.GRID_COLUMNS) {
-                            frame.push(parseInt(column, 10) !== 0);
+                        const trimmed = column.trim();
+                        if (trimmed.length && x < Device.GRID_COLUMNS) {
+                            frame.push(trimmed === "true" || parseInt(trimmed, 10) > 0);
                             ++x;
                         }
                     });
@@ -56,15 +57,19 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
                 ctx?.drawImage(image, 0, 0, Device.GRID_COLUMNS, Device.GRID_ROWS);
                 const imgData = ctx?.getImageData(0, 0, Device.GRID_COLUMNS, Device.GRID_ROWS);
                 if (imgData) {
-                    const frame: number[] = [];
-                    for (let i = 0; i < imgData.data.length; i += 4) {
-                        frame.push(imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2]);
+                    const pixelCount = Device.GRID_COLUMNS * Device.GRID_ROWS;
+                    const luminances = new Uint32Array(pixelCount);
+                    let sum = 0;
+                    for (let i = 0, p = 0; i < imgData.data.length; i += 4, ++p) {
+                        const val =
+                            (imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2]) *
+                            imgData.data[i + 3];
+                        luminances[p] = val;
+                        sum += val;
                     }
-                    const avg = frame.reduce((p, c, i) => {
-                        return p + (c - p) / (i + 1);
-                    }, 0);
+                    const avg = sum / pixelCount;
                     callback([
-                        frame.map((i) => i > avg),
+                        Array.from(luminances, (val) => val > avg),
                     ]);
                 }
             };
@@ -81,40 +86,25 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
         if (!file) {
             return;
         }
-        file.name.endsWith(".csv") ? csvParser(file, callback) : imageParser(file, callback);
+        file.name.toLowerCase().endsWith(".csv")
+            ? csvParser(file, callback)
+            : imageParser(file, callback);
     };
 };
 
 export const csvExport = (name: string, frames: boolean[][]) => {
-    const csvGenerator = (pixels: boolean[]) => {
-        let csv = "";
-        let column = 1;
-        for (const lit of pixels) {
-            csv += lit;
-            if (column >= Device.GRID_COLUMNS) {
-                csv += "\r\n";
-                column = 1;
-            } else {
-                csv += ",";
-                ++column;
-            }
-        }
-        return csv;
-    };
-
-    const handleDownload = (name: string, csv: string) => {
-        const element = document.createElement("a");
-        element.setAttribute("href", `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`);
-        element.setAttribute("download", `${name}.csv`);
-        element.style.display = "none";
-        document.body.appendChild(element);
-        element.click();
-        element.remove();
-    };
-
     let csv = "";
     for (const frame of frames) {
-        csv += csvGenerator(frame);
+        for (let i = 0; i < frame.length; i += Device.GRID_COLUMNS) {
+            csv += `${frame.slice(i, i + Device.GRID_COLUMNS).map(Number).join(",")}\r\n`;
+        }
     }
-    handleDownload(name, csv);
+
+    const element = document.createElement("a");
+    element.setAttribute("href", `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`);
+    element.setAttribute("download", `${name}.csv`);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    element.remove();
 };

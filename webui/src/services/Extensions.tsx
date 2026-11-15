@@ -8,6 +8,17 @@ import {
     name as ExtensionAlarmName,
     MainThird as ExtensionAlarmThird,
 } from "../extensions/Alarm";
+import {
+    Link as ExtensionMessageLink,
+    name as ExtensionMessageName,
+    MainThird as ExtensionMessageThird,
+} from "../extensions/Message";
+import {
+    Actions as ExtensionMirrorActions,
+    Link as ExtensionMirrorLink,
+    name as ExtensionMirrorName,
+    MainThird as ExtensionMirrorThird,
+} from "../extensions/Mirror";
 import { Link as ExtensionOtaLink, name as ExtensionOtaName, MainThird as ExtensionOtaThird } from "../extensions/Ota";
 import {
     Actions as ExtensionPhotocellActions,
@@ -37,6 +48,8 @@ export const SidebarSecondary: Component = () => (
     <SidebarSectionSecondary title={name}>
         <div class="space-y-3">
             <ExtensionAlarmActions />
+            <ExtensionMessageLink />
+            <ExtensionMirrorActions />
             <ExtensionPhotocellActions />
             <ExtensionPlaylistActions />
             <a
@@ -58,6 +71,12 @@ export const MainThird: Component = () => (
         <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionAlarmName.toLowerCase()}`}>
             <ExtensionAlarmThird />
         </Match>
+        <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMessageName.toLowerCase()}`}>
+            <ExtensionMessageThird />
+        </Match>
+        <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionMirrorName.toLowerCase()}`}>
+            <ExtensionMirrorThird />
+        </Match>
         <Match when={WebUIPath() === `/${ExtensionsName.toLowerCase()}/${ExtensionOtaName.toLowerCase()}`}>
             <ExtensionOtaThird />
         </Match>
@@ -73,6 +92,8 @@ export const MainThird: Component = () => (
 export const SidebarThird: Component = () => (
     <SidebarSectionSecondary title={name}>
         <ExtensionAlarmLink />
+        <ExtensionMessageLink />
+        <ExtensionMirrorLink />
         <ExtensionOtaLink />
         <ExtensionPhotocellLink />
         <ExtensionPlaylistLink />

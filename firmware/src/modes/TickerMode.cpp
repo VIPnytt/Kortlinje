@@ -69,8 +69,7 @@ void TickerMode::onReceive(JsonObjectConst payload, std::string_view source)
 
 bool __time_critical_func(TickerMode::onTimer)(repeating_timer *rt)
 {
-    static_cast<void>(rt);
-    tick = true;
+    static_cast<TickerMode *>(rt->user_data)->tick = true;
     return true;
 }
 
@@ -98,7 +97,7 @@ void TickerMode::startTimer()
 {
     if (!timerRunning)
     {
-        timerRunning = add_repeating_timer_ms(-(0b1L << 7U), &onTimer, nullptr, &timer);
+        timerRunning = add_repeating_timer_ms(-(0b1U << 7U), &onTimer, this, &timer);
     }
 }
 

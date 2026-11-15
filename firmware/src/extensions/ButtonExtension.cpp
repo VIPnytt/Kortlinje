@@ -239,10 +239,10 @@ void ButtonExtension::minus()
         DisplayService::setPower(true);
         return;
     }
-    const DisplayService::Brightness _brightness{DisplayService::getBrightness()};
-    if (_brightness != DisplayService::Brightness::DUTY1)
+    const auto brightness{static_cast<uint8_t>(DisplayService::getBrightness())};
+    if (brightness != 0U)
     {
-        DisplayService::setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) - 1U));
+        DisplayService::setBrightness(static_cast<DisplayService::Brightness>(brightness - 1U));
     }
 }
 
@@ -256,7 +256,8 @@ void ButtonExtension::plus()
     const DisplayService::Brightness _brightness{DisplayService::getBrightness()};
     if (_brightness != DisplayService::Brightness::DUTY14)
     {
-        DisplayService::setBrightness(static_cast<DisplayService::Brightness>(static_cast<uint8_t>(_brightness) + 1U));
+        DisplayService::setBrightness(
+            static_cast<DisplayService::Brightness>(static_cast<unsigned int>(_brightness) + 1U));
     }
 }
 

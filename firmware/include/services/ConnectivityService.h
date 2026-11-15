@@ -3,11 +3,12 @@
 #include "modules/ServiceModule.h"
 
 #include <ArduinoJson.h>
+#include <DNSServer.h>
 #include <WiFiMulti.h>
-#include <WiFiUdp.h>
 #include <pico/time.h>
 #include <string>
 #include <string_view>
+
 
 class ConnectivityService final : public ServiceModule
 {
@@ -30,9 +31,9 @@ private:
 
     repeating_timer timer{};
 
-    WiFiMulti multi{};
+    DNSServer dns{};
 
-    WiFiUDP dnsUdp{};
+    WiFiMulti multi{};
 
     static inline volatile bool pending{false};
     static inline bool pendingConnect{false};
@@ -42,7 +43,6 @@ private:
     static inline std::string pendingKey{};
 
     void connect(std::string_view ssid, std::string_view key);
-    void handleDns();
     void initStation();
     void initHotspot();
     void onDisconnected();
@@ -50,5 +50,5 @@ private:
     void onScan(int8_t count);
     void transmit();
 
-    static bool onTimer(repeating_timer *timer);
+    [[nodiscard]] static bool onTimer(repeating_timer *timer);
 };

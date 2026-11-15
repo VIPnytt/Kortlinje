@@ -1,5 +1,6 @@
 #include "services/DisplayService.h"
 
+#include "extensions/MirrorExtension.h"
 #include "extensions/WebUiExtension.h"
 #include "fonts/KortlinjeFont.h"
 #include "handlers/ConfigHandler.h"
@@ -63,15 +64,8 @@ void DisplayService::begin()
         dma_channel_configure(chip, &dma, &pio0->txf[chip], txBuffer[chip].data(), txBuffer[chip].size(), true);
     }
     ConfigHandler::get(name, "brightness", brightness);
-    // Guard against a corrupt LittleFS brightness value blanking the panel.
-    if (static_cast<uint8_t>(brightness) < static_cast<uint8_t>(Brightness::DUTY1) ||
-        static_cast<uint8_t>(brightness) > static_cast<uint8_t>(Brightness::DUTY14))
-    {
-        brightness = Brightness::DUTY14;
-    }
-    KortlinjeFont font{};
+    const KortlinjeFont font{};
     TextHandler("Hej! ♥", font).draw();
-    power = false; // force setPower to emit the duty command
     setPower(true);
     flush();
 }
@@ -208,7 +202,7 @@ void DisplayService::fillColumn(uint8_t x, bool lit)
 
 void DisplayService::fillFrame(bool lit)
 {
-    std::ranges::fill(std::span{frame}.first((GRID_COLUMNS * GRID_ROWS) + 2U), lit);
+    std::ranges::fill(std::span{frame}.first(lit ? GRID_COLUMNS * GRID_ROWS : (GRID_COLUMNS * GRID_ROWS) + 2U), lit);
     render = true;
 }
 
@@ -298,12 +292,16 @@ void DisplayService::flush()
         dma_channel_transfer_from_buffer_now(chip, txBuffer[chip].data(), idx);
         vkBuffer[chip] = buffer[chip];
     }
+    MirrorExtension::render = true;
     WebUiExtension::render = true;
 }
 
 DisplayService::Brightness DisplayService::getBrightness() { return brightness; }
 
-std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> DisplayService::getFrame() { return frame; }
+std::span<const bool, GRID_COLUMNS * GRID_ROWS> DisplayService::getFrame()
+{
+    return std::span{frame}.first<GRID_COLUMNS * GRID_ROWS>();
+}
 
 bool DisplayService::getPixel(size_t idx) { return frame[idx]; }
 
@@ -318,7 +316,7 @@ bool DisplayService::getPower() { return power; }
 
 void DisplayService::invertFrame()
 {
-    for (bool &lit : frame)
+    for (bool &lit : std::span{frame}.first(GRID_COLUMNS * GRID_ROWS))
     {
         lit = !lit;
     }
@@ -368,8 +366,7 @@ void DisplayService::onReceive(JsonObjectConst payload, std::string_view source)
 {
     if (payload["brightness"].is<uint8_t>())
     {
-        setBrightness(static_cast<Brightness>((payload["brightness"].as<uint8_t>()) +
-                                              static_cast<uint8_t>(Brightness::DUTY1) - 1U));
+        setBrightness(static_cast<Brightness>(static_cast<uint8_t>(payload["brightness"].as<uint8_t>() - 1U)));
     }
     if (payload["power"].is<bool>())
     {
@@ -389,7 +386,7 @@ void DisplayService::setBrightness(Brightness _brightness)
     }
     power = true;
     brightness = _brightness;
-    const uint32_t command{static_cast<uint32_t>(brightness) << 1U};
+    const uint32_t command{(0b1000'1000UL | static_cast<uint32_t>(brightness)) << 1U};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
         while (dma_channel_is_busy(chip))
@@ -404,9 +401,18 @@ void DisplayService::setBrightness(Brightness _brightness)
     pending = true;
 }
 
-void DisplayService::setFrame(std::span<const bool, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> _frame)
+void DisplayService::setFrame(std::span<const bool, GRID_COLUMNS * GRID_ROWS> _frame)
 {
     std::ranges::copy(_frame, frame.begin());
+    render = true;
+}
+
+void DisplayService::setFrame(std::span<const uint8_t, (((GRID_COLUMNS * GRID_ROWS) + 7U) >> 3U)> _frame)
+{
+    for (size_t idx{0U}; idx < GRID_COLUMNS * GRID_ROWS; ++idx)
+    {
+        frame[idx] = (_frame[idx >> 3U] & (0b1U << (idx & 7U))) != 0U;
+    }
     render = true;
 }
 
@@ -446,7 +452,7 @@ void DisplayService::setPower(bool enable)
         return;
     }
     power = enable;
-    const uint32_t command{power ? static_cast<uint32_t>(brightness) << 1U : 0b1000'0000UL << 1U};
+    const uint32_t command{power ? (0b1000'1000UL | static_cast<uint32_t>(brightness)) << 1U : 0b1000'0000UL << 1U};
     for (size_t chip{0U}; chip < chips; ++chip)
     {
         while (dma_channel_is_busy(chip))
@@ -463,7 +469,7 @@ void DisplayService::setPower(bool enable)
 void DisplayService::transmit()
 {
     JsonDocument doc{};
-    doc["brightness"].set(static_cast<uint8_t>(brightness) + 1U - static_cast<uint8_t>(Brightness::DUTY1));
+    doc["brightness"].set(static_cast<uint8_t>(brightness) + 1U);
     doc["power"].set(power);
     DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <array>
 
-SnakeMode::~SnakeMode() { stopTimer(); }
+SnakeMode::~SnakeMode() { cancel_repeating_timer(&timer); }
 
 void SnakeMode::begin()
 {
@@ -14,7 +14,7 @@ void SnakeMode::begin()
     snakeClear();
     target = static_cast<size_t>(random(0L, static_cast<long>(GRID_COLUMNS * GRID_ROWS)));
     stage = Stage::READY;
-    startTimer();
+    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 7U), &onTimer, this, &timer);
 }
 
 void SnakeMode::handle()
@@ -39,8 +39,6 @@ void SnakeMode::handle()
         }
     }
 }
-
-void SnakeMode::end() { stopTimer(); }
 
 void SnakeMode::idle()
 {
@@ -205,7 +203,7 @@ void SnakeMode::clean()
 
 bool __time_critical_func(SnakeMode::onTimer)(repeating_timer *rt)
 {
-    tick = true;
+    static_cast<SnakeMode *>(rt->user_data)->tick = true;
     return true;
 }
 
@@ -280,22 +278,4 @@ void SnakeMode::setTarget()
     }
     target = available[static_cast<size_t>(random(static_cast<long>(count)))];
     DisplayService::setPixel(target, true);
-}
-
-void SnakeMode::startTimer()
-{
-    if (!timerRunning)
-    {
-        timerRunning = add_repeating_timer_ms(-(0b1L << 7U), &onTimer, nullptr, &timer);
-    }
-}
-
-void SnakeMode::stopTimer()
-{
-    if (timerRunning)
-    {
-        cancel_repeating_timer(&timer);
-        timerRunning = false;
-        tick = false;
-    }
 }

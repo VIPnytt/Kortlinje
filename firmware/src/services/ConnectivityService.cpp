@@ -2,6 +2,7 @@
 
 #include "config/IkeaKortlinje.h"
 #include "config/secrets.h"
+#include "extensions/AlexaExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
 
@@ -24,7 +25,7 @@ void ConnectivityService::begin()
     tzset();
     gpio_init(PIN_REAR);
     gpio_disable_pulls(PIN_REAR);
-    gpio_set_dir(PIN_REAR, GPIO_IN);
+    gpio_set_dir(PIN_REAR, gpio_dir::GPIO_IN);
     sleep_us(0b1U << 4U);
     const bool hotspot{!gpio_get(PIN_REAR)};
     gpio_deinit(PIN_REAR);
@@ -74,7 +75,7 @@ void ConnectivityService::handle()
     }
     if (dnsRunning)
     {
-        handleDns();
+        dns.processNextRequest();
     }
     else
     {
@@ -126,7 +127,7 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
     serializeJson(doc, json);
     if (ConfigHandler::set(name, "Wi-Fi", json) && dnsRunning)
     {
-        dnsUdp.stop();
+        dns.stop();
         dnsRunning = false;
         static_cast<void>(WiFi.disconnectAP());
         rp2040.reboot();
@@ -149,91 +150,6 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
 }
 
 /**
- * @brief Processes incoming UDP DNS queries for the captive portal.
- */
-void ConnectivityService::handleDns()
-{
-    const IPAddress apIp{WiFi.softAPIP()};
-    for (uint8_t idx{0U}; idx < 8U; ++idx)
-    {
-        const int packetSize{dnsUdp.parsePacket()};
-        if (packetSize < 12)
-        {
-            return;
-        }
-        std::array<uint8_t, 512U> req{};
-        const int len{dnsUdp.read(req.data(), req.size())};
-        if (len < 12)
-        {
-            continue;
-        }
-        int qend{12};
-        while (qend < len && req[static_cast<size_t>(qend)] != 0U)
-        {
-            const int lab{static_cast<int>(req[static_cast<size_t>(qend)])};
-            if ((lab & 0xC0) == 0xC0)
-            {
-                qend += 2;
-                break;
-            }
-            qend += lab + 1;
-            if (qend >= len)
-            {
-                qend = -1;
-                break;
-            }
-        }
-        if (qend < 0 || qend >= len)
-        {
-            continue;
-        }
-        qend += 1 + 4; // NUL + QTYPE + QCLASS
-        if (qend > len || static_cast<size_t>(qend + 16) > req.size())
-        {
-            continue;
-        }
-        const uint16_t qtype{
-            static_cast<uint16_t>((req[static_cast<size_t>(qend - 4)] << 8U) | req[static_cast<size_t>(qend - 3)])};
-        std::array<uint8_t, 512U> resp{};
-        std::memcpy(resp.data(), req.data(), static_cast<size_t>(qend));
-        resp[2U] = 0x84U; // QR=1, AA=1
-        resp[3U] = 0U;    // RCODE=0
-        resp[4U] = 0U;
-        resp[5U] = 0x1U; // QDCOUNT = 1
-        resp[6U] = 0U;
-        resp[7U] = 0U; // ANCOUNT
-        resp[8U] = 0U;
-        resp[9U] = 0U; // NSCOUNT
-        resp[10U] = 0U;
-        resp[11U] = 0U; // ARCOUNT = 0 (drop EDNS)
-        size_t pos{static_cast<size_t>(qend)};
-        if (qtype == 0x0001U)
-        {
-            resp[7U] = 0x1U;
-            resp[pos++] = 0xC0U;
-            resp[pos++] = 0xCU;
-            resp[pos++] = 0U;
-            resp[pos++] = 0x1U; // TYPE A
-            resp[pos++] = 00U;
-            resp[pos++] = 0x1U; // CLASS IN
-            resp[pos++] = 0U;
-            resp[pos++] = 0U;
-            resp[pos++] = 0U;
-            resp[pos++] = 0x3CU; // TTL 60s
-            resp[pos++] = 0U;
-            resp[pos++] = 0x4U;
-            resp[pos++] = apIp[0U];
-            resp[pos++] = apIp[1U];
-            resp[pos++] = apIp[2U];
-            resp[pos++] = apIp[3U];
-        }
-        dnsUdp.beginPacket(dnsUdp.remoteIP(), dnsUdp.remotePort());
-        dnsUdp.write(resp.data(), pos);
-        dnsUdp.endPacket();
-    }
-}
-
-/**
  * @brief Starts the Wi-Fi access point and wildcard DNS responder for hotspot operation.
  */
 void ConnectivityService::initHotspot()
@@ -242,7 +158,8 @@ void ConnectivityService::initHotspot()
     const IPAddress apIp{192, 168, 4, 1};
     WiFi.softAPConfig(apIp, apIp, IPAddress{255, 255, 255, 0});
     WiFi.softAP(NAME);
-    dnsRunning = dnsUdp.begin(53U) != 0U;
+    dns.setErrorReplyCode(DNSReplyCode::NoError);
+    dnsRunning = dns.start(53U, "*", apIp);
     transmit();
 }
 
@@ -346,13 +263,19 @@ void ConnectivityService::onRoutable()
     if (!routable)
     {
         routable = true;
+        NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
         if (!mdns && MDNS.begin(HOSTNAME))
         {
             mdns = true;
             MDNS.addService("http", "tcp", 80U);
             MDNS.addService("ws", "tcp", 80U);
+#ifdef OTA_KEY
+            MDNS.enableArduino(2'040U, true);
+#else
+            MDNS.enableArduino(2'040U, false);
+#endif // OTA_KEY
+            AlexaExtension::onMdns();
         }
-        NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
     }
 }
 

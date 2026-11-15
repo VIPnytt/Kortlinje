@@ -14,7 +14,7 @@ void WeekdayMode::handle()
         pending = false;
         weekday = local.tm_wday;
         DisplayService::fillFrame(false);
-        KortlinjeFont font{};
+        const KortlinjeFont font{};
         TextHandler(std::string(names[weekday]), font).draw();
     }
 }
