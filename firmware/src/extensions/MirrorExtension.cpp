@@ -20,7 +20,7 @@ void MirrorExtension::handle()
     {
         pending = false;
         render = false;
-        std::array<uint8_t, 10U + bytes> ddp{
+        std::array<uint8_t, 10U + Display::grid::bytes> ddp{
             (0b1U << 6U) | 0b1U,
             0U,
             (0b100U << 3U) | 0b001U,
@@ -29,8 +29,8 @@ void MirrorExtension::handle()
             0U,
             0U,
             0U,
-            static_cast<uint8_t>((bytes >> 8U) & 0xFFU),
-            static_cast<uint8_t>(bytes & 0xFFU),
+            static_cast<uint8_t>((Display::grid::bytes >> 8U) & 0xFFU),
+            static_cast<uint8_t>(Display::grid::bytes & 0xFFU),
         };
         const auto frame{DisplayService::getFrame()};
         for (size_t idx{0U}; idx < frame.size(); ++idx)
@@ -100,7 +100,7 @@ void MirrorExtension::onTransmit(JsonObjectConst payload, std::string_view sourc
     if (enabled && source == DisplayService::name && payload["power"].is<bool>() && !payload["power"].as<bool>())
     {
         render = false;
-        constexpr std::array<uint8_t, 10U + bytes> ddp{
+        constexpr std::array<uint8_t, 10U + Display::grid::bytes> ddp{
             (0b1U << 6U) | 0b1U,
             0U,
             (0b100U << 3U) | 0b001U,
@@ -109,8 +109,8 @@ void MirrorExtension::onTransmit(JsonObjectConst payload, std::string_view sourc
             0U,
             0U,
             0U,
-            static_cast<uint8_t>((bytes >> 8U) & 0xFFU),
-            static_cast<uint8_t>(bytes & 0xFFU),
+            static_cast<uint8_t>((Display::grid::bytes >> 8U) & 0xFFU),
+            static_cast<uint8_t>(Display::grid::bytes & 0xFFU),
         };
         udp.write(ddp.data(), ddp.size());
     }

@@ -1,6 +1,6 @@
 #include "modes/WeatherMode.h"
 
-#include "config/version.h"
+#include "constants/Kortlinje.h"
 #include "fonts/KortlinjeFont.h"
 #include "fonts/SmallFont.h"
 #include "handlers/BitmapHandler.h"
@@ -85,10 +85,10 @@ void WeatherMode::end() { cancelAlarm(); }
 
 void WeatherMode::cancelAlarm()
 {
-    if (alarmId > 0)
+    if (alarmId > 0L)
     {
         cancel_alarm(alarmId);
-        alarmId = 0;
+        alarmId = 0L;
     }
     pending = false;
 }
@@ -97,16 +97,13 @@ void WeatherMode::draw()
 {
     const BitmapHandler bitmap(getSign(condition.value()));
     const KortlinjeFont font;
-#if TEMPERATURE_KELVIN
-    const TextHandler text(std::to_string(temperature.value()), font);
-#else
-    const TextHandler text(std::format("{:d}°", temperature.value()), font);
-#endif // TEMPERATURE_KELVIN
+    const TextHandler text(
+        std::format(Kortlinje::device::temperature_unit == "K" ? "{:d}" : "{:d}°", temperature.value()), font);
     const uint8_t textWidth{text.getWidth()};
-    const uint8_t marginsX{static_cast<uint8_t>(max(0U, GRID_COLUMNS - bitmap.getWidth() - textWidth) / 3U)};
+    const uint8_t marginsX{static_cast<uint8_t>(max(0U, Display::grid::columns - bitmap.getWidth() - textWidth) / 3U)};
     DisplayService::fillFrame(false);
-    bitmap.draw(marginsX, (GRID_ROWS - bitmap.getHeight()) / 2U);
-    text.draw(GRID_COLUMNS - textWidth - marginsX - 1U, (GRID_ROWS - text.getHeight()) / 2U);
+    bitmap.draw(marginsX, (Display::grid::rows - bitmap.getHeight()) / 2U);
+    text.draw(Display::grid::maxX - textWidth - marginsX, (Display::grid::rows - text.getHeight()) / 2U);
 }
 
 int WeatherMode::fetch(const char *url, std::vector<char> &body)
@@ -114,7 +111,8 @@ int WeatherMode::fetch(const char *url, std::vector<char> &body)
     BearSSL::WiFiClientSecure secure{};
     secure.setTrustAnchors(&CertificateHandler::list());
     HTTPClient http{};
-    http.setUserAgent("Kortlinje/" VERSION " (RP2350; +https://github.com/VIPnytt/Kortlinje)");
+    http.setUserAgent(std::define_static_string(std::string{"Kortlinje/"} + Kortlinje::version +
+                                                " (RP2350; +https://github.com/VIPnytt/Kortlinje)"));
     if (!http.begin(secure, url))
     {
         return -1;
@@ -220,11 +218,14 @@ bool WeatherMode::parseOpenMeteo(std::string_view body, std::optional<Condition>
         doc["current"]["temperature_2m"].is<float>() && doc["current"]["weather_code"].is<uint8_t>())
     {
         cond = getCondition<uint8_t>(doc["current"]["weather_code"].as<uint8_t>(), codesets);
-#if TEMPERATURE_KELVIN
-        temp = static_cast<int16_t>(lroundf(273.15F + doc["current"]["temperature_2m"].as<float>()));
-#else
-        temp = static_cast<int16_t>(lroundf(doc["current"]["temperature_2m"].as<float>()));
-#endif // TEMPERATURE_KELVIN
+        if constexpr (Kortlinje::device::temperature_unit == "°C" || Kortlinje::device::temperature_unit == "°F")
+        {
+            temp = static_cast<int16_t>(lroundf(doc["current"]["temperature_2m"].as<float>()));
+        }
+        else
+        {
+            temp = static_cast<int16_t>(lroundf(273.15F + doc["current"]["temperature_2m"].as<float>()));
+        }
         return true;
     }
     return false;
@@ -270,29 +271,34 @@ bool WeatherMode::parseWttrIn(std::string_view body, std::optional<Condition> &c
         {Condition::THUNDER, codesThunder},
     }};
     JsonDocument filter{};
-#if TEMPERATURE_FAHRENHEIT
-    filter["current_condition"][0U]["temp_F"].set(true);
-#else
-    filter["current_condition"][0U]["temp_C"].set(true);
-#endif // TEMPERATURE_FAHRENHEIT
+    if constexpr (Kortlinje::device::temperature_unit == "°F")
+    {
+        filter["current_condition"][0U]["temp_F"].set(true);
+    }
+    else
+    {
+        filter["current_condition"][0U]["temp_C"].set(true);
+    }
     filter["current_condition"][0U]["weatherCode"].set(true);
     JsonDocument doc{};
     if (deserializeJson(doc, body, DeserializationOption::Filter(filter)) == DeserializationError::Code::Ok &&
-#if TEMPERATURE_FAHRENHEIT
-        doc["current_condition"][0U]["temp_F"].is<std::string_view>() &&
-#else
-        doc["current_condition"][0U]["temp_C"].is<std::string_view>() &&
-#endif // TEMPERATURE_FAHRENHEIT
+        doc["current_condition"][0U][Kortlinje::device::temperature_unit == "°F" ? "temp_F" : "temp_C"]
+            .is<std::string_view>() &&
         doc["current_condition"][0U]["weatherCode"].is<std::string_view>())
     {
         cond = getCondition<uint16_t>(doc["current_condition"][0U]["weatherCode"].as<uint16_t>(), codesets);
-#if TEMPERATURE_FAHRENHEIT
-        temp = doc["current_condition"][0U]["temp_F"].as<int16_t>();
-#elif TEMPERATURE_KELVIN
-        temp = static_cast<int16_t>(273 + doc["current_condition"][0U]["temp_C"].as<int>());
-#else
-        temp = doc["current_condition"][0U]["temp_C"].as<int16_t>();
-#endif // TEMPERATURE_FAHRENHEIT
+        if constexpr (Kortlinje::device::temperature_unit == "°C")
+        {
+            temp = doc["current_condition"][0U]["temp_C"].as<int16_t>();
+        }
+        else if constexpr (Kortlinje::device::temperature_unit == "°F")
+        {
+            temp = doc["current_condition"][0U]["temp_F"].as<int16_t>();
+        }
+        else
+        {
+            temp = static_cast<int16_t>(273 + doc["current_condition"][0U]["temp_C"].as<int>());
+        }
         return true;
     }
     return false;
@@ -421,13 +427,18 @@ bool WeatherMode::parseYr(std::string_view body, std::optional<Condition> &cond,
                             codesets);
         const float celsius{
             doc["properties"]["timeseries"][0U]["data"]["instant"]["details"]["air_temperature"].as<float>()};
-#if TEMPERATURE_FAHRENHEIT
-        temp = static_cast<int16_t>(lroundf(celsius * 9.0F / 5.0F) + 32L);
-#elif TEMPERATURE_KELVIN
-        temp = static_cast<int16_t>(lroundf(273.15F + celsius));
-#else
-        temp = static_cast<int16_t>(lroundf(celsius));
-#endif // TEMPERATURE_FAHRENHEIT
+        if constexpr (Kortlinje::device::temperature_unit == "°C")
+        {
+            temp = static_cast<int16_t>(lroundf(celsius));
+        }
+        else if constexpr (Kortlinje::device::temperature_unit == "°F")
+        {
+            temp = static_cast<int16_t>(lroundf(celsius * 9.0F / 5.0F) + 32L);
+        }
+        else
+        {
+            temp = static_cast<int16_t>(lroundf(273.15F + celsius));
+        }
         return true;
     }
     return false;

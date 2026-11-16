@@ -1,16 +1,15 @@
 import os
+import pathlib
 import re
 import shutil
+import tomllib
 import typing
 import unicodedata
-
-import dotenv
 
 from .components.certificate import Certificate
 from .components.Dependency import Dependency
 from .components.Time import Time
 from .config.version import VERSION
-from .devices.IkeaKortlinje import IkeaKortlinje
 from .extensions.Ota import Ota
 from .extensions.WebUI import WebUI
 from .Firmware import Firmware
@@ -25,11 +24,11 @@ else:
 class Kortlinje:
     certificate: Certificate | None = None
     dependency: Dependency | None = None
-    dotenv: dict[str, str]
     env: Environment
     firmware: Firmware | None = None
     ota: Ota | None = None
     time: Time | None = None
+    toml: dict[str, typing.Any]
     weather: Weather | None = None
     webui: WebUI | None = None
 
@@ -40,8 +39,8 @@ class Kortlinje:
         Parameters:
             env (Environment): SCons build environment used to configure project components.
         """
+        self.toml = tomllib.loads(pathlib.Path("secrets.toml").read_text(encoding="utf-8"))
         self.env = env
-        self.dotenv = {key: (value if value is not None else "") for key, value in dotenv.dotenv_values(".env").items()}
         self.certificate = Certificate(self)
         self.dependency = Dependency(self)
         self.firmware = Firmware(self)
@@ -65,16 +64,17 @@ class Kortlinje:
 
         Determines default application and host names, normalizes configured hostnames, and initializes the available project components.
         """
-        if "NAME" not in self.dotenv:
-            self.dotenv["NAME"] = IkeaKortlinje.NAME
-        if "HOSTNAME" in self.dotenv:
-            self.dotenv["HOSTNAME"] = self.dotenv["HOSTNAME"].lower()
-        else:
-            self.dotenv["HOSTNAME"] = re.sub(
+        device = self.toml.setdefault("device", {})
+        name = device.setdefault("name", "Kortlinje")
+        device["hostname"] = (
+            device["hostname"].lower()
+            if "hostname" in device
+            else re.sub(
                 r"[^a-z0-9]+",
                 "-",
-                unicodedata.normalize("NFKD", self.dotenv["NAME"]).encode("ascii", "ignore").decode("ascii").lower(),
+                unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii").lower(),
             ).strip("-")
+        )
         if self.certificate:
             self.certificate.initialize()
         if self.dependency:

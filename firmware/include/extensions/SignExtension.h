@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ExtensionModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstdint>
@@ -17,11 +17,11 @@ private:
 
     uint32_t duration{0b1U << 15U};
 
-    volatile alarm_id_t alarmId{0};
+    volatile alarm_id_t alarmId{0L};
 
-    std::array<bool, GRID_COLUMNS * GRID_ROWS> frame{};
+    std::array<bool, Display::grid::pixels> frame{};
 
-    std::array<uint64_t, GRID_ROWS> bitmap{};
+    std::array<uint64_t, Display::grid::rows> bitmap{};
 
     void setDuration(uint8_t seconds);
     void transmit();

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <cmath>
 #include <cstdint>
@@ -11,8 +11,8 @@
 class CircleMode final : public ModeModule
 {
 private:
-    static constexpr float x{(GRID_COLUMNS - 1U) / 2.0F};
-    static constexpr float y{(GRID_ROWS - 1U) / 2.0F};
+    static constexpr float x{Display::grid::maxX / 2.0F};
+    static constexpr float y{Display::grid::maxY / 2.0F};
 
     static inline const uint8_t maxRadius{static_cast<uint8_t>(ceilf(hypotf(x, y)))};
 

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"    // NOLINT(misc-include-cleaner)
-#include "modules/HandlerModule.h"   // NOLINT(misc-include-cleaner)
-#include "services/DisplayService.h" // NOLINT(misc-include-cleaner)
+#include "modules/HandlerModule.h"  
+#include "services/DisplayService.h" 
 
 #include <span>
 
@@ -64,7 +63,7 @@ template <typename T>
     requires std::is_unsigned_v<T>
 void BitmapHandler<T>::draw(bool lit) const
 {
-    draw((GRID_COLUMNS - width) / 2U, (GRID_ROWS - height) / 2U, lit);
+    draw((Display::grid::columns - width) / 2U, (Display::grid::rows - height) / 2U, lit);
 }
 
 template <typename T>

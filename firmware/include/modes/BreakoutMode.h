@@ -1,29 +1,30 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <cstdint>
 #include <ctime>
 #include <pico/time.h>
 #include <string_view>
 
+
 class BreakoutMode final : public ModeModule
 {
 private:
     volatile bool tick{false};
 
-    uint8_t paddleY{GRID_ROWS / 2U};
-    uint8_t x{GRID_COLUMNS - 2U};
-    uint8_t y{GRID_ROWS / 2U};
+    uint8_t paddleY{Display::grid::rows / 2U};
+    uint8_t x{Display::grid::maxX - 1U};
+    uint8_t y{Display::grid::rows / 2U};
 
     uint16_t deg{180U};
 
     int hour{24};
     int minute{60};
 
-    float xDec{static_cast<float>(GRID_COLUMNS - 2U)};
-    float yDec{static_cast<float>(GRID_ROWS / 2U)};
+    float xDec{static_cast<float>(Display::grid::maxX - 1U)};
+    float yDec{static_cast<float>(Display::grid::rows / 2U)};
 
     alarm_id_t alarmId{0L};
 

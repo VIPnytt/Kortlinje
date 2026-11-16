@@ -1,7 +1,6 @@
 import { type Component, createEffect, onCleanup, onMount } from "solid-js";
-
-import { Device } from "../config/devices";
 import { WebUISidebar } from "../extensions/WebUI";
+import { DisplayColumns, DisplayRows } from "../services/Display";
 
 export const Canvas: Component<{
     disabled?: boolean;
@@ -9,6 +8,8 @@ export const Canvas: Component<{
     onFrame?: (data: boolean[]) => void;
     onPixel?: (x: number, y: number, lit: boolean) => void;
 }> = (props) => {
+    const PixelSize = 2.54;
+    const PixelPitch = 3.3;
     let canvasRef: HTMLCanvasElement | undefined;
     let divRef: HTMLDivElement | undefined;
     let isDrawing: boolean = false;
@@ -50,10 +51,10 @@ export const Canvas: Component<{
         }
         canvasRef.width = divRef.clientWidth;
         canvasRef.height = divRef.clientHeight;
-        const columnWidth = canvasRef.width / Device.GRID_COLUMNS;
-        const rowHeight = canvasRef.height / Device.GRID_ROWS;
-        const pixelHeight = rowHeight * (Device.LED_SIZE_VERTICAL / Device.PITCH_VERTICAL);
-        const pixelWidth = columnWidth * (Device.LED_SIZE_HORIZONTAL / Device.PITCH_HORIZONTAL);
+        const columnWidth = canvasRef.width / DisplayColumns;
+        const rowHeight = canvasRef.height / DisplayRows;
+        const pixelHeight = rowHeight * (PixelSize / PixelPitch);
+        const pixelWidth = columnWidth * (PixelSize / PixelPitch);
         const offsetX = (columnWidth - pixelWidth) / 2;
         const offsetY = (rowHeight - pixelHeight) / 2;
         const ctx = canvasRef.getContext("2d");
@@ -65,9 +66,9 @@ export const Canvas: Component<{
         ctx.globalAlpha = 1;
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvasRef.width, canvasRef.height);
-        for (let x = 0; x < Device.GRID_COLUMNS; ++x) {
-            for (let y = 0; y < Device.GRID_ROWS; ++y) {
-                ctx.fillStyle = toColor(props.pixels[x + y * Device.GRID_COLUMNS]);
+        for (let x = 0; x < DisplayColumns; ++x) {
+            for (let y = 0; y < DisplayRows; ++y) {
+                ctx.fillStyle = toColor(props.pixels[x + y * DisplayColumns]);
                 ctx.fillRect(offsetX + x * columnWidth, offsetY + y * rowHeight, pixelWidth, pixelHeight);
             }
         }
@@ -75,7 +76,7 @@ export const Canvas: Component<{
     };
 
     const toColor = (lit: boolean) => {
-        const factor = (lit ? 0xff : Device.LED_BASE_TONE) / 0xff;
+        const factor = (lit ? 0xff : 1) / 0xff;
         return `rgb(${factor * 0xf4},${factor * 0xeb},${factor * 0xdc})`;
     };
 
@@ -83,13 +84,13 @@ export const Canvas: Component<{
         if (canvasRef && !props.disabled) {
             const rect = canvasRef.getBoundingClientRect();
             const _x = Math.floor(
-                ((e.clientX - rect.left) * canvasRef.width) / rect.width / (canvasRef.width / Device.GRID_COLUMNS),
+                ((e.clientX - rect.left) * canvasRef.width) / rect.width / (canvasRef.width / DisplayColumns),
             );
             const _y = Math.floor(
-                ((e.clientY - rect.top) * canvasRef.height) / rect.height / (canvasRef.height / Device.GRID_ROWS),
+                ((e.clientY - rect.top) * canvasRef.height) / rect.height / (canvasRef.height / DisplayRows),
             );
             return {
-                i: _x + _y * Device.GRID_COLUMNS,
+                i: _x + _y * DisplayColumns,
                 x: _x,
                 y: _y,
             };
@@ -144,7 +145,7 @@ export const Canvas: Component<{
                 divRef = div;
             }}
             style={{
-                "aspect-ratio": `${Device.GRID_COLUMNS * Device.PITCH_HORIZONTAL} / ${Device.GRID_ROWS * Device.PITCH_VERTICAL}`,
+                "aspect-ratio": `${DisplayColumns * PixelPitch} / ${DisplayRows * PixelPitch}`,
             }}
         >
             <canvas

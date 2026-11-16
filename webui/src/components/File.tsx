@@ -1,4 +1,4 @@
-import { Device } from "../config/devices";
+import { DisplayColumns, DisplayRows } from "../services/Display";
 
 export const fileImport = (callback: (frames: boolean[][]) => void) => {
     const csvParser = (file: File, callback: (frames: boolean[][]) => void) => {
@@ -15,18 +15,18 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
                     let x = 0;
                     row.split(",").forEach((column) => {
                         const trimmed = column.trim();
-                        if (trimmed.length && x < Device.GRID_COLUMNS) {
+                        if (trimmed.length && x < DisplayColumns) {
                             frame.push(trimmed === "true" || parseInt(trimmed, 10) > 0);
                             ++x;
                         }
                     });
                     if (x > 0) {
-                        while (x < Device.GRID_COLUMNS) {
+                        while (x < DisplayColumns) {
                             frame.push(false);
                             ++x;
                         }
                         ++y;
-                        if (y >= Device.GRID_ROWS) {
+                        if (y >= DisplayRows) {
                             frames.push(frame);
                             frame = [];
                             y = 0;
@@ -34,7 +34,7 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
                     }
                 });
             if (y > 0) {
-                while (frame.length < Device.GRID_COLUMNS * Device.GRID_ROWS) {
+                while (frame.length < DisplayColumns * DisplayRows) {
                     frame.push(false);
                 }
                 frames.push(frame);
@@ -49,21 +49,19 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
-            const image = new Image(Device.GRID_COLUMNS, Device.GRID_ROWS);
+            const image = new Image(DisplayColumns, DisplayRows);
             image.src = reader.result as string;
             image.onload = () => {
-                const canvas = new OffscreenCanvas(Device.GRID_COLUMNS, Device.GRID_ROWS);
+                const canvas = new OffscreenCanvas(DisplayColumns, DisplayRows);
                 const ctx = canvas.getContext("2d");
-                ctx?.drawImage(image, 0, 0, Device.GRID_COLUMNS, Device.GRID_ROWS);
-                const imgData = ctx?.getImageData(0, 0, Device.GRID_COLUMNS, Device.GRID_ROWS);
+                ctx?.drawImage(image, 0, 0, DisplayColumns, DisplayRows);
+                const imgData = ctx?.getImageData(0, 0, DisplayColumns, DisplayRows);
                 if (imgData) {
-                    const pixelCount = Device.GRID_COLUMNS * Device.GRID_ROWS;
+                    const pixelCount = DisplayColumns * DisplayRows;
                     const luminances = new Uint32Array(pixelCount);
                     let sum = 0;
                     for (let i = 0, p = 0; i < imgData.data.length; i += 4, ++p) {
-                        const val =
-                            (imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2]) *
-                            imgData.data[i + 3];
+                        const val = (imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2]) * imgData.data[i + 3];
                         luminances[p] = val;
                         sum += val;
                     }
@@ -86,17 +84,18 @@ export const fileImport = (callback: (frames: boolean[][]) => void) => {
         if (!file) {
             return;
         }
-        file.name.toLowerCase().endsWith(".csv")
-            ? csvParser(file, callback)
-            : imageParser(file, callback);
+        file.name.toLowerCase().endsWith(".csv") ? csvParser(file, callback) : imageParser(file, callback);
     };
 };
 
 export const csvExport = (name: string, frames: boolean[][]) => {
     let csv = "";
     for (const frame of frames) {
-        for (let i = 0; i < frame.length; i += Device.GRID_COLUMNS) {
-            csv += `${frame.slice(i, i + Device.GRID_COLUMNS).map(Number).join(",")}\r\n`;
+        for (let i = 0; i < frame.length; i += DisplayColumns) {
+            csv += `${frame
+                .slice(i, i + DisplayColumns)
+                .map(Number)
+                .join(",")}\r\n`;
         }
     }
 

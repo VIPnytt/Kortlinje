@@ -103,7 +103,7 @@ private:
     static inline bool scheduled{false};
     static inline volatile bool tick{false};
 
-    static inline alarm_id_t alarmId{0};
+    static inline alarm_id_t alarmId{0L};
 
     static inline std::unique_ptr<ModeModule> mode{};
 

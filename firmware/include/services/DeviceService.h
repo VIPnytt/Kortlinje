@@ -8,7 +8,7 @@
 #include "services/ModesService.h"
 #include "services/WebServerService.h"
 
-#include <ArduinoJson.h> // NOLINT(misc-include-cleaner)
+#include <ArduinoJson.h>
 
 class DeviceService final : public ServiceModule
 {

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
+#include "constants/secrets.h"
 #include "handlers/TextHandler.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <bits/unique_ptr.h>
 #include <pico/time.h>
@@ -15,14 +16,14 @@ private:
     bool timerRunning{false};
     volatile bool tick{false};
 
-    int8_t offsetY{static_cast<int8_t>(GRID_ROWS / 2U)};
+    int8_t offsetY{static_cast<int8_t>(Display::grid::rows / 2U)};
 
-    int16_t offsetX{GRID_COLUMNS};
+    int16_t offsetX{Display::grid::columns};
     int16_t width{0};
 
     repeating_timer timer{};
 
-    static inline std::string message{NAME};
+    static inline std::string message{Kortlinje::device::name};
 
     std::unique_ptr<const FontModule> font{};
 

@@ -1,9 +1,8 @@
-import decimal
-import logging
-import numbers
-import os
+import json
 import pathlib
 import typing
+
+from .config.version import VERSION
 
 if typing.TYPE_CHECKING:
     from .Kortlinje import Kortlinje
@@ -20,72 +19,78 @@ class Firmware:
         self.project = project
 
     def finalize(self) -> None:
-        """Configures environment and PlatformIO preprocessor definitions for the firmware component."""
-        self._define_env()
-        self._define_pio()
-
-    def _define_env(self) -> None:
-        """
-        Define C/C++ preprocessor macros from dotenv options, including enabled extension counts and temperature-unit selections. Unsupported temperature units are logged as warnings.
-        """
-        for option, _value in self.project.dotenv.items():
-            if (value := _value or "") in (
-                "false",
-                "true",
-            ):
-                self.project.env.Append(
-                    CPPDEFINES=[
-                        (option, "true" if value == "true" else "false"),
+        """Generate the C++ configuration header from TOML options."""
+        secrets_lines: list[str] = [
+            "#pragma once",
+            "",
+            "#include <pico/types.h>",
+            "#include <string_view>",
+        ]
+        for section, options in sorted(self.project.toml.items()):
+            if not isinstance(options, dict):
+                continue
+            members: list[str] = []
+            for key, value in sorted(options.items()):
+                if value is None:
+                    continue
+                if isinstance(value, bool):
+                    cpp_type = "bool"
+                    cpp_value = "true" if value else "false"
+                elif isinstance(value, int) and value >= 0:
+                    cpp_type = "uint"
+                    cpp_value = f"{value!s}U"
+                elif isinstance(value, int):
+                    cpp_type = "int"
+                    cpp_value = str(value)
+                elif isinstance(value, float):
+                    cpp_type = "float"
+                    cpp_value = str(value)
+                else:
+                    cpp_type = "std::string_view"
+                    cpp_value = json.dumps(str(value), ensure_ascii=False)
+                members.append(f"inline constexpr {cpp_type} {key}{{{cpp_value}}};")
+            if members:
+                secrets_lines.extend(
+                    [
+                        "",
+                        f"namespace Kortlinje::{section}",
+                        "{",
+                        *members,
+                        f"}} // namespace Kortlinje::{section}",
                     ]
                 )
-            else:
-                self.project.env.Append(
-                    CPPDEFINES=[
-                        (option, self.project.env.StringifyMacro(value)),
-                    ]
-                )
-                if option == "TEMPERATURE_UNIT":
-                    _option = {
-                        "K": "TEMPERATURE_KELVIN",
-                        "°C": "TEMPERATURE_CELSIUS",
-                        "°F": "TEMPERATURE_FAHRENHEIT",
-                    }.get(value)
-                    if _option is None:
-                        logging.getLogger(__name__).warning(
-                            "%s %r is unsupported. Valid values are '°C', '°F' and 'K'.", option, value
-                        )
-                    else:
-                        self.project.env.Append(
-                            CPPDEFINES=[
-                                (_option, "true"),
-                            ]
-                        )
-
-    def _define_pio(self) -> None:
-        """
-        Add configured PlatformIO board and monitor-speed values as C/C++ preprocessor definitions.
-        """
-        config = self.project.env.GetProjectConfig()
-        for option in (
-            "board",
-            "monitor_speed",
-        ):
-            if value := config.get(f"env:{self.project.env['PIOENV']}", option, None):
-                _value = (
-                    value
-                    if isinstance(value, (decimal.Decimal, numbers.Number))
-                    else self.project.env.StringifyMacro(value)
-                )
-                self.project.env.Append(
-                    CPPDEFINES=[
-                        (option.replace(".", "__").upper(), _value),
-                    ]
-                )
+        secrets_content = "\n".join(secrets_lines) + "\n"
+        secrets_path = self.path / "include" / "constants" / "secrets.h"
+        if not secrets_path.is_file() or secrets_path.read_text(encoding="utf-8") != secrets_content:
+            secrets_path.write_text(secrets_content, encoding="utf-8")
+        version_path = self.path / "include" / "constants" / "Kortlinje.h"
+        version_content = (
+            "\n".join(
+                [
+                    "#pragma once",
+                    "",
+                    "#include <string_view>",
+                    "",
+                    "namespace Kortlinje",
+                    "{",
+                    f'inline constexpr std::string_view version{{"{VERSION}"}};',
+                    "} // namespace Kortlinje",
+                ]
+            )
+            + "\n"
+        )
+        if not version_path.is_file() or version_path.read_text(encoding="utf-8") != version_content:
+            version_path.write_text(version_content, encoding="utf-8")
 
     @staticmethod
     def clean() -> None:
-        """Remove generated PIO files from the project."""
-        for data in os.scandir("firmware/src/pio"):
-            if data.is_file() and pathlib.Path(data.path).name.endswith(".pio.h"):
-                pathlib.Path(data.path).unlink()
-                print(f"Removing {data.path}")
+        """Remove generated PIO and configuration header files from the project."""
+        firmware = pathlib.Path("firmware")
+        for file in (
+            firmware / "include" / "constants" / "Kortlinje.h",
+            firmware / "include" / "constants" / "secrets.h",
+            *(firmware / "src" / "pio").glob("*.pio.h"),
+        ):
+            if file.is_file():
+                file.unlink()
+                print(f"Removing {file}")

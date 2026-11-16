@@ -21,9 +21,9 @@ import { csvExport, fileImport } from "../components/File";
 import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
-import { Device } from "../config/devices";
-import { SidebarSection, WebUISidebar } from "../extensions/WebUI";
 import { WebSocketWS } from "../extensions/WebSocket";
+import { SidebarSection, WebUISidebar } from "../extensions/WebUI";
+import { DisplayColumns, DisplayRows } from "../services/Display";
 import { MainComponent as ModesMainComponent } from "../services/Modes";
 
 export const name = "Animation";
@@ -44,7 +44,7 @@ const [getSaved, setSaved] = createSignal<boolean>(true);
 
 export const receiver = (json: { frame?: number[]; index?: number; interval?: number }) => {
     if (json?.frame !== undefined && json?.index !== undefined) {
-        const pixels = new Array<boolean>(Device.GRID_COLUMNS * Device.GRID_ROWS);
+        const pixels = new Array<boolean>(DisplayColumns * DisplayRows);
         for (let i = 0; i < pixels.length; ++i) {
             pixels[i] = Boolean((json.frame[i >> 3] >> (i & 7)) & 1);
         }
@@ -55,7 +55,7 @@ export const receiver = (json: { frame?: number[]; index?: number; interval?: nu
 
 let divRef: HTMLDivElement | undefined;
 
-const template = new Array<boolean>(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false);
+const template = new Array<boolean>(DisplayColumns * DisplayRows).fill(false);
 
 const handleFrameAt = (index: number, frame: Frame) => (frames: Frame[]) => {
     const next = [
@@ -187,7 +187,7 @@ export const Sidebar: Component = () => {
                         }),
                     );
                 },
-                Device.GRID_COLUMNS * Device.GRID_ROWS * i,
+                DisplayColumns * DisplayRows * i,
             );
         }
         setTimeout(
@@ -203,7 +203,7 @@ export const Sidebar: Component = () => {
                 setSaved(true);
                 toast(`${name} saved`);
             },
-            Device.GRID_COLUMNS * Device.GRID_ROWS * frames.length,
+            DisplayColumns * DisplayRows * frames.length,
         );
     };
 
@@ -417,7 +417,7 @@ export const Main: Component = () => {
                                                     class="canvas-action-negative"
                                                     disabled={
                                                         !getFramesDraft()
-                                                        [index()][0]?.()
+                                                            [index()][0]?.()
                                                             .some((pixel) => pixel)
                                                     }
                                                     onclick={() => handleClear(index())}
@@ -455,7 +455,7 @@ export const Main: Component = () => {
                                             const currentFrame = [
                                                 ...getFrame(),
                                             ];
-                                            currentFrame[x + y * Device.GRID_COLUMNS] = value;
+                                            currentFrame[x + y * DisplayColumns] = value;
                                             setFrame(currentFrame);
                                         }}
                                         pixels={getFrame()}

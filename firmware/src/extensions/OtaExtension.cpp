@@ -1,15 +1,17 @@
 #include "extensions/OtaExtension.h"
 
+#include "constants/Kortlinje.h"
 #include "fonts/KortlinjeFont.h"
 #include "handlers/TextHandler.h"
 #include "services/DisplayService.h"
 
 void OtaExtension::begin()
 {
-    ArduinoOTA.setHostname(HOSTNAME);
-#ifdef OTA_KEY
-    ArduinoOTA.setPasswordHash(OTA_KEY);
-#endif // OTA_KEY
+    ArduinoOTA.setHostname(Kortlinje::device::hostname.data());
+    if constexpr (!Kortlinje::ota::password.empty())
+    {
+        ArduinoOTA.setPasswordHash(Kortlinje::ota::password.data());
+    }
     ArduinoOTA.onStart(&onStart);
     ArduinoOTA.begin(false);
 }

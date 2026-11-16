@@ -14,7 +14,7 @@ void ScanMode::handle()
         return;
     }
     tick = false;
-    if (x < GRID_COLUMNS)
+    if (x < Display::grid::columns)
     {
         DisplayService::fillColumn(x, true);
     }
@@ -23,7 +23,7 @@ void ScanMode::handle()
         DisplayService::fillColumn(x - 2U, false);
     }
     ++x;
-    if (x >= GRID_COLUMNS + 2U)
+    if (x >= Display::grid::columns + 2U)
     {
         x = 0U;
     }

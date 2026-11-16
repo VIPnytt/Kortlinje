@@ -1,10 +1,10 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "fonts/SmallFont.h"
 #include "handlers/TextHandler.h"
 #include "modules/ExtensionModule.h"
 #include "modules/FontModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstdint>
@@ -41,14 +41,14 @@ private:
     static inline uint8_t repeat{3U};
     static inline uint8_t width{0U};
 
-    static inline int16_t offsetX{GRID_COLUMNS};
+    static inline int16_t offsetX{Display::grid::columns};
 
     static inline repeating_timer timer{};
 
     static inline std::string fontName{SmallFont::name};
     static inline std::string message{};
 
-    static inline std::array<bool, GRID_COLUMNS * GRID_ROWS> frame{};
+    static inline std::array<bool, Display::grid::pixels> frame{};
 
     static inline std::unique_ptr<const FontModule> font{};
     static inline std::unique_ptr<TextHandler> text{};

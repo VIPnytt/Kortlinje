@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstdint>
@@ -19,7 +19,7 @@ private:
 
     volatile bool tick{false};
 
-    std::array<Leaf, GRID_COLUMNS * GRID_ROWS / 20U> leaves{};
+    std::array<Leaf, Display::grid::pixels / 20U> leaves{};
 
     repeating_timer timer{};
 

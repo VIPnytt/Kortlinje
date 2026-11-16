@@ -1,6 +1,7 @@
 #include "extensions/ClimateExtension.h"
 
-#include "config/secrets.h"
+#include "constants/HomeAssistant.h"
+#include "constants/Kortlinje.h"
 #include "modes/HumidityMode.h"
 #include "modes/TemperatureMode.h"
 #include "pio/climate.pio.h"
@@ -21,19 +22,19 @@ void ClimateExtension::begin()
 {
     pio_sm_config sampler{climate_sampler_program_get_default_config(0U)};
     pio_sm_config pacer{climate_pacer_program_get_default_config(climate_sampler_program.length)};
-    sm_config_set_set_pins(&sampler, PIN_EN, 1U);
-    sm_config_set_in_pins(&sampler, PIN_PDM);
+    sm_config_set_set_pins(&sampler, Kortlinje::pin::climate_en, 1U);
+    sm_config_set_in_pins(&sampler, Kortlinje::pin::climate_pdm);
     sm_config_set_in_shift(&sampler, false, false, 32U);
     sm_config_set_clkdiv_int_frac8(&sampler, static_cast<uint32_t>(F_CPU) / 14'547UL, 0U);
-    sm_config_set_jmp_pin(&pacer, PIN_EN);
+    sm_config_set_jmp_pin(&pacer, Kortlinje::pin::climate_en);
     sm_config_set_clkdiv_int_frac8(&pacer, 0UL, 0U);
-    pio_gpio_init(pio1, PIN_EN);
-    pio_gpio_init(pio1, PIN_PDM);
-    gpio_pull_down(PIN_PDM);
-    gpio_set_input_enabled(PIN_EN, true);
-    gpio_set_drive_strength(PIN_EN, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
-    pio_sm_set_consecutive_pindirs(pio1, 0U, PIN_EN, 1U, true);
-    pio_sm_set_consecutive_pindirs(pio1, 0U, PIN_PDM, 1U, false);
+    pio_gpio_init(pio1, Kortlinje::pin::climate_en);
+    pio_gpio_init(pio1, Kortlinje::pin::climate_pdm);
+    gpio_pull_down(Kortlinje::pin::climate_pdm);
+    gpio_set_input_enabled(Kortlinje::pin::climate_en, true);
+    gpio_set_drive_strength(Kortlinje::pin::climate_en, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
+    pio_sm_set_consecutive_pindirs(pio1, 0U, Kortlinje::pin::climate_en, 1U, true);
+    pio_sm_set_consecutive_pindirs(pio1, 0U, Kortlinje::pin::climate_pdm, 1U, false);
     irq_set_exclusive_handler(irq_num_rp2350::PIO1_IRQ_0, &onSampler);
     irq_set_exclusive_handler(irq_num_rp2350::PIO1_IRQ_1, &onPacer);
     pio_interrupt_clear(pio1, 2U);
@@ -77,31 +78,27 @@ void ClimateExtension::onHomeAssistant(JsonDocument &discovery, std::string topi
     topic.append(name);
     {
         const std::string id{std::string(name).append("_humidity")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::device_class].set("humidity");
-        component[HomeAssistantAbbreviations::name].set("Humidity");
-        component[HomeAssistantAbbreviations::platform].set("sensor");
-        component[HomeAssistantAbbreviations::state_class].set("measurement");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-        component[HomeAssistantAbbreviations::unit_of_measurement].set("%");
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.humidity}}");
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::device_class].set("humidity");
+        component[HomeAssistant::Abbreviations::name].set("Humidity");
+        component[HomeAssistant::Abbreviations::platform].set("sensor");
+        component[HomeAssistant::Abbreviations::state_class].set("measurement");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::unit_of_measurement].set("%");
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.humidity}}");
     }
     {
         const std::string id{std::string(name).append("_temperature")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::device_class].set("temperature");
-        component[HomeAssistantAbbreviations::name].set("Temperature");
-        component[HomeAssistantAbbreviations::platform].set("sensor");
-        component[HomeAssistantAbbreviations::state_class].set("measurement");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-#ifdef TEMPERATURE_UNIT
-        component[HomeAssistantAbbreviations::unit_of_measurement].set(TEMPERATURE_UNIT);
-#else
-        component[HomeAssistantAbbreviations::unit_of_measurement].set("°C");
-#endif // TEMPERATURE_UNIT
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.temperature}}");
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::device_class].set("temperature");
+        component[HomeAssistant::Abbreviations::name].set("Temperature");
+        component[HomeAssistant::Abbreviations::platform].set("sensor");
+        component[HomeAssistant::Abbreviations::state_class].set("measurement");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::unit_of_measurement].set(Kortlinje::device::temperature_unit);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.temperature}}");
     }
 }
 
@@ -118,13 +115,18 @@ void __time_critical_func(ClimateExtension::onSampler)()
         if (static_cast<uint8_t>(0xA5U + lsb + msb + _humidity) == checksum)
         {
             humidity = _humidity;
-#if TEMPERATURE_FAHRENHEIT
-            temperature = (static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .18F) + 32.0F;
-#elif TEMPERATURE_KELVIN
-            temperature = (static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .1F) + 273.15F;
-#else
-            temperature = static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .1F;
-#endif // TEMPERATURE_FAHRENHEIT
+            if constexpr (Kortlinje::device::temperature_unit == "°C")
+            {
+                temperature = static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .1F;
+            }
+            else if constexpr (Kortlinje::device::temperature_unit == "°F")
+            {
+                temperature = (static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .18F) + 32.0F;
+            }
+            else
+            {
+                temperature = (static_cast<float>(static_cast<int16_t>((msb << 8U) | lsb)) * .1F) + 273.15F;
+            }
             pending = true;
         }
     }

@@ -1,6 +1,5 @@
 #include "extensions/ButtonExtension.h"
 
-#include "config/secrets.h"
 #include "extensions/AlarmExtension.h"
 #include "extensions/PlaylistExtension.h"
 #include "services/DisplayService.h"
@@ -18,9 +17,9 @@ void ButtonExtension::configure()
 void ButtonExtension::begin()
 {
     adc_init();
-    adc_gpio_init(PIN_REAR);
-    adc_gpio_init(PIN_TOP);
-    adc_select_input(PIN_REAR - __FIRSTANALOGGPIO);
+    adc_gpio_init(Kortlinje::pin::button_rear);
+    adc_gpio_init(Kortlinje::pin::button_top);
+    adc_select_input(Kortlinje::pin::button_rear - __FIRSTANALOGGPIO);
     adc_fifo_setup(true, true, 1U, false, false);
     adc_set_clkdiv(divider);
     dma_channel_config_t config{dma_channel_get_default_config(channel)};

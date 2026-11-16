@@ -23,13 +23,18 @@ void TemperatureMode::handle()
         pending = false;
         DisplayService::fillFrame(false);
         const KortlinjeFont font{};
-#if TEMPERATURE_FAHRENHEIT
-        TextHandler(std::format("{:.0f}°F", temperature), font).draw();
-#elif TEMPERATURE_KELVIN
-        TextHandler(std::format("{:.0f}K", temperature), font).draw();
-#else
-        TextHandler(std::format("{:.1f}°C", temperature), font).draw();
-#endif // TEMPERATURE_FAHRENHEIT
+        if constexpr (Kortlinje::device::temperature_unit == "°C")
+        {
+            TextHandler(std::format("{:.1f}°C", temperature), font).draw();
+        }
+        else if constexpr (Kortlinje::device::temperature_unit == "°F")
+        {
+            TextHandler(std::format("{:.0f}°F", temperature), font).draw();
+        }
+        else
+        {
+            TextHandler(std::format("{:.0f}K", temperature), font).draw();
+        }
         if (!saved)
         {
             saved = true;

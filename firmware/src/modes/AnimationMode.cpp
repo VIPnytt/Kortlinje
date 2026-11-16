@@ -2,8 +2,6 @@
 
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
-#include "services/DisplayService.h"
-#include "services/ExtensionsService.h" // NOLINT(misc-include-cleaner)
 
 #include <algorithm>
 #include <string>
@@ -144,10 +142,10 @@ void AnimationMode::onReceive(JsonObjectConst payload, std::string_view source)
         index = 0U;
         pending = true;
     }
-    if (payload["frame"].is<JsonArrayConst>() && payload["frame"].size() == ((GRID_COLUMNS * GRID_ROWS) + 7U) / 8U &&
+    if (payload["frame"].is<JsonArrayConst>() && payload["frame"].size() == Display::grid::bytes &&
         payload["index"].is<uint8_t>())
     {
-        std::array<uint8_t, ((GRID_COLUMNS * GRID_ROWS) + 7U) / 8U> frame{};
+        std::array<uint8_t, Display::grid::bytes> frame{};
         const JsonArrayConst _frame{payload["frame"].as<JsonArrayConst>()};
         for (size_t idx{0U}; idx < frame.size(); ++idx)
         {
@@ -156,9 +154,9 @@ void AnimationMode::onReceive(JsonObjectConst payload, std::string_view source)
                 frame[idx] = _frame[idx].as<uint8_t>();
             }
         }
-        if constexpr ((GRID_COLUMNS * GRID_ROWS) % 8U != 0U)
+        if constexpr (Display::grid::pixels % 8U != 0U)
         {
-            frame.back() &= static_cast<uint8_t>((1U << ((GRID_COLUMNS * GRID_ROWS) % 8U)) - 1U);
+            frame.back() &= static_cast<uint8_t>((1U << (Display::grid::pixels % 8U)) - 1U);
         }
         setFrame(payload["index"].as<uint8_t>(), frame);
     }

@@ -20,13 +20,14 @@ class Ota:
 
     def configure(self) -> None:
         """
-        Configure the OTA authentication key for project use.
+        Configure the OTA authentication credential for project use.
 
-        Stores the original key for upload authentication and replaces the project key with its SHA-256 hexadecimal digest when it is not already a 64-character hash.
+        Stores the original credential for upload authentication and replaces the project value with its SHA-256 hexadecimal digest when it is not already a 64-character hash.
         """
-        if "OTA_KEY" in self.project.dotenv and len(self.project.dotenv["OTA_KEY"]) != 64:
-            self.auth = self.project.dotenv["OTA_KEY"]
-            self.project.dotenv["OTA_KEY"] = hashlib.sha256(self.project.dotenv["OTA_KEY"].encode()).hexdigest()
+        ota = self.project.toml.setdefault("ota", {})
+        if (password := ota.setdefault("password", "")) and len(password) != 64:
+            self.auth = password
+            ota["password"] = hashlib.sha256(password.encode()).hexdigest()
 
     def finalize(self) -> None:
         """
@@ -41,7 +42,7 @@ class Ota:
             and not self.project.env.GetProjectOption("upload_flags", None)
             and not self.project.env.GetProjectOption("upload_port", None)
         ):
-            self.project.env.Replace(UPLOAD_PORT=f"{self.project.dotenv['HOSTNAME']}.local")
+            self.project.env.Replace(UPLOAD_PORT=f"{self.project.toml['device']['hostname']}.local")
             if self.auth:
                 self.project.env.Append(
                     UPLOAD_FLAGS=[

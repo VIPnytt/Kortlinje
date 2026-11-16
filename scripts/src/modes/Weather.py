@@ -28,22 +28,21 @@ class Weather:
         if self.project.certificate:
             for hostname in self.HOSTS:
                 self.project.certificate.add_host(hostname)
+        weather = self.project.toml.setdefault("weather", {})
         options = (
-            "LATITUDE",
-            "LONGITUDE",
+            "latitude",
+            "longitude",
         )
         precision = min(
             4,
             max(
                 (
-                    len(str(self.project.dotenv[option]).strip().partition(".")[2].rstrip("0"))
+                    len(f"{float(weather[option]):.4f}".partition(".")[2].rstrip("0"))
                     for option in options
-                    if option in self.project.dotenv
+                    if option in weather
                 ),
                 default=0,
             ),
         )
         for option in options:
-            self.project.dotenv[option] = (
-                f"{float(self.project.dotenv[option]):.{precision}f}" if option in self.project.dotenv else "0"
-            )
+            weather[option] = f"{float(weather[option]):.{precision}f}" if option in weather else "0"

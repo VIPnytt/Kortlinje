@@ -1,11 +1,20 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
-#include "config/secrets.h"
+#include "constants/secrets.h"
 #include "modules/ServiceModule.h"
 
 #include <array>
 #include <span>
+
+namespace Display::grid
+{
+inline constexpr uint8_t columns{42U};
+inline constexpr uint8_t rows{9U};
+inline constexpr uint8_t maxX{columns - 1U};
+inline constexpr uint8_t maxY{rows - 1U};
+inline constexpr uint16_t pixels{columns * rows};
+inline constexpr uint8_t bytes{(pixels + 7U) >> 3U};
+} // namespace Display::grid
 
 class DisplayService final : public ServiceModule
 {
@@ -55,8 +64,8 @@ public:
     static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
     static void onReceive(JsonObjectConst payload, std::string_view source);
     static void setBrightness(Brightness _brightness);
-    static void setFrame(std::span<const bool, GRID_COLUMNS * GRID_ROWS> _frame);
-    static void setFrame(std::span<const uint8_t, (((GRID_COLUMNS * GRID_ROWS) + 7U) >> 3U)> _frame);
+    static void setFrame(std::span<const bool, Display::grid::pixels> _frame);
+    static void setFrame(std::span<const uint8_t, Display::grid::bytes> _frame);
     static void setPixel(uint8_t x, uint8_t y, bool lit);
     static void setPixel(size_t idx, bool lit);
     static void setPixel(Symbol symbol, bool lit);
@@ -67,23 +76,31 @@ public:
     [[nodiscard]] static bool getPixel(Symbol symbol);
     [[nodiscard]] static bool getPower();
 
-    [[nodiscard]] static std::span<const bool, GRID_COLUMNS * GRID_ROWS> getFrame();
+    [[nodiscard]] static std::span<const bool, Display::grid::pixels> getFrame();
 
     [[nodiscard]] static Brightness getBrightness();
 
 private:
-    static constexpr std::array<uint16_t, ((GRID_COLUMNS * GRID_ROWS) + 0x7FU) & ~0x7FU> pixels{LED_MAP};
+    static constexpr size_t leds{(Display::grid::pixels + 0x7FU) & ~0x7FU};
 
-    static constexpr size_t chips{pixels.size() >> 7U};
+    static constexpr size_t chips{leds >> 7U};
 
     static inline bool pending{false};
     static inline bool power{false};
     static inline bool render{false};
 
-    static inline std::array<bool, pixels.size()> frame{};
+    static inline std::array<bool, leds> frame{};
 
-    std::array<pin_size_t, chips> sclk{PIN_SCLK1, PIN_SCLK2, PIN_SCLK3};
-    std::array<pin_size_t, chips> sda{PIN_SDA1, PIN_SDA2, PIN_SDA3};
+    std::array<uint, chips> sclk{
+        Kortlinje::pin::display_sclk1,
+        Kortlinje::pin::display_sclk2,
+        Kortlinje::pin::display_sclk3,
+    };
+    std::array<uint, chips> sda{
+        Kortlinje::pin::display_sda1,
+        Kortlinje::pin::display_sda2,
+        Kortlinje::pin::display_sda3,
+    };
 
     alignas(4U) std::array<std::array<uint8_t, 16U>, chips> vkBuffer{};
 

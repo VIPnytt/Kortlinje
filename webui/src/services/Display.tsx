@@ -8,6 +8,9 @@ import { SidebarSection } from "../extensions/WebUI";
 
 export const name = "Display";
 
+export const DisplayColumns = 42;
+export const DisplayRows = 9;
+
 const [getBrightness, setBrightness] = createSignal<number>(0);
 const [getPower, setPower] = createSignal<boolean>(false);
 

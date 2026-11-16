@@ -154,6 +154,7 @@ export const MainComponent: Component<{
             class="mode-title"
             href="https://github.com/VIPnytt/Kortlinje/wiki"
             target="_blank"
+            rel="noopener"
         >
             {getMode()}
         </a>

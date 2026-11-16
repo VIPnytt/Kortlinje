@@ -2,7 +2,6 @@
 
 #include "handlers/TextHandler.h"
 #include "services/DeviceService.h"
-#include "services/DisplayService.h"
 
 #include <algorithm>
 #include <cmath>
@@ -12,10 +11,10 @@ PingPongMode::~PingPongMode() { stopAlarm(); }
 void PingPongMode::begin()
 {
     DisplayService::fillFrame(false);
-    paddleL = paddleR = static_cast<uint8_t>(random(1, GRID_ROWS - 1U));
+    paddleL = paddleR = static_cast<uint8_t>(random(1L, static_cast<long>(Display::grid::maxY)));
     DisplayService::drawLineVertical(0U, paddleL - 1U, paddleL + 1U, true);
-    DisplayService::drawLineVertical(GRID_COLUMNS - 1U, paddleR - 1U, paddleR + 1U, true);
-    xDec = x = GRID_COLUMNS - 2U;
+    DisplayService::drawLineVertical(Display::grid::maxX, paddleR - 1U, paddleR + 1U, true);
+    xDec = x = Display::grid::maxX - 1U;
     yDec = y = paddleR;
     deg = static_cast<uint16_t>(random(150L, 211L)); // ±30°
     DisplayService::setPixel(x, y, true);
@@ -34,20 +33,20 @@ void PingPongMode::handle()
         // Left paddle reflection
         deg = (random(60L, 121L) + 270U) % 360U; // ±30°
     }
-    else if (xDec >= static_cast<float>(GRID_COLUMNS - 2U) && (deg < 90U || deg >= 270U))
+    else if (xDec >= static_cast<float>(Display::grid::maxX - 1U) && (deg < 90U || deg >= 270U))
     {
         // Right paddle reflection
         deg = static_cast<uint16_t>(random(150L, 211L)); // ±30°
     }
-    if (xDec <= .0F || xDec >= static_cast<float>(GRID_COLUMNS - 1U))
+    if (xDec <= .0F || xDec >= static_cast<float>(Display::grid::maxX))
     {
         deg = deg >= 180U ? 540U - deg : 180U - deg; // Invert X
-        xDec = std::clamp(xDec, .0F, static_cast<float>(GRID_COLUMNS - 1U));
+        xDec = std::clamp(xDec, .0F, static_cast<float>(Display::grid::maxX));
     }
-    if (yDec <= .0F || yDec >= static_cast<float>(GRID_ROWS - 1U))
+    if (yDec <= .0F || yDec >= static_cast<float>(Display::grid::maxY))
     {
         deg = 360U - deg; // Invert Y
-        yDec = std::clamp(yDec, .0F, static_cast<float>(GRID_ROWS - 1U));
+        yDec = std::clamp(yDec, .0F, static_cast<float>(Display::grid::maxY));
     }
     const float rad{static_cast<float>(deg) * static_cast<float>(DEG_TO_RAD)};
     const float dx{cosf(rad)};
@@ -56,13 +55,13 @@ void PingPongMode::handle()
     DisplayService::setPixel(x, y, false);
     xDec += dx / maxComponent;
     yDec += dy / maxComponent;
-    x = static_cast<uint8_t>(std::clamp<int>(lroundf(xDec), 0, GRID_COLUMNS - 1));
-    y = static_cast<uint8_t>(std::clamp<int>(lroundf(yDec), 0, GRID_ROWS - 1));
+    x = static_cast<uint8_t>(std::clamp<int>(lroundf(xDec), 0, static_cast<int>(Display::grid::maxX)));
+    y = static_cast<uint8_t>(std::clamp<int>(lroundf(yDec), 0, static_cast<int>(Display::grid::maxY)));
     DisplayService::setPixel(x, y, true);
     const float lRad{atanf((xDec - 1.0F) / std::max(.1F, fabsf(static_cast<float>(paddleL) - yDec)))};
-    const float rRad{atanf((static_cast<float>(GRID_COLUMNS - 2U) - xDec) /
+    const float rRad{atanf((static_cast<float>(Display::grid::maxX - 1U) - xDec) /
                            std::max(.1F, fabsf(static_cast<float>(paddleR) - yDec)))};
-    if (yDec > paddleL + 1U && lRad < 1.3F && paddleL < GRID_ROWS - 2U)
+    if (yDec > paddleL + 1U && lRad < 1.3F && paddleL < Display::grid::maxY - 1U)
     {
         DisplayService::setPixel(0U, paddleL - 1U, false);
         ++paddleL;
@@ -74,17 +73,17 @@ void PingPongMode::handle()
         --paddleL;
         DisplayService::setPixel(0U, paddleL - 1U, true);
     }
-    if (yDec > paddleR + 1U && rRad < 1.3F && paddleR < GRID_ROWS - 2U)
+    if (yDec > paddleR + 1U && rRad < 1.3F && paddleR < Display::grid::maxY - 1U)
     {
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleR - 1U, false);
+        DisplayService::setPixel(Display::grid::maxX, paddleR - 1U, false);
         ++paddleR;
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleR + 1U, true);
+        DisplayService::setPixel(Display::grid::maxX, paddleR + 1U, true);
     }
     else if (yDec < paddleR - 1U && rRad < 1.3F && paddleR > 1U)
     {
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleR + 1U, false);
+        DisplayService::setPixel(Display::grid::maxX, paddleR + 1U, false);
         --paddleR;
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleR - 1U, true);
+        DisplayService::setPixel(Display::grid::maxX, paddleR - 1U, true);
     }
     startAlarm();
 }

@@ -9,7 +9,6 @@
 #include <string>
 #include <string_view>
 
-
 class ConnectivityService final : public ServiceModule
 {
 public:
@@ -50,5 +49,5 @@ private:
     void onScan(int8_t count);
     void transmit();
 
-    [[nodiscard]] static bool onTimer(repeating_timer *timer);
+    [[nodiscard]] static bool onTimer(repeating_timer *rt);
 };

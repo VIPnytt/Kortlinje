@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstddef>
@@ -14,8 +14,8 @@ class NoiseMode final : public ModeModule
 private:
     volatile bool tick{false};
 
-    std::array<size_t, GRID_COLUMNS * GRID_ROWS / 9U> dots{};
-    std::array<size_t, GRID_COLUMNS * GRID_ROWS / 9U>::iterator it{dots.begin()};
+    std::array<size_t, Display::grid::pixels / 9U> dots{};
+    std::array<size_t, Display::grid::pixels / 9U>::iterator it{dots.begin()};
 
     repeating_timer timer{};
 

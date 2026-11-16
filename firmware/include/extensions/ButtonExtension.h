@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config/secrets.h"
+#include "constants/secrets.h"
 #include "modules/ExtensionModule.h"
 
 #include <hardware/dma.h>
@@ -60,7 +60,7 @@ private:
         idle : 0U,
         low : 0U,
         medium : 0U,
-        pin : PIN_REAR,
+        pin : Kortlinje::pin::button_rear,
         _high : Button::DOWN,
         _low : Button::ALARM,
         _medium : Button::UP,
@@ -75,7 +75,7 @@ private:
         idle : 0U,
         low : 0U,
         medium : 0U,
-        pin : PIN_TOP,
+        pin : Kortlinje::pin::button_top,
         _high : Button::CYCLE,
         _low : Button::DISMISS,
         _medium : Button::BRIGHTNESS,

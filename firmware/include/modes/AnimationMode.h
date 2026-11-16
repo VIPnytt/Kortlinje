@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstdint>
@@ -23,7 +23,7 @@ private:
 
     repeating_timer timer{};
 
-    std::vector<std::array<uint8_t, ((GRID_COLUMNS * GRID_ROWS) + 7U) / 8U>> frames{};
+    std::vector<std::array<uint8_t, Display::grid::bytes>> frames{};
 
     void setFrame(uint8_t _index, std::span<const uint8_t> frame);
     void setFrames(uint8_t count);

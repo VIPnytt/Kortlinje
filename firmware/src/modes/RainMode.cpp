@@ -1,7 +1,5 @@
 #include "modes/RainMode.h"
 
-#include "services/DisplayService.h"
-
 #include <algorithm>
 
 RainMode::~RainMode() { cancel_repeating_timer(&timer); }
@@ -23,9 +21,9 @@ void RainMode::handle()
         if (++drop.ticks == drop.delay)
         {
             drop.ticks = 0U;
-            if (drop.y >= GRID_ROWS + drop.length - 1U)
+            if (drop.y >= Display::grid::rows + drop.length - 1U)
             {
-                const uint8_t newX{static_cast<uint8_t>(random(static_cast<long>(GRID_COLUMNS)))};
+                const uint8_t newX{static_cast<uint8_t>(random(static_cast<long>(Display::grid::columns)))};
                 if (std::none_of(drops.begin(), drops.end(), [&](const Drop &_drop) { return _drop.x == newX; }))
                 {
                     drop.x = newX;
@@ -42,7 +40,7 @@ void RainMode::handle()
             {
                 DisplayService::setPixel(drop.x, drop.y - drop.length, false);
             }
-            if (drop.y < GRID_ROWS)
+            if (drop.y < Display::grid::rows)
             {
                 DisplayService::setPixel(drop.x, drop.y, true);
             }

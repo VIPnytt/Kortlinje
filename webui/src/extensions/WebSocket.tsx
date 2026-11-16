@@ -2,7 +2,7 @@ import { createEventSignal } from "@solid-primitives/event-listener";
 import { createReconnectingWS, createWSState } from "@solid-primitives/websocket";
 import { batch, createEffect, type ParentComponent } from "solid-js";
 
-import { HOSTNAME } from "../config/constants";
+import { DEVICE_HOSTNAME } from "../constants/secrets";
 import { name as ModeAnimationName, receiver as ModeAnimationReceiver } from "../modes/Animation";
 import { name as ModeCountdownName, receiver as ModeCountdownReceiver } from "../modes/Countdown";
 import { name as ModeDrawName, receiver as ModeDrawReceiver } from "../modes/Draw";
@@ -20,10 +20,10 @@ import { name as ExtensionPlaylistName, receiver as ExtensionPlaylistReceiver } 
 import { receiver as ExtensionWebUIReceiver, Canonical as WebUICanonical } from "./WebUI";
 
 export const name = "WebSocket";
-export const WebSocketUrl = `ws://${HOSTNAME}.local/ws`;
+export const WebSocketUrl = `ws://${DEVICE_HOSTNAME}.local/ws`;
 
 export const WebSocketWS = createReconnectingWS(
-    `ws://${import.meta.env.PROD ? location.hostname : `${HOSTNAME}.local`}/ws`,
+    `ws://${import.meta.env.PROD ? location.hostname : `${DEVICE_HOSTNAME}.local`}/ws`,
 );
 export const WebSocketState = createWSState(WebSocketWS);
 

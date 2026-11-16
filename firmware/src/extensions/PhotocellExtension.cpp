@@ -1,6 +1,7 @@
 #include "extensions/PhotocellExtension.h"
 
-#include "config/secrets.h"
+#include "constants/HomeAssistant.h"
+#include "constants/Kortlinje.h"
 #include "extensions/MqttExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "pio/photocell.pio.h"
@@ -26,19 +27,19 @@ void PhotocellExtension::begin()
     ConfigHandler::get(name, "enabled", enabled);
 #ifdef RP2350_ERRATA_E9
     pio_sm_config config{photocell_e9_program_get_default_config(PIO_INSTRUCTION_COUNT - photocell_e9_program.length)};
-    sm_config_set_set_pins(&config, PIN_LIGHT, 1U);
+    sm_config_set_set_pins(&config, Kortlinje::pin::light_sense, 1U);
 #else
     pio_sm_config config{photocell_program_get_default_config(PIO_INSTRUCTION_COUNT - photocell_program.length)};
 #endif // RP2350_ERRATA_E9
-    sm_config_set_in_pins(&config, PIN_LIGHT);
+    sm_config_set_in_pins(&config, Kortlinje::pin::light_sense);
     sm_config_set_clkdiv_int_frac8(&config, static_cast<uint32_t>(F_CPU) / (0b1UL << 21U), 0U);
     sm_config_set_in_shift(&config, false, false, 0U);
-    pio_gpio_init(pio0, PIN_LIGHT);
-    gpio_disable_pulls(PIN_LIGHT);
-    gpio_set_input_enabled(PIN_LIGHT, true);
+    pio_gpio_init(pio0, Kortlinje::pin::light_sense);
+    gpio_disable_pulls(Kortlinje::pin::light_sense);
+    gpio_set_input_enabled(Kortlinje::pin::light_sense, true);
 #ifdef RP2350_ERRATA_E9
-    gpio_set_drive_strength(PIN_LIGHT, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
-    pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, PIN_LIGHT, 1U, false);
+    gpio_set_drive_strength(Kortlinje::pin::light_sense, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
+    pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, Kortlinje::pin::light_sense, 1U, false);
     pio_sm_init(pio0, NUM_PIO_STATE_MACHINES - 1U, PIO_INSTRUCTION_COUNT - photocell_e9_program.length, &config);
 #else
     pio_sm_init(pio0, NUM_PIO_STATE_MACHINES - 1U, PIO_INSTRUCTION_COUNT - photocell_program.length, &config);
@@ -61,7 +62,7 @@ void PhotocellExtension::handle()
         pending = false;
         if (enabled)
         {
-            DisplayService::setPower(detected);
+            DisplayService::setPower(lit);
         }
         transmit();
     }
@@ -77,7 +78,7 @@ void PhotocellExtension::cancelAlarm()
     }
 }
 
-bool PhotocellExtension::getDetected() const { return detected; }
+bool PhotocellExtension::getDetected() const { return lit; }
 
 bool PhotocellExtension::getEnabled() const { return enabled; }
 
@@ -86,7 +87,7 @@ int64_t __time_critical_func(PhotocellExtension::onAlarm)(alarm_id_t id, void *u
     static_cast<void>(id);
     static_cast<void>(user_data);
     alarm = 0L;
-    detected = false;
+    lit = false;
     pending = true;
     return 0LL;
 }
@@ -102,34 +103,34 @@ void PhotocellExtension::onHomeAssistant(JsonDocument &discovery, std::string to
 {
     topic.append(name);
     {
-        const std::string id{std::string(name).append("_detected")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::device_class].set("light");
-        component[HomeAssistantAbbreviations::enabled_by_default].set(false);
-        component[HomeAssistantAbbreviations::icon].set("mdi:brightness-5");
-        component[HomeAssistantAbbreviations::name].set(name);
-        component[HomeAssistantAbbreviations::payload_off].set("False");
-        component[HomeAssistantAbbreviations::payload_on].set("True");
-        component[HomeAssistantAbbreviations::platform].set("binary_sensor");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.detected}}");
+        const std::string id{std::string(name).append("_enabled")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"enabled":{{value}}})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:brightness-auto");
+        component[HomeAssistant::Abbreviations::name].set(name);
+        component[HomeAssistant::Abbreviations::payload_off].set("false");
+        component[HomeAssistant::Abbreviations::payload_on].set("true");
+        component[HomeAssistant::Abbreviations::platform].set("switch");
+        component[HomeAssistant::Abbreviations::state_off].set("False");
+        component[HomeAssistant::Abbreviations::state_on].set("True");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.enabled}}");
     }
     {
-        const std::string id{std::string(name).append("_enabled")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::command_template].set(R"({"enabled":{{value}}})");
-        component[HomeAssistantAbbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistantAbbreviations::icon].set("mdi:brightness-auto");
-        component[HomeAssistantAbbreviations::name].set(name);
-        component[HomeAssistantAbbreviations::payload_off].set("false");
-        component[HomeAssistantAbbreviations::payload_on].set("true");
-        component[HomeAssistantAbbreviations::platform].set("switch");
-        component[HomeAssistantAbbreviations::state_off].set("False");
-        component[HomeAssistantAbbreviations::state_on].set("True");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.enabled}}");
+        const std::string id{std::string(name).append("_lit")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::device_class].set("light");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::icon].set("mdi:brightness-5");
+        component[HomeAssistant::Abbreviations::name].set(name);
+        component[HomeAssistant::Abbreviations::payload_off].set("False");
+        component[HomeAssistant::Abbreviations::payload_on].set("True");
+        component[HomeAssistant::Abbreviations::platform].set("binary_sensor");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.lit}}");
     }
 }
 
@@ -142,13 +143,13 @@ void __time_critical_func(PhotocellExtension::onPio)()
         if (light)
         {
             cancelAlarm();
-            if (!detected)
+            if (!lit)
             {
-                detected = true;
+                lit = true;
                 pending = true;
             }
         }
-        else if (detected && alarm == 0)
+        else if (lit && alarm == 0)
         {
             alarm = add_alarm_in_ms(0b1UL << 15U, &onAlarm, nullptr, true);
         }
@@ -171,7 +172,7 @@ void PhotocellExtension::setEnabled(bool enable)
     }
     enabled = enable;
     cancelAlarm();
-    detected = false;
+    lit = false;
     pio_sm_set_enabled(pio0, NUM_PIO_STATE_MACHINES - 1U, false);
     pio_sm_clear_fifos(pio0, NUM_PIO_STATE_MACHINES - 1U);
     pio_interrupt_clear(pio0, 1U);
@@ -189,7 +190,7 @@ void PhotocellExtension::setEnabled(bool enable)
 #ifdef RP2350_ERRATA_E9
     else
     {
-        pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, PIN_LIGHT, 1U, false);
+        pio_sm_set_consecutive_pindirs(pio0, NUM_PIO_STATE_MACHINES - 1U, Kortlinje::pin::light_sense, 1U, false);
     }
 #endif // RP2350_ERRATA_E9
     ConfigHandler::set(name, "enabled", enabled);
@@ -199,7 +200,7 @@ void PhotocellExtension::setEnabled(bool enable)
 void PhotocellExtension::transmit()
 {
     JsonDocument doc{};
-    doc["detected"].set(detected);
     doc["enabled"].set(enabled);
+    doc["lit"].set(lit);
     DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

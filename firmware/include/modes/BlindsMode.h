@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <cstdint>
 #include <pico/time.h>
@@ -10,7 +10,7 @@
 class BlindsMode final : public ModeModule
 {
 private:
-    static constexpr uint8_t moduloMax{GRID_COLUMNS / 3U};
+    static constexpr uint8_t moduloMax{Display::grid::columns / 3U};
 
     bool direction{false};
     volatile bool tick{false};

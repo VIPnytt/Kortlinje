@@ -1,9 +1,9 @@
 #include "modes/BreakoutMode.h"
 
+#include "constants/Kortlinje.h"
 #include "fonts/KortlinjeFont.h"
 #include "handlers/BitmapHandler.h"
 #include "handlers/TextHandler.h"
-#include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
 
 #include <algorithm>
@@ -14,14 +14,14 @@ BreakoutMode::~BreakoutMode() { stopAlarm(); }
 void BreakoutMode::begin()
 {
     DisplayService::fillFrame(false);
-    for (uint8_t column{0U}; column <= GRID_COLUMNS - 4U; ++column)
+    for (uint8_t column{0U}; column <= Display::grid::maxX - 3U; ++column)
     {
         DisplayService::fillColumn(column, true);
     }
-    paddleY = static_cast<uint8_t>(random(1L, GRID_ROWS - 1U));
-    DisplayService::drawLineVertical(GRID_COLUMNS - 1U, paddleY - 1U, paddleY + 1U, true);
+    paddleY = static_cast<uint8_t>(random(1L, static_cast<long>(Display::grid::maxY)));
+    DisplayService::drawLineVertical(Display::grid::maxX, paddleY - 1U, paddleY + 1U, true);
     deg = static_cast<uint16_t>(random(150L, 211L)); // ±30°
-    xDec = x = GRID_COLUMNS - 2U;
+    xDec = x = Display::grid::maxX - 1U;
     yDec = y = paddleY;
     DisplayService::setPixel(x, y, true);
     startAlarm();
@@ -34,23 +34,22 @@ void BreakoutMode::handle()
         return;
     }
     tick = false;
-    if (x == GRID_COLUMNS - 2U)
+    if (x == Display::grid::maxX - 1U)
     {
         now = time(nullptr);
         if (localtime_r(&now, &local) != nullptr && (minute != local.tm_min || hour != local.tm_hour))
         {
             hour = local.tm_hour;
             minute = local.tm_min;
-#if CLOCK_12H
-            const int _hour{(local.tm_hour + 11) % 12 + 1};
-            DisplayService::setPixel(DisplayService::Symbol::AM, local.tm_hour < 12);
-            DisplayService::setPixel(DisplayService::Symbol::PM, local.tm_hour >= 12);
-#else
-            const int _hour{hour};
-#endif // CLOCK_12H
+            const int _hour{Kortlinje::time::format == 12U ? (local.tm_hour + 11) % 12 + 1 : hour};
+            if constexpr (Kortlinje::time::format == 12U)
+            {
+                DisplayService::setPixel(DisplayService::Symbol::AM, local.tm_hour < 12);
+                DisplayService::setPixel(DisplayService::Symbol::PM, local.tm_hour >= 12);
+            }
             const KortlinjeFont font{};
             const TextHandler text{std::format("{:02d}:{:02d}", _hour, minute), font};
-            text.draw(0, static_cast<int8_t>((GRID_ROWS - text.getHeight()) / 2U));
+            text.draw(0, static_cast<int8_t>((Display::grid::rows - text.getHeight()) / 2U));
         }
     }
     const float rad{static_cast<float>(deg) * static_cast<float>(DEG_TO_RAD)};
@@ -61,17 +60,17 @@ void BreakoutMode::handle()
     const float stepY{dy / maxComponent};
     const int targetX{static_cast<int>(std::lroundf(xDec + stepX))};
     const int targetY{static_cast<int>(std::lroundf(yDec + stepY))};
-    const uint8_t nextX{static_cast<uint8_t>(std::clamp(targetX, 0, static_cast<int>(GRID_COLUMNS - 1U)))};
-    const uint8_t nextY{static_cast<uint8_t>(std::clamp(targetY, 0, static_cast<int>(GRID_ROWS - 1U)))};
+    const uint8_t nextX{static_cast<uint8_t>(std::clamp(targetX, 0, static_cast<int>(Display::grid::maxX)))};
+    const uint8_t nextY{static_cast<uint8_t>(std::clamp(targetY, 0, static_cast<int>(Display::grid::maxY)))};
     if (x == 0U && deg >= 90U && deg < 270U)
     {
         deg = deg >= 180U ? 540U - deg : 180U - deg; // Invert X
     }
-    if ((y == 0U && deg < 180U) || (y >= GRID_ROWS - 1U && deg > 180U))
+    if ((y == 0U && deg < 180U) || (y >= Display::grid::maxY && deg > 180U))
     {
         deg = 360U - deg; // Invert Y
     }
-    if (nextX >= GRID_COLUMNS - 1U && (deg < 90U || deg > 270U))
+    if (nextX >= Display::grid::maxX && (deg < 90U || deg > 270U))
     {
         deg = static_cast<uint16_t>(random(150L, 211L));
     }
@@ -98,24 +97,24 @@ void BreakoutMode::handle()
     DisplayService::setPixel(x, y, false);
     xDec += moveDx / moveMaxComponent;
     yDec += moveDy / moveMaxComponent;
-    xDec = std::clamp(xDec, .0F, static_cast<float>(GRID_COLUMNS - 1U));
-    yDec = std::clamp(yDec, .0F, static_cast<float>(GRID_ROWS - 1U));
-    x = static_cast<uint8_t>(std::clamp<int>(std::lroundf(xDec), 0, GRID_COLUMNS - 1));
-    y = static_cast<uint8_t>(std::clamp<int>(std::lroundf(yDec), 0, GRID_ROWS - 1));
+    xDec = std::clamp(xDec, .0F, static_cast<float>(Display::grid::maxX));
+    yDec = std::clamp(yDec, .0F, static_cast<float>(Display::grid::maxY));
+    x = static_cast<uint8_t>(std::clamp<int>(std::lroundf(xDec), 0, static_cast<int>(Display::grid::maxX)));
+    y = static_cast<uint8_t>(std::clamp<int>(std::lroundf(yDec), 0, static_cast<int>(Display::grid::maxY)));
     DisplayService::setPixel(x, y, true);
-    const float angleRad{atanf(std::max(.0F, static_cast<float>(GRID_COLUMNS - 2U) - xDec) /
+    const float angleRad{atanf(std::max(.0F, static_cast<float>(Display::grid::maxX - 1U) - xDec) /
                                std::max(.1F, std::fabs(static_cast<float>(paddleY) - yDec)))};
     if (yDec < paddleY - 1U && angleRad < 1.0F && paddleY > 1U)
     {
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleY + 1U, false);
+        DisplayService::setPixel(Display::grid::maxX, paddleY + 1U, false);
         --paddleY;
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleY - 1U, true);
+        DisplayService::setPixel(Display::grid::maxX, paddleY - 1U, true);
     }
-    else if (yDec > paddleY + 1U && angleRad < 1.0F && paddleY < GRID_ROWS - 2U)
+    else if (yDec > paddleY + 1U && angleRad < 1.0F && paddleY < Display::grid::maxY - 1U)
     {
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleY - 1U, false);
+        DisplayService::setPixel(Display::grid::maxX, paddleY - 1U, false);
         ++paddleY;
-        DisplayService::setPixel(GRID_COLUMNS - 1U, paddleY + 1U, true);
+        DisplayService::setPixel(Display::grid::maxX, paddleY + 1U, true);
     }
     startAlarm();
 }

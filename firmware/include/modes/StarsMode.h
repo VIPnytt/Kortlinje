@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstddef>
@@ -23,9 +23,9 @@ private:
 
     repeating_timer timer{};
 
-    std::array<Star, GRID_COLUMNS * GRID_ROWS / (0b1U << 4U)> stars{};
+    std::array<Star, Display::grid::pixels / (0b1U << 4U)> stars{};
 
-   [[nodiscard]]   static bool onTimer(repeating_timer *rt);
+    [[nodiscard]] static bool onTimer(repeating_timer *rt);
 
 public:
     static constexpr std::string_view name{"Stars"};

@@ -14,9 +14,9 @@ import { csvExport, fileImport } from "../components/File";
 import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
-import { Device } from "../config/devices";
 import { WebSocketWS } from "../extensions/WebSocket";
 import { SidebarSection } from "../extensions/WebUI";
+import { DisplayColumns, DisplayRows } from "../services/Display";
 
 export const name = "Draw";
 
@@ -25,7 +25,7 @@ const [getSaved, setSaved] = createSignal<boolean>(false);
 
 export const receiver = (json: { frame?: number[] }) => {
     if (json?.frame !== undefined) {
-        const pixels = new Array<boolean>(Device.GRID_COLUMNS * Device.GRID_ROWS);
+        const pixels = new Array<boolean>(DisplayColumns * DisplayRows);
         for (let i = 0; i < pixels.length; ++i) {
             pixels[i] = Boolean((json.frame[i >> 3] >> (i & 7)) & 1);
         }
@@ -38,7 +38,7 @@ export const Sidebar: Component = () => {
 
     const handleDownload = () => {
         csvExport(name.toLowerCase(), [
-            getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false),
+            getFrame() || new Array(DisplayColumns * DisplayRows).fill(false),
         ]);
     };
 
@@ -141,7 +141,7 @@ export const Sidebar: Component = () => {
 export const Main: Component = () => {
     const handleClear = () => {
         setFrame([
-            ...new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false),
+            ...new Array(DisplayColumns * DisplayRows).fill(false),
         ]);
         WebSocketWS.send(
             JSON.stringify({
@@ -209,7 +209,7 @@ export const Main: Component = () => {
                     <Canvas
                         onFrame={handleFrame}
                         onPixel={handlePixel}
-                        pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false)}
+                        pixels={getFrame() || new Array(DisplayColumns * DisplayRows).fill(false)}
                     />
                 </div>
             </div>

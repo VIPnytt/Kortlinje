@@ -1,7 +1,5 @@
 #include "modes/NoiseMode.h"
 
-#include "services/DisplayService.h" // NOLINT(misc-include-cleaner)
-
 NoiseMode::~NoiseMode() { cancel_repeating_timer(&timer); }
 
 void NoiseMode::begin()
@@ -15,16 +13,17 @@ void NoiseMode::begin()
  */
 void NoiseMode::handle()
 {
-    if (tick)
+    if (!tick)
     {
-        tick = false;
-        DisplayService::setPixel(*it, false);
-        *it = static_cast<size_t>(random(GRID_COLUMNS * GRID_ROWS));
-        DisplayService::setPixel(*it, true);
-        if (++it == dots.end())
-        {
-            it = dots.begin();
-        }
+        return;
+    }
+    tick = false;
+    DisplayService::setPixel(*it, false);
+    *it = static_cast<size_t>(random(static_cast<long>(Display::grid::pixels)));
+    DisplayService::setPixel(*it, true);
+    if (++it == dots.end())
+    {
+        it = dots.begin();
     }
 }
 

@@ -1,7 +1,5 @@
 #include "modes/LeafFallMode.h"
 
-#include "services/DisplayService.h"
-
 LeafFallMode::~LeafFallMode() { cancel_repeating_timer(&timer); }
 
 /**
@@ -14,8 +12,8 @@ void LeafFallMode::begin()
     {
         do
         {
-            leaf.x = static_cast<uint8_t>(random(GRID_COLUMNS));
-            leaf.y = static_cast<uint8_t>(random(GRID_ROWS));
+            leaf.x = static_cast<uint8_t>(random(static_cast<long>(Display::grid::columns)));
+            leaf.y = static_cast<uint8_t>(random(static_cast<long>(Display::grid::rows)));
         } while (DisplayService::getPixel(leaf.x, leaf.y));
         DisplayService::setPixel(leaf.x, leaf.y, true);
     }
@@ -36,13 +34,13 @@ void LeafFallMode::handle()
     {
         if (random(0b1U << 3U) == 0)
         {
-            if (leaf.y >= GRID_ROWS - 1U)
+            if (leaf.y >= Display::grid::maxY)
             {
                 DisplayService::setPixel(leaf.x, leaf.y, false);
                 leaf.y = 0U;
                 do
                 {
-                    leaf.x = static_cast<uint8_t>(random(GRID_COLUMNS));
+                    leaf.x = static_cast<uint8_t>(random(static_cast<long>(Display::grid::columns)));
                 } while (DisplayService::getPixel(leaf.x, leaf.y));
                 DisplayService::setPixel(leaf.x, leaf.y, true);
             }
@@ -55,7 +53,7 @@ void LeafFallMode::handle()
                 {
                     --nextX;
                 }
-                else if (dir == 1 && leaf.x < GRID_COLUMNS - 1U)
+                else if (dir == 1 && leaf.x < Display::grid::maxX)
                 {
                     ++nextX;
                 }

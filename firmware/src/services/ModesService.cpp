@@ -1,5 +1,6 @@
 #include "services/ModesService.h"
 
+#include "constants/HomeAssistant.h"
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
 #include "handlers/TextHandler.h"
@@ -60,10 +61,10 @@ void ModesService::handle()
 
 void ModesService::cancelAlarm()
 {
-    if (alarmId > 0)
+    if (alarmId > 0L)
     {
         cancel_alarm(alarmId);
-        alarmId = 0;
+        alarmId = 0L;
     }
     tick = false;
 }
@@ -197,7 +198,7 @@ int64_t __time_critical_func(ModesService::onAlarm)(alarm_id_t id, void *userDat
 {
     static_cast<void>(id);
     static_cast<void>(userData);
-    alarmId = 0;
+    alarmId = 0L;
     tick = true;
     return 0LL;
 }
@@ -214,20 +215,20 @@ void ModesService::onHomeAssistant(JsonDocument &discovery, std::string topic, s
     topic.append(name);
     {
         const std::string id{std::string(name).append("_mode")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::command_template].set(R"({"mode":"{{value}}"})");
-        component[HomeAssistantAbbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistantAbbreviations::icon].set("mdi:format-list-bulleted");
-        component[HomeAssistantAbbreviations::name].set("Mode");
-        JsonArray options{component[HomeAssistantAbbreviations::options].to<JsonArray>()};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"mode":"{{value}}"})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:format-list-bulleted");
+        component[HomeAssistant::Abbreviations::name].set("Mode");
+        JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
         for (const std::string_view _name : names)
         {
             options.add(_name);
         }
-        component[HomeAssistantAbbreviations::platform].set("select");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.mode}}");
+        component[HomeAssistant::Abbreviations::platform].set("select");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.mode}}");
     }
 }
 
@@ -319,7 +320,7 @@ void ModesService::setModePrevious()
 void ModesService::transmit()
 {
     JsonDocument doc{};
-    JsonArray list{doc["list"].to<JsonArray>()};
+    JsonArray list{doc["available"].to<JsonArray>()};
     for (const std::string_view _name : names)
     {
         list.add(_name);

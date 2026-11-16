@@ -2,7 +2,6 @@
 
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
-#include "services/DisplayService.h"
 
 #include <algorithm>
 
@@ -102,9 +101,9 @@ void DrawMode::onReceive(JsonObjectConst payload, std::string_view source)
                 frame[idx] = _frame[idx].as<uint8_t>();
             }
         }
-        if constexpr ((GRID_COLUMNS * GRID_ROWS) % 8U != 0U)
+        if constexpr (Display::grid::pixels % 8U != 0U)
         {
-            frame.back() &= static_cast<uint8_t>((1U << ((GRID_COLUMNS * GRID_ROWS) % 8U)) - 1U);
+            frame.back() &= static_cast<uint8_t>((1U << (Display::grid::pixels % 8U)) - 1U);
         }
         render = true;
     }
@@ -116,9 +115,9 @@ void DrawMode::onReceive(JsonObjectConst payload, std::string_view source)
             {
                 const uint8_t x{pixel["x"].as<uint8_t>()};
                 const uint8_t y{pixel["y"].as<uint8_t>()};
-                if (x < GRID_COLUMNS && y < GRID_ROWS)
+                if (x < Display::grid::columns && y < Display::grid::rows)
                 {
-                    const size_t idx{static_cast<size_t>(x + (y * GRID_COLUMNS))};
+                    const size_t idx{static_cast<size_t>(x + (y * Display::grid::columns))};
                     if (pixel["lit"].as<bool>())
                     {
                         frame[idx / 8U] |= static_cast<uint8_t>(1U << (idx % 8U));

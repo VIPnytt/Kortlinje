@@ -3,7 +3,6 @@
 #include "handlers/BitmapHandler.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
-#include "services/DisplayService.h"
 #include "services/ModesService.h"
 
 #include <algorithm>
@@ -35,7 +34,7 @@ void SignExtension::handle()
         }
         DisplayService::fillFrame(false);
         BitmapHandler(std::span<const uint64_t>{bitmap}).draw();
-        if (alarmId > 0)
+        if (alarmId > 0L)
         {
             cancel_alarm(alarmId);
         }
@@ -63,7 +62,7 @@ int64_t SignExtension::onAlarm(alarm_id_t id, void *user_data)
 }
 
 /**
- * @brief Applies an incoming signal duration and stores up to GRID_ROWS 64-bit row bitmasks.
+ * @brief Applies an incoming signal duration and stores up to Display::grid::rows 64-bit row bitmasks.
  *
  * @param payload Incoming duration and bitmap configuration.
  */
@@ -76,10 +75,10 @@ void SignExtension::onReceive(JsonObjectConst payload, std::string_view source)
     if (payload["bitmap"].is<JsonArrayConst>())
     {
         const JsonArrayConst _bitmap{payload["bitmap"].as<JsonArrayConst>()};
-        if (!_bitmap.isNull() && _bitmap.size() > 0U && _bitmap.size() <= GRID_ROWS)
+        if (!_bitmap.isNull() && _bitmap.size() > 0U && _bitmap.size() <= Display::grid::rows)
         {
             bitmap.fill(0U);
-            size_t row{(GRID_ROWS - _bitmap.size()) / 2U};
+            size_t row{(Display::grid::rows - _bitmap.size()) / 2U};
             for (const JsonVariantConst value : _bitmap)
             {
                 if (value.is<uint64_t>())

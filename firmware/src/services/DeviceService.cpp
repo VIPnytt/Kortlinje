@@ -1,8 +1,7 @@
 #include "services/DeviceService.h"
 
-#include "config/IkeaKortlinje.h"
-#include "config/secrets.h"
-#include "config/version.h"
+#include "constants/HomeAssistant.h"
+#include "constants/Kortlinje.h"
 #include "extensions/AlarmExtension.h"
 #include "extensions/ButtonExtension.h"
 #include "handlers/ConfigHandler.h"
@@ -26,7 +25,7 @@ void DeviceService::begin0()
     connectivity.begin();
     webServer.begin();
     extensions.begin();
-    if (WiFi.getMode() == WIFI_STA && WiFi.connected())
+    if (WiFi.getMode() == WiFiMode_t::WIFI_STA && WiFi.connected())
     {
         NTP.waitSet(&onWaitSet);
     }
@@ -65,13 +64,18 @@ void DeviceService::handle0()
         ButtonExtension::enable();
         const float _temperature{static_cast<float>(sumTemperature) *
                                  (3.3F / static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)))};
-#if TEMPERATURE_FAHRENHEIT
-        temperature = 80.6F - ((_temperature - .706F) * (1.8F / .001721F));
-#elif TEMPERATURE_KELVIN
-        temperature = 300.15F - ((_temperature - .706F) * (1.0F / .001721F));
-#else
-        temperature = 27.0F - ((_temperature - .706F) * (1.0F / .001721F));
-#endif // TEMPERATURE_FAHRENHEIT
+        if constexpr (Kortlinje::device::temperature_unit == "°C")
+        {
+            temperature = 27.0F - ((_temperature - .706F) * (1.0F / .001721F));
+        }
+        else if constexpr (Kortlinje::device::temperature_unit == "°F")
+        {
+            temperature = 80.6F - ((_temperature - .706F) * (1.8F / .001721F));
+        }
+        else
+        {
+            temperature = 300.15F - ((_temperature - .706F) * (1.0F / .001721F));
+        }
         voltage = static_cast<float>(sumVsys) * (9.9F / static_cast<float>(samples * ((0b1U << ADC_RESOLUTION) - 1U)));
         transmit();
     }
@@ -115,36 +119,32 @@ void DeviceService::onHomeAssistant(JsonDocument &discovery, std::string topic, 
     topic.append(name);
     {
         const std::string id{std::string(name).append("_temperature")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::device_class].set("temperature");
-        component[HomeAssistantAbbreviations::enabled_by_default].set(false);
-        component[HomeAssistantAbbreviations::entity_category].set("diagnostic");
-        component[HomeAssistantAbbreviations::name].set("Internal temperature");
-        component[HomeAssistantAbbreviations::platform].set("sensor");
-        component[HomeAssistantAbbreviations::state_class].set("measurement");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-#ifdef TEMPERATURE_UNIT
-        component[HomeAssistantAbbreviations::unit_of_measurement].set(TEMPERATURE_UNIT);
-#else
-        component[HomeAssistantAbbreviations::unit_of_measurement].set("°C");
-#endif // TEMPERATURE_UNIT
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.temperature}}");
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::device_class].set("temperature");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::entity_category].set("diagnostic");
+        component[HomeAssistant::Abbreviations::name].set("Internal temperature");
+        component[HomeAssistant::Abbreviations::platform].set("sensor");
+        component[HomeAssistant::Abbreviations::state_class].set("measurement");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::unit_of_measurement].set(Kortlinje::device::temperature_unit);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.temperature}}");
     }
     {
         const std::string id{std::string(name).append("_vsys")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::device_class].set("voltage");
-        component[HomeAssistantAbbreviations::enabled_by_default].set(false);
-        component[HomeAssistantAbbreviations::entity_category].set("diagnostic");
-        component[HomeAssistantAbbreviations::icon].set("mdi:current-dc");
-        component[HomeAssistantAbbreviations::name].set("System voltage");
-        component[HomeAssistantAbbreviations::platform].set("sensor");
-        component[HomeAssistantAbbreviations::state_class].set("measurement");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-        component[HomeAssistantAbbreviations::unit_of_measurement].set("V");
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.voltage}}");
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::device_class].set("voltage");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::entity_category].set("diagnostic");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:current-dc");
+        component[HomeAssistant::Abbreviations::name].set("System voltage");
+        component[HomeAssistant::Abbreviations::platform].set("sensor");
+        component[HomeAssistant::Abbreviations::state_class].set("measurement");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::unit_of_measurement].set("V");
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.voltage}}");
     }
 }
 
@@ -198,10 +198,10 @@ void DeviceService::receive(JsonObjectConst payload, std::string_view source, st
 void DeviceService::transmit()
 {
     JsonDocument doc{};
-    doc["name"].set(NAME);
+    doc["name"].set(Kortlinje::device::name);
     doc["repository"].set("https://github.com/VIPnytt/Kortlinje");
     doc["temperature"].set(temperature);
-    doc["version"].set(VERSION);
+    doc["version"].set(Kortlinje::version);
     doc["voltage"].set(voltage);
     transmit(doc.as<JsonObjectConst>(), name);
 }

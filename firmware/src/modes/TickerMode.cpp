@@ -3,7 +3,6 @@
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
-#include "services/DisplayService.h"
 #include "services/ExtensionsService.h"
 #include "services/FontsService.h"
 
@@ -29,8 +28,8 @@ void TickerMode::handle()
     if (pending)
     {
         text = std::make_unique<TextHandler>(message, *font);
-        offsetX = GRID_COLUMNS;
-        offsetY = (GRID_ROWS - text->getHeight()) / 2U;
+        offsetX = Display::grid::columns;
+        offsetY = (Display::grid::rows - text->getHeight()) / 2U;
         width = static_cast<int16_t>(text->getWidth());
         transmit();
         pending = false;
@@ -41,7 +40,7 @@ void TickerMode::handle()
         tick = false;
         if (width + offsetX < 0)
         {
-            offsetX = GRID_COLUMNS;
+            offsetX = Display::grid::columns;
         }
         DisplayService::fillFrame(false);
         text->draw(offsetX, offsetY);
@@ -97,7 +96,7 @@ void TickerMode::startTimer()
 {
     if (!timerRunning)
     {
-        timerRunning = add_repeating_timer_ms(-(0b1U << 7U), &onTimer, this, &timer);
+        timerRunning = add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 7U), &onTimer, this, &timer);
     }
 }
 

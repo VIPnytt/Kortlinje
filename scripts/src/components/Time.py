@@ -28,34 +28,23 @@ class Time:
         Configure the project's timezone and clock display settings.
 
         The timezone is stored in IANA and POSIX formats. The clock display preference is
-        set from ``CLOCK_FORMAT`` when provided, or inferred from the system locale.
+        set from ``time.format`` when provided, or inferred from the system locale.
         Unsupported clock format values are ignored.
         """
-        iana, posix = self._get_zone()
-        self.project.dotenv["TIME_ZONE"] = iana
-        self.project.dotenv["TIME_ZONE_POSIX"] = posix
-        format = self.project.dotenv.get("CLOCK_FORMAT")
-        if format is None:
+        time = self.project.toml.setdefault("time", {})
+        time["timezone"], time["posix"] = self._get_zone()
+        fmt = time.get("format")
+        if str(fmt) in ("12", "24"):
+            time["format"] = int(fmt)
+        else:
+            if fmt is not None:
+                logging.getLogger(__name__).warning("time.format %r is unsupported. Valid values are 12 and 24.", fmt)
             previous = locale.setlocale(locale.LC_TIME)
             try:
                 locale.setlocale(locale.LC_TIME, "")
-                clock = {
-                    "11": "CLOCK_12H",
-                    "23": "CLOCK_24H",
-                }.get(datetime.datetime.now(datetime.UTC).replace(hour=23).strftime("%X")[:2])
-                if clock is not None:
-                    self.project.dotenv[clock] = "true"
+                time["format"] = 12 if datetime.time(23).strftime("%X").startswith("11") else 24
             finally:
                 locale.setlocale(locale.LC_TIME, previous)
-        else:
-            clock = {
-                "12": "CLOCK_12H",
-                "24": "CLOCK_24H",
-            }.get(format)
-            if clock is None:
-                logging.getLogger(__name__).warning("CLOCK_FORMAT %r is unsupported. Valid values are '12' and '24'.", format)
-            else:
-                self.project.dotenv[clock] = "true"
 
     def _get_zone(self) -> tuple[str, str]:
         """
@@ -64,14 +53,11 @@ class Time:
         Returns:
             tuple[str, str]: The IANA timezone name and its corresponding POSIX timezone string.
         """
-        if "TIME_ZONE" in self.project.dotenv:
-            posix = self._lookup_zone(self.project.dotenv["TIME_ZONE"])
-            if posix:
-                return self.project.dotenv["TIME_ZONE"], posix
-        if iana := tzlocal.get_localzone_name():
-            posix = self._lookup_zone(iana)
-            if posix:
-                return iana, posix
+        time = self.project.toml.get("time", {})
+        if (iana := time.get("timezone")) and (posix := self._lookup_zone(iana)):
+            return iana, posix
+        if (iana := tzlocal.get_localzone_name()) and (posix := self._lookup_zone(iana)):
+            return iana, posix
         return "Etc/UTC", "UTC0"
 
     @staticmethod

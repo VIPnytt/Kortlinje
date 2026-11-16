@@ -1,7 +1,5 @@
 #include "modes/StarsMode.h"
 
-#include "services/DisplayService.h"
-
 StarsMode::~StarsMode() { cancel_repeating_timer(&timer); }
 
 void StarsMode::begin()
@@ -15,31 +13,32 @@ void StarsMode::begin()
  */
 void StarsMode::handle()
 {
-    if (tick)
+    if (!tick)
     {
-        tick = false;
-        for (Star &star : stars)
+        return;
+    }
+    tick = false;
+    for (Star &star : stars)
+    {
+        if (star.delay != 0U)
         {
-            if (star.delay != 0U)
+            --star.delay;
+        }
+        else if (star.lit)
+        {
+            DisplayService::setPixel(star.idx, false);
+            star.lit = false;
+            star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 10U)));
+        }
+        else
+        {
+            do
             {
-                --star.delay;
-            }
-            else if (star.lit)
-            {
-                DisplayService::setPixel(star.idx, false);
-                star.lit = false;
-                star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 10U)));
-            }
-            else
-            {
-                do
-                {
-                    star.idx = static_cast<size_t>(random(static_cast<long>(GRID_COLUMNS * GRID_ROWS)));
-                } while (DisplayService::getPixel(star.idx));
-                DisplayService::setPixel(star.idx, true);
-                star.lit = true;
-                star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 12U)));
-            }
+                star.idx = static_cast<size_t>(random(static_cast<long>(Display::grid::pixels)));
+            } while (DisplayService::getPixel(star.idx));
+            DisplayService::setPixel(star.idx, true);
+            star.lit = true;
+            star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 12U)));
         }
     }
 }

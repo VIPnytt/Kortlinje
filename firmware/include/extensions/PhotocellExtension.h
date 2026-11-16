@@ -11,7 +11,7 @@ class PhotocellExtension final : public ExtensionModule
 private:
     static constexpr std::string_view name{"Photocell"};
 
-    static inline volatile bool detected{false};
+    static inline volatile bool lit{false};
     static inline volatile bool pending{true};
 
     static inline volatile alarm_id_t alarm{0L};

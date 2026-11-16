@@ -5,16 +5,21 @@ import { Canvas } from "../components/Canvas";
 import { Icon } from "../components/Icon";
 import { ToastProvider } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
-import { HOSTNAME, NAME } from "../config/constants";
-import { Device } from "../config/devices";
-import { VERSION } from "../config/version";
+import { DEVICE_HOSTNAME, DEVICE_NAME } from "../constants/secrets";
+import { VERSION } from "../constants/version";
 import {
     name as ConnectivityName,
     SidebarSecondaryComponent as ConnectivitySecondarySidebarComponent,
     MainThird as ConnectivityThird,
     SidebarThird as ConnectivityThirdSidebar,
 } from "../services/Connectivity";
-import { Main as DisplayMain, DisplayPower, Sidebar as DisplaySidebar } from "../services/Display";
+import {
+    DisplayColumns,
+    Main as DisplayMain,
+    DisplayPower,
+    DisplayRows,
+    Sidebar as DisplaySidebar,
+} from "../services/Display";
 import {
     Footer as ExtensionsFooter,
     name as ExtensionsName,
@@ -50,8 +55,8 @@ createEffect(() => {
 });
 
 export const receiver = (bytes: Uint8Array) => {
-    const pixels = new Array<boolean>(Device.GRID_COLUMNS * Device.GRID_ROWS);
-    for (let idx = 0; idx < Device.GRID_COLUMNS * Device.GRID_ROWS; ++idx) {
+    const pixels = new Array<boolean>(DisplayColumns * DisplayRows);
+    for (let idx = 0; idx < DisplayColumns * DisplayRows; ++idx) {
         pixels[idx] = ((bytes[idx >> 3] >> (idx & 7)) & 1) === 1;
     }
     setFrame(pixels);
@@ -156,7 +161,7 @@ export const Main: Component = () => (
         <div class="shrink-0 snap-center">
             <Canvas
                 disabled={true}
-                pixels={getFrame() || new Array(Device.GRID_COLUMNS * Device.GRID_ROWS).fill(false)}
+                pixels={getFrame() || new Array(DisplayColumns * DisplayRows).fill(false)}
             />
         </div>
     </div>
@@ -167,7 +172,7 @@ export const MainSecondary: Component = () => (
         <h1>
             <Icon path={mdiClockDigital} />
         </h1>
-        <div class="mode-title">{NAME}</div>
+        <div class="mode-title">{DEVICE_NAME}</div>
     </div>
 );
 
@@ -271,13 +276,13 @@ const Layout: Component<{
 
 export const Canonical = () => {
     import.meta.env.PROD &&
-        `${HOSTNAME}.local` !== location.hostname &&
-        fetch(`http://${HOSTNAME}.local`, {
+        `${DEVICE_HOSTNAME}.local` !== location.hostname &&
+        fetch(`http://${DEVICE_HOSTNAME}.local`, {
             method: "HEAD",
         }).then((response) => {
             if (response.status === 200) {
                 WebSocketWS.close();
-                location.href = `http://${HOSTNAME}.local`;
+                location.href = `http://${DEVICE_HOSTNAME}.local`;
             }
         });
 };

@@ -139,21 +139,21 @@ Wire up everything in accordance with diagrams. It’s advised to defer the USB 
 
 ## 🔧 Configuration
 
-| Label        | Type           | Constant     |
-| ------------ | -------------- | ------------ |
-| `SCLK1`      | Digital output | `PIN_SCLK1`  |
-| `SCLK2`      | Digital output | `PIN_SCLK2`  |
-| `SCLK3`      | Digital output | `PIN_SCLK3`  |
-| `SDA1`       | Digital output | `PIN_SDA1`   |
-| `SDA2`       | Digital output | `PIN_SDA2`   |
-| `SDA3`       | Digital output | `PIN_SDA3`   |
-| Buzzer       | Digital output | `PIN_BUZZER` |
-| Enable       | Digital output | `PIN_EN`     |
-| Data         | Digital input  | `PIN_PDM`    |
-| Light        | Digital input  | `PIN_LIGHT`  |
-| Power        | Digital input  | `PIN_POWER`  |
-| Buttons top  | Analog input   | `PIN_TOP`    |
-| Buttons rear | Analog input   | `PIN_REAR`   |
+| Label        | Type           | Constant        |
+| ------------ | -------------- | --------------- |
+| `SCLK1`      | Digital output | `display_sclk1` |
+| `SCLK2`      | Digital output | `display_sclk2` |
+| `SCLK3`      | Digital output | `display_sclk3` |
+| `SDA1`       | Digital output | `display_sda1`  |
+| `SDA2`       | Digital output | `display_sda2`  |
+| `SDA3`       | Digital output | `display_sda3`  |
+| Buzzer       | Digital output | `audio_buzzer`  |
+| Enable       | Digital output | `climate_en`    |
+| Data         | Digital input  | `climate_pdm`   |
+| Light        | Digital input  | `light_sense`   |
+| Power        | Digital input  | `power_sense`   |
+| Buttons top  | Analog input   | `button_top`    |
+| Buttons rear | Analog input   | `button_rear`   |
 
 ### Power and ground
 
@@ -167,64 +167,70 @@ Wire up everything in accordance with diagrams. It’s advised to defer the USB 
 
 Any 5 V tolerant GPIO pin can be used for the `VK1640` `SCLK` clock lines.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_SCLK1 1
-#define PIN_SCLK2 2
-#define PIN_SCLK3 3
+```toml
+[pin]
+display_sclk1 = 1
+display_sclk2 = 2
+display_sclk3 = 3
 ```
 
 ### LED driver data
 
 Any 5 V tolerant GPIO pin can be used for the `VK1640` `DIN` data lines.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_SDA1 4
-#define PIN_SDA2 5
-#define PIN_SDA3 6
+```toml
+[pin]
+display_sda1 = 4
+display_sda2 = 5
+display_sda3 = 6
 ```
 
 ### Buzzer
 
 Any GPIO pin can be used for control signals to the buzzer.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_BUZZER 7
+```toml
+[pin]
+audio_buzzer = 7
 ```
 
 ### Environment sensor enable
 
 Any GPIO pin can be used to activate the `U6` chip.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_EN 8
+```toml
+[pin]
+climate_en = 8
 ```
 
 ### Environment sensor data
 
 Any 5 V tolerant GPIO pin can be used to read temperature and humidity data from the `U6` chip.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_PDM 9
+```toml
+[pin]
+climate_pdm = 9
 ```
 
 ### Ambient light sensor
 
 Any 5 V tolerant GPIO pin can be used to detect ambient light presence.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_LIGHT 10
+```toml
+[pin]
+light_sense = 10
 ```
 
 ### Power source detection
@@ -235,30 +241,33 @@ Used to wake up the RP2350 from sleep when USB power is applied, and to put it b
 
 Any 5 V tolerant GPIO pin can be used to detect the presence of USB power.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_POWER 11
+```toml
+[pin]
+power_sense = 11
 ```
 
 ### Snooze, brightness, cycle and alarm buttons
 
 Any analog input pin can be used to detect button presses.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_TOP 12
+```toml
+[pin]
+button_top = 26
 ```
 
 ### Config, alarm, plus and minus buttons
 
 Any analog input pin can be used to detect button presses.
 
-Configure in [secrets.h](https://github.com/VIPnytt/Kortlinje/blob/main/firmware/include/config/secrets.h):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
 
-```h
-#define PIN_REAR 13
+```toml
+[pin]
+button_rear = 27
 ```
 
 ## 🔗 Resources

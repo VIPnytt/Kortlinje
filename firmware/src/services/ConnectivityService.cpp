@@ -1,7 +1,7 @@
 #include "services/ConnectivityService.h"
 
-#include "config/IkeaKortlinje.h"
-#include "config/secrets.h"
+#include "constants/HomeAssistant.h"
+#include "constants/Kortlinje.h"
 #include "extensions/AlexaExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
@@ -16,19 +16,19 @@
 /**
  * @brief Configures Wi-Fi, checks the boot button for hotspot mode, and starts NTP synchronization.
  *
- * Initializes Soft-AP mode only if PIN_REAR reads LOW during boot; otherwise starts station mode.
+ * Initializes Soft-AP mode only if button_rear reads LOW during boot; otherwise starts station mode.
  */
 void ConnectivityService::begin()
 {
-    WiFi.setHostname(HOSTNAME);
-    setenv("TZ", TIME_ZONE_POSIX, 1);
+    WiFi.setHostname(Kortlinje::device::hostname.data());
+    setenv("TZ", Kortlinje::time::posix.data(), 1);
     tzset();
-    gpio_init(PIN_REAR);
-    gpio_disable_pulls(PIN_REAR);
-    gpio_set_dir(PIN_REAR, gpio_dir::GPIO_IN);
+    gpio_init(Kortlinje::pin::button_rear);
+    gpio_disable_pulls(Kortlinje::pin::button_rear);
+    gpio_set_dir(Kortlinje::pin::button_rear, gpio_dir::GPIO_IN);
     sleep_us(0b1U << 4U);
-    const bool hotspot{!gpio_get(PIN_REAR)};
-    gpio_deinit(PIN_REAR);
+    const bool hotspot{!gpio_get(Kortlinje::pin::button_rear)};
+    gpio_deinit(Kortlinje::pin::button_rear);
     if (hotspot)
     {
         initHotspot();
@@ -36,7 +36,6 @@ void ConnectivityService::begin()
     else
     {
         initStation();
-        NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
     }
 }
 
@@ -154,10 +153,10 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
  */
 void ConnectivityService::initHotspot()
 {
-    WiFi.mode(WIFI_AP);
+    WiFi.mode(WiFiMode_t::WIFI_AP);
     const IPAddress apIp{192, 168, 4, 1};
     WiFi.softAPConfig(apIp, apIp, IPAddress{255, 255, 255, 0});
-    WiFi.softAP(NAME);
+    WiFi.softAP(Kortlinje::device::name.data());
     dns.setErrorReplyCode(DNSReplyCode::NoError);
     dnsRunning = dns.start(53U, "*", apIp);
     transmit();
@@ -168,17 +167,16 @@ void ConnectivityService::initHotspot()
  */
 void ConnectivityService::initStation()
 {
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WiFiMode_t::WIFI_STA);
     JsonDocument doc{};
     std::string json{};
     if (ConfigHandler::get(name, "Wi-Fi", json))
     {
         deserializeJson(doc, json);
     }
-    if (doc[WIFI_SSID].isUnbound())
+    if (doc[Kortlinje::wifi::ssid].isUnbound())
     {
-        doc[WIFI_SSID].set(WIFI_PSK);
-        json.clear();
+        doc[Kortlinje::wifi::ssid].set(Kortlinje::wifi::psk);
         serializeJson(doc, json);
         ConfigHandler::set(name, "Wi-Fi", json);
     }
@@ -187,12 +185,12 @@ void ConnectivityService::initStation()
     {
         multi.addAP(pair.key().c_str(), pair.value().as<const char *>());
     }
-    if (multi.run() == WL_CONNECTED && WiFi.localIP().isSet())
+    if (multi.run() == wl_status_t::WL_CONNECTED && WiFi.localIP().isSet())
     {
         onRoutable();
         transmit();
     }
-    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 18U), &onTimer, nullptr, &timer);
+    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 18U), &onTimer, this, &timer);
 }
 
 /**
@@ -220,18 +218,16 @@ void ConnectivityService::onHomeAssistant(JsonDocument &discovery, std::string t
     topic.append(name);
     {
         const std::string id{std::string(name).append("_rssi")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::device_class].set("signal_strength");
-        component[HomeAssistantAbbreviations::entity_category].set("diagnostic");
-        component[HomeAssistantAbbreviations::expire_after].set(UINT8_MAX);
-        component[HomeAssistantAbbreviations::force_update].set(true);
-        component[HomeAssistantAbbreviations::name].set("Wi-Fi signal");
-        component[HomeAssistantAbbreviations::platform].set("sensor");
-        component[HomeAssistantAbbreviations::state_class].set("measurement");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-        component[HomeAssistantAbbreviations::unit_of_measurement].set("dBm");
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.rssi}}");
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::device_class].set("signal_strength");
+        component[HomeAssistant::Abbreviations::entity_category].set("diagnostic");
+        component[HomeAssistant::Abbreviations::name].set("Wi-Fi signal");
+        component[HomeAssistant::Abbreviations::platform].set("sensor");
+        component[HomeAssistant::Abbreviations::state_class].set("measurement");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::unit_of_measurement].set("dBm");
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.rssi}}");
     }
 }
 
@@ -264,16 +260,12 @@ void ConnectivityService::onRoutable()
     {
         routable = true;
         NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
-        if (!mdns && MDNS.begin(HOSTNAME))
+        if (!mdns && MDNS.begin(Kortlinje::device::hostname.data()))
         {
             mdns = true;
             MDNS.addService("http", "tcp", 80U);
             MDNS.addService("ws", "tcp", 80U);
-#ifdef OTA_KEY
-            MDNS.enableArduino(2'040U, true);
-#else
-            MDNS.enableArduino(2'040U, false);
-#endif // OTA_KEY
+            MDNS.enableArduino(2'040U, !Kortlinje::ota::password.empty());
             AlexaExtension::onMdns();
         }
     }
@@ -303,10 +295,9 @@ void ConnectivityService::onScan(int8_t count)
 /**
  * @brief Hardware repeating timer ISR that flags periodic telemetry or reconnection checks.
  */
-bool __time_critical_func(ConnectivityService::onTimer)(repeating_timer *timer)
+bool __time_critical_func(ConnectivityService::onTimer)(repeating_timer *rt)
 {
-    static_cast<void>(timer);
-    pending = true;
+    static_cast<ConnectivityService *>(rt->user_data)->pending = true;
     return true;
 }
 

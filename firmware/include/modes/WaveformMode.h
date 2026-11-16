@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <api/Common.h>
 #include <cstdint>
@@ -11,7 +11,7 @@
 class WaveformMode final : public ModeModule
 {
 private:
-    static constexpr float centerY{(GRID_ROWS - 1U) / 2.0F};
+    static constexpr float centerY{Display::grid::maxY / 2.0F};
     static constexpr float ampDrift{centerY * .28F};
     static constexpr float baseAmp{centerY * .72F};
     static constexpr float baseFreq{.26F};

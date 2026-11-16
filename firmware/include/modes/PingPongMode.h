@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <pico/time.h>
 
@@ -10,10 +10,10 @@ class PingPongMode final : public ModeModule
 private:
     volatile bool tick{false};
 
-    uint8_t paddleL{GRID_ROWS / 2U};
-    uint8_t paddleR{GRID_ROWS / 2U};
-    uint8_t x{GRID_COLUMNS - 2U};
-    uint8_t y{GRID_ROWS / 2U};
+    uint8_t paddleL{Display::grid::rows / 2U};
+    uint8_t paddleR{Display::grid::rows / 2U};
+    uint8_t x{Display::grid::maxX - 1U};
+    uint8_t y{Display::grid::rows / 2U};
 
     uint16_t deg{135U};
 

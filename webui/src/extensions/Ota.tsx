@@ -3,7 +3,7 @@ import type { Component } from "solid-js";
 
 import { Icon } from "../components/Icon";
 import { Tooltip } from "../components/Tooltip";
-import { BOARD, HOSTNAME, OTA_KEY } from "../config/constants";
+import { ARDUINO_VARIANT, DEVICE_HOSTNAME, OTA_PASSWORD } from "../constants/secrets";
 import { name as ExtensionsName } from "../services/Extensions";
 
 export const name = "OTA";
@@ -31,7 +31,7 @@ export const MainThird: Component = () => (
 
 /**
  * Renders PlatformIO espota setup instructions for the configured board and hostname.
- * Includes an authentication flag with a placeholder password when OTA_KEY is enabled.
+ * Includes an authentication flag with a placeholder password when OTA_PASSWORD is enabled.
  */
 const MainComponent: Component = () => (
     <div class="space-y-3 p-5">
@@ -39,7 +39,7 @@ const MainComponent: Component = () => (
         <div class="box">
             <div class="space-y-3">
                 <div class="grid gap-3">
-                    {!OTA_KEY && <h3>Automatic updates</h3>}
+                    {!OTA_PASSWORD && <h3>Automatic updates</h3>}
                     <div class="text-sm">
                         Configure your&nbsp;
                         <a
@@ -53,14 +53,14 @@ const MainComponent: Component = () => (
                         &nbsp;for <span class="italic">over-the-air</span> updates:
                     </div>
                     <div class="font-mono text-sm  whitespace-nowrap">
-                        [env:{BOARD}]
+                        [env:{ARDUINO_VARIANT}]
                         <br />
-                        board = {BOARD}
+                        board = {ARDUINO_VARIANT}
                         <br />
                         upload_protocol = espota
                         <br />
-                        upload_port = {HOSTNAME}.local
-                        {OTA_KEY && (
+                        upload_port = {DEVICE_HOSTNAME}.local
+                        {OTA_PASSWORD && (
                             <>
                                 <br />
                                 upload_flags = --auth=password

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <ArduinoOTA.h>
 #include <array>
@@ -30,9 +30,9 @@ private:
 
     repeating_timer timer{};
 
-    std::array<bool, GRID_COLUMNS * GRID_ROWS> occupied{};
+    std::array<bool, Display::grid::pixels> occupied{};
 
-    std::array<size_t, GRID_COLUMNS * GRID_ROWS> snake{};
+    std::array<size_t, Display::grid::pixels> snake{};
 
     Stage stage{Stage::READY};
 

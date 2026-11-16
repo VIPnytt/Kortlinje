@@ -5,8 +5,7 @@ import { type Component, createSignal, For } from "solid-js";
 import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
-import { Device } from "../config/devices";
-import { name as DisplayName } from "../services/Display";
+import { DisplayColumns, name as DisplayName } from "../services/Display";
 import { name as ExtensionsName } from "../services/Extensions";
 import { FontsList } from "../services/Fonts";
 import { WebSocketWS } from "./WebSocket";
@@ -26,7 +25,7 @@ export const receiver = (json: { event?: string; font?: string; repeat?: number 
 const { toast } = Toast();
 
 const event = (message: string) => {
-    toast(message, 2 ** 7 * (Device.GRID_COLUMNS + message.length * 6.8));
+    toast(message, 2 ** 7 * (DisplayColumns + message.length * 6.8));
 };
 
 export const Link: Component = () => (

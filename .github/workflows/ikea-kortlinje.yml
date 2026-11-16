@@ -48,35 +48,37 @@ jobs:
         env:
           PIO_ENVIRONMENT: ${{ matrix.environment }}
         run: |
-          cat <<'EOL' > .env
-          HOSTNAME='kortlinje'
-          NAME='Kortlinje'
-          OTA_KEY='redacted'
-          TEMPERATURE_UNIT='K'
-          TIME_ZONE='Etc/Universal'
-          EOL
-          cat <<'EOL' > firmware/include/config/secrets.h
-          #pragma once
-          #define MQTT_HOST "127.0.0.1"
-          #define MQTT_PASS "redacted"
-          #define MQTT_USER "redacted"
-          #define PIN_BUZZER 1
-          #define PIN_EN 2
-          #define PIN_LIGHT 3
-          #define PIN_PDM 4
-          #define PIN_POWER 5
-          #define PIN_REAR 26
-          #define PIN_SCLK1 6
-          #define PIN_SCLK2 7
-          #define PIN_SCLK3 8
-          #define PIN_SDA1 9
-          #define PIN_SDA2 10
-          #define PIN_SDA3 11
-          #define PIN_TOP 27
-          #define RP2350_ERRATA_E9
-          #define VK1640_SCLK_1M25
-          #define WIFI_PSK "redacted"
-          #define WIFI_SSID "redacted"
+          cat <<'EOL' > secrets.toml
+          [device]
+          hostname = 'kortlinje'
+          name = 'Kortlinje'
+          temperature_unit = 'K'
+          [mqtt]
+          host = '127.0.0.1'
+          pass = 'redacted'
+          user = 'redacted'
+          [ota]
+          password = 'redacted'
+          [pin]
+          audio_buzzer = 1
+          button_rear = 26
+          button_top = 27
+          climate_en = 2
+          climate_pdm = 3
+          display_sclk1 = 4
+          display_sclk2 = 5
+          display_sclk3 = 6
+          display_sda1 = 7
+          display_sda2 = 8
+          display_sda3 = 9
+          light_sense = 10
+          power_sense = 11
+          [time]
+          format = 12
+          zone = 'Etc/Universal'
+          [wifi]
+          psk = 'redacted'
+          ssid = 'redacted'
           EOL
           uv run --only-group platformio pio run -e "$PIO_ENVIRONMENT"
 
@@ -112,25 +114,27 @@ jobs:
         env:
           PIO_ENVIRONMENT: ${{ matrix.environment }}
         run: |
-          cat <<'EOL' > firmware/include/config/secrets.h
-          #pragma once
-          #define MQTT_HOST "127.0.0.1"
-          #define MQTT_PASS "redacted"
-          #define MQTT_USER "redacted"
-          #define PIN_BUZZER 1
-          #define PIN_EN 2
-          #define PIN_LIGHT 3
-          #define PIN_PDM 4
-          #define PIN_POWER 5
-          #define PIN_REAR 26
-          #define PIN_SCLK1 6
-          #define PIN_SCLK2 7
-          #define PIN_SCLK3 8
-          #define PIN_SDA1 9
-          #define PIN_SDA2 10
-          #define PIN_SDA3 11
-          #define PIN_TOP 27
-          #define WIFI_PSK "redacted"
-          #define WIFI_SSID "redacted"
+          cat <<'EOL' > secrets.toml
+          [mqtt]
+          host = '127.0.0.1'
+          pass = 'redacted'
+          user = 'redacted'
+          [pin]
+          audio_buzzer = 1
+          button_rear = 26
+          button_top = 27
+          climate_en = 2
+          climate_pdm = 3
+          display_sclk1 = 4
+          display_sclk2 = 5
+          display_sclk3 = 6
+          display_sda1 = 7
+          display_sda2 = 8
+          display_sda3 = 9
+          light_sense = 10
+          power_sense = 11
+          [wifi]
+          psk = 'redacted'
+          ssid = 'redacted'
           EOL
           uv run --only-group platformio pio run -e "$PIO_ENVIRONMENT"

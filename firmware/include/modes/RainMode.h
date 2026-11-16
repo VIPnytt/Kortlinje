@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstdint>
@@ -14,7 +14,7 @@ private:
     struct Drop
     {
         uint8_t x{0U};
-        uint8_t y{GRID_ROWS};
+        uint8_t y{Display::grid::rows};
         uint8_t length{0U};
         uint8_t delay{1U};
         uint8_t ticks{0U};
@@ -24,9 +24,9 @@ private:
 
     repeating_timer timer{};
 
-    std::array<Drop, GRID_COLUMNS / 4U> drops{};
+    std::array<Drop, Display::grid::columns / 4U> drops{};
 
-    [[nodiscard]]  static bool onTimer(repeating_timer *rt);
+    [[nodiscard]] static bool onTimer(repeating_timer *rt);
 
 public:
     static constexpr std::string_view name{"Rain"};

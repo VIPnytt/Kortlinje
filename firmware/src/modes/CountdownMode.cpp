@@ -1,5 +1,6 @@
 #include "modes/CountdownMode.h"
 
+#include "constants/HomeAssistant.h"
 #include "extensions/MqttExtension.h"
 #include "fonts/KortlinjeFont.h"
 #include "handlers/TextHandler.h"
@@ -78,16 +79,16 @@ void CountdownMode::onHomeAssistant(JsonDocument &discovery, std::string topic, 
     topic.append(name);
     {
         const std::string id{std::string(name).append("_timestamp")};
-        JsonObject component{discovery[HomeAssistantAbbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistantAbbreviations::command_template].set(R"({"timestamp":"{{value}}"})");
-        component[HomeAssistantAbbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistantAbbreviations::entity_category].set("config");
-        component[HomeAssistantAbbreviations::icon].set("mdi:timer-sand-full");
-        component[HomeAssistantAbbreviations::name].set(name);
-        component[HomeAssistantAbbreviations::platform].set("time");
-        component[HomeAssistantAbbreviations::state_topic].set(topic);
-        component[HomeAssistantAbbreviations::unique_id].set(unique + id);
-        component[HomeAssistantAbbreviations::value_template].set("{{value_json.timestamp}}");
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"timestamp":"{{value}}"})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::entity_category].set("config");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:timer-sand-full");
+        component[HomeAssistant::Abbreviations::name].set(name);
+        component[HomeAssistant::Abbreviations::platform].set("time");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.timestamp}}");
     }
 }
 

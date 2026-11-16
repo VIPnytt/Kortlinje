@@ -1,6 +1,5 @@
 #include "modes/StreamMode.h"
 
-#include "config/IkeaKortlinje.h"
 #include "services/DisplayService.h"
 
 #include <span>
@@ -25,14 +24,13 @@ void StreamMode::begin()
  */
 void StreamMode::onDistributedDisplayProtocol(AsyncUDPPacket packet)
 {
-    static constexpr size_t bytes{((GRID_COLUMNS * GRID_ROWS) + 7U) >> 3U};
     const std::span<const uint8_t> data{packet.data(), packet.length()};
-    if (packet.length() == 10U + bytes && (data.front() & (0b1U << 4U)) == 0U)
+    if (packet.length() == 10U + Display::grid::bytes && (data.front() & (0b1U << 4U)) == 0U)
     {
-        DisplayService::setFrame(static_cast<std::span<const uint8_t, bytes>>(data.subspan(10U)));
+        DisplayService::setFrame(static_cast<std::span<const uint8_t, Display::grid::bytes>>(data.subspan(10U)));
     }
-    else if (packet.length() == 14U + bytes && (data.front() & (0b1U << 4U)) != 0U)
+    else if (packet.length() == 14U + Display::grid::bytes && (data.front() & (0b1U << 4U)) != 0U)
     {
-        DisplayService::setFrame(static_cast<std::span<const uint8_t, bytes>>(data.subspan(14U)));
+        DisplayService::setFrame(static_cast<std::span<const uint8_t, Display::grid::bytes>>(data.subspan(14U)));
     }
 }

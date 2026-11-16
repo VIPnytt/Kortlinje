@@ -1,13 +1,11 @@
 #include "modes/FireworkMode.h"
 
-#include "services/DisplayService.h"
-
 FireworkMode::~FireworkMode() { stopAlarm(); }
 
 void FireworkMode::begin()
 {
     stage = 0U;
-    rocketY = GRID_ROWS;
+    rocketY = Display::grid::rows;
     radius = 0U;
 }
 
@@ -40,8 +38,8 @@ void FireworkMode::pad()
     if (tick)
     {
         tick = false;
-        rocketX = static_cast<uint8_t>(random(GRID_COLUMNS));
-        rocketY = GRID_ROWS;
+        rocketX = static_cast<uint8_t>(random(static_cast<long>(Display::grid::columns)));
+        rocketY = Display::grid::rows;
         stage = 1U;
     }
     startAlarm(static_cast<uint32_t>(random(static_cast<long>(0b1U << 8U))));
@@ -52,23 +50,24 @@ void FireworkMode::pad()
  */
 void FireworkMode::launching()
 {
-    if (tick)
+    if (!tick)
     {
-        tick = false;
-        if (rocketY < GRID_ROWS)
-        {
-            DisplayService::setPixel(rocketX, rocketY, false);
-        }
-        --rocketY;
-        DisplayService::setPixel(rocketX, rocketY, true);
-        if (rocketY <= random((static_cast<long>(GRID_ROWS) / 2L) + 1L))
-        {
-            radius = 0U;
-            maxRadius = static_cast<uint8_t>(random(1L, (static_cast<long>(GRID_ROWS) / 2L) + 1L));
-            stage = 2U;
-        }
-        startAlarm(0b1U << 7U);
+        return;
     }
+    tick = false;
+    if (rocketY < Display::grid::rows)
+    {
+        DisplayService::setPixel(rocketX, rocketY, false);
+    }
+    --rocketY;
+    DisplayService::setPixel(rocketX, rocketY, true);
+    if (rocketY <= random(static_cast<long>((Display::grid::rows / 2U) + 1U)))
+    {
+        radius = 0U;
+        maxRadius = static_cast<uint8_t>(random(1L, static_cast<long>(Display::grid::rows / 2U) + 1U));
+        stage = 2U;
+    }
+    startAlarm(0b1U << 7U);
 }
 
 /**
@@ -76,22 +75,23 @@ void FireworkMode::launching()
  */
 void FireworkMode::exploding()
 {
-    if (tick)
+    if (!tick)
     {
-        tick = false;
-        if (radius < maxRadius)
-        {
-            ++radius;
-            DisplayService::drawEllipseSolid(rocketX, rocketY, radius, true);
-            startAlarm(radius < maxRadius ? 0b1U << 8U
-                                          : static_cast<uint32_t>(
-                                                random(static_cast<long>(0b1U << 8U), static_cast<long>(0b1U << 11U))));
-        }
-        else
-        {
-            DisplayService::drawEllipseSolid(rocketX, rocketY, radius, false);
-            stage = 0U;
-        }
+        return;
+    }
+    tick = false;
+    if (radius < maxRadius)
+    {
+        ++radius;
+        DisplayService::drawEllipseSolid(rocketX, rocketY, radius, true);
+        startAlarm(radius < maxRadius
+                       ? 0b1U << 8U
+                       : static_cast<uint32_t>(random(static_cast<long>(0b1U << 8U), static_cast<long>(0b1U << 11U))));
+    }
+    else
+    {
+        DisplayService::drawEllipseSolid(rocketX, rocketY, radius, false);
+        stage = 0U;
     }
 }
 
@@ -112,10 +112,10 @@ void FireworkMode::startAlarm(uint32_t delayMs)
 
 void FireworkMode::stopAlarm()
 {
-    if (alarmId > 0)
+    if (alarmId > 0L)
     {
         cancel_alarm(alarmId);
-        alarmId = 0;
+        alarmId = 0L;
     }
     tick = false;
 }

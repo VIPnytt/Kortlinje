@@ -1,6 +1,5 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ExtensionModule.h"
 
 #include <AsyncUDP.h>
@@ -8,13 +7,10 @@
 #include <pico/time.h>
 #include <string_view>
 
-
 class MirrorExtension final : public ExtensionModule
 {
 private:
-    static constexpr size_t bytes{((GRID_COLUMNS * GRID_ROWS) + 7U) >> 3U};
-
-    static constexpr ip_addr_t addr IPADDR4_INIT_BYTES(255, 255, 255, 255);
+    static constexpr ip_addr_t addr IPADDR4_INIT_BYTES(255U, 255U, 255U, 255U);
 
     bool enabled{false};
     volatile bool pending{false};

@@ -59,8 +59,8 @@ TextHandler::TextHandler(std::string text, const FontModule &font) : text(text),
 
 void TextHandler::draw() const
 {
-    draw(GRID_COLUMNS > width ? (GRID_COLUMNS - width) / 2U : 0U,
-         (static_cast<int>(GRID_ROWS) - static_cast<int>(height)) / 2);
+    draw(Display::grid::columns > width ? (Display::grid::columns - width) / 2U : 0U,
+         (static_cast<int>(Display::grid::rows) - static_cast<int>(height)) / 2);
 }
 
 void TextHandler::draw(int16_t x, int8_t y) const
@@ -86,8 +86,8 @@ void TextHandler::draw(int16_t x, int8_t y) const
                             const int pixelY{static_cast<int>(y) + static_cast<int>(height) -
                                              static_cast<int>(_height) - static_cast<int>(character.offsetY) +
                                              static_cast<int>(_y)};
-                            if (pixelX >= 0 && pixelX < GRID_COLUMNS && pixelY >= 0 && pixelY < GRID_ROWS &&
-                                (((bitmap[_y] >> (msbMax - _x)) & 0b1U) != 0U))
+                            if (pixelX >= 0 && pixelX < Display::grid::columns && pixelY >= 0 &&
+                                pixelY < Display::grid::rows && (((bitmap[_y] >> (msbMax - _x)) & 0b1U) != 0U))
                             {
                                 DisplayService::setPixel(
                                     static_cast<uint8_t>(pixelX), static_cast<uint8_t>(pixelY), true);

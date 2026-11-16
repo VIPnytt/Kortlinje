@@ -1,7 +1,6 @@
 #include "extensions/AlexaExtension.h"
 
-#include "config/IkeaKortlinje.h"
-#include "config/version.h"
+#include "constants/Kortlinje.h"
 #include "services/DisplayService.h"
 #include "services/WebServerService.h"
 
@@ -30,27 +29,29 @@ void AlexaExtension::begin()
     upnp.onPacket(&onUpnp);
 }
 
-std::array<char, 256U> AlexaExtension::light()
+std::array<char, 0b1U << 8U> AlexaExtension::light()
 {
-    std::array<char, 256U> buffer{};
+    std::array<char, 0b1U << 8U> buffer{};
     std::format_to_n(buffer.begin(),
                      buffer.size() - 1U,
                      R"({{"1":{{)"
                      R"("manufacturername":"IKEA",)"
                      R"("modelid":"Kortlinje",)"
-                     R"("name":")" NAME R"(",)"
+                     R"("name":"{}",)"
                      R"("state":{{)"
                      R"("bri":{},)"
                      R"("mode":"homeautomation",)"
                      R"("on":{},)"
                      R"("reachable":true)"
                      R"(}},)"
-                     R"("swversion":")" VERSION R"(",)"
+                     R"("swversion":"{}",)"
                      R"("type":"Dimmable light",)"
                      R"("uniqueid":"00:{:012x}:00:00")"
                      R"(}}}})",
+                     Kortlinje::device::name.data(),
                      ((static_cast<unsigned int>(DisplayService::getBrightness()) + 1U) * 254U) >> 3U,
                      DisplayService::getPower(),
+                     Kortlinje::version,
                      mac());
     return buffer;
 }
@@ -75,7 +76,7 @@ void AlexaExtension::onGetDescription(AsyncWebServerRequest *request)
                      R"(<root xmlns="urn:schemas-upnp-org:device-1-0">)"
                      "<device>"
                      "<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>"
-                     "<friendlyName>" NAME " (" HOSTNAME ".local)</friendlyName>"
+                     "<friendlyName>{} ({}.local)</friendlyName>"
                      "<manufacturer>Royal Philips Electronics</manufacturer>"
                      "<manufacturerURL>http://www.philips.com</manufacturerURL>"
                      "<modelDescription>Philips hue Personal Wireless Lighting</modelDescription>"
@@ -91,6 +92,8 @@ void AlexaExtension::onGetDescription(AsyncWebServerRequest *request)
                      "</specVersion>"
                      "<URLBase>http://{}.{}.{}.{}:80/</URLBase>"
                      "</root>",
+                     Kortlinje::device::name.data(),
+                     Kortlinje::device::hostname.data(),
                      _mac >> 24U,
                      _mac & 0xFFFFFFU,
                      _mac,
@@ -103,7 +106,7 @@ void AlexaExtension::onGetDescription(AsyncWebServerRequest *request)
 
 void AlexaExtension::onGetLight(AsyncWebServerRequest *request)
 {
-    std::array<char, 256U> response{light()};
+    std::array<char, 0b1U << 8U> response{light()};
     for (size_t idx{response.size() - 1U}; idx > 5U; --idx)
     {
         if (response[idx] == '}')

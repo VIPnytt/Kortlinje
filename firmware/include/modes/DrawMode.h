@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h" // NOLINT(misc-include-cleaner)
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <array>
 #include <cstdint>
@@ -13,7 +13,7 @@ private:
     bool pending{false};
     bool render{false};
 
-    std::array<uint8_t, ((GRID_COLUMNS * GRID_ROWS) + 7U) / 8U> frame{};
+    std::array<uint8_t, Display::grid::bytes> frame{};
 
     void load(bool cache = false);
     void save(bool cache = false);

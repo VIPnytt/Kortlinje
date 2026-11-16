@@ -1,7 +1,6 @@
 #include "modes/SnakeMode.h"
 
 #include "services/DeviceService.h"
-#include "services/DisplayService.h"
 
 #include <algorithm>
 #include <array>
@@ -12,37 +11,38 @@ void SnakeMode::begin()
 {
     DisplayService::fillFrame(false);
     snakeClear();
-    target = static_cast<size_t>(random(0L, static_cast<long>(GRID_COLUMNS * GRID_ROWS)));
+    target = static_cast<size_t>(random(0L, static_cast<long>(Display::grid::pixels)));
     stage = Stage::READY;
     add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 7U), &onTimer, this, &timer);
 }
 
 void SnakeMode::handle()
 {
-    if (tick)
+    if (!tick)
     {
-        tick = false;
-        switch (stage)
-        {
-        case Stage::READY:
-            idle();
-            break;
-        case Stage::MOVE:
-            move();
-            break;
-        case Stage::DEATH:
-            blink();
-            break;
-        case Stage::REMOVE:
-            clean();
-            break;
-        }
+        return;
+    }
+    tick = false;
+    switch (stage)
+    {
+    case Stage::READY:
+        idle();
+        break;
+    case Stage::MOVE:
+        move();
+        break;
+    case Stage::DEATH:
+        blink();
+        break;
+    case Stage::REMOVE:
+        clean();
+        break;
     }
 }
 
 void SnakeMode::idle()
 {
-    snakeReset(static_cast<size_t>(random(0L, static_cast<long>(GRID_COLUMNS * GRID_ROWS))));
+    snakeReset(static_cast<size_t>(random(0L, static_cast<long>(Display::grid::pixels))));
     DisplayService::setPixel(snake[head], true);
     setTarget();
     stage = Stage::MOVE;
@@ -51,9 +51,9 @@ void SnakeMode::idle()
 std::optional<size_t> SnakeMode::findStepPath() const
 {
     const uint8_t yMin{0U};
-    std::array<size_t, GRID_COLUMNS * GRID_ROWS> from{};
-    std::array<size_t, GRID_COLUMNS * GRID_ROWS> frontier{};
-    std::array<bool, GRID_COLUMNS * GRID_ROWS> visited{};
+    std::array<size_t, Display::grid::pixels> from{};
+    std::array<size_t, Display::grid::pixels> frontier{};
+    std::array<bool, Display::grid::pixels> visited{};
     size_t frontierHead{0U};
     size_t frontierTail{0U};
     frontier[frontierTail++] = snake[head];
@@ -74,21 +74,21 @@ std::optional<size_t> SnakeMode::findStepPath() const
         }
         std::array<size_t, 4U> neighbors{};
         size_t count{0U};
-        if (current % GRID_COLUMNS != 0U)
+        if (current % Display::grid::columns != 0U)
         {
             neighbors[count++] = current - 1U;
         }
-        if (current % GRID_COLUMNS < GRID_COLUMNS - 1U)
+        if (current % Display::grid::columns < Display::grid::maxX)
         {
             neighbors[count++] = current + 1U;
         }
-        if (current / GRID_COLUMNS > yMin)
+        if (current / Display::grid::columns > yMin)
         {
-            neighbors[count++] = current - GRID_COLUMNS;
+            neighbors[count++] = current - Display::grid::columns;
         }
-        if (current / GRID_COLUMNS < GRID_ROWS - 1U)
+        if (current / Display::grid::columns < Display::grid::maxY)
         {
-            neighbors[count++] = current + GRID_COLUMNS;
+            neighbors[count++] = current + Display::grid::columns;
         }
         for (size_t idx{0U}; idx < count; ++idx)
         {
@@ -109,21 +109,21 @@ std::optional<size_t> SnakeMode::findStepAvailable() const
 {
     std::array<size_t, 4U> available{};
     size_t count{0U};
-    if (snake[head] % GRID_COLUMNS > 0U)
+    if (snake[head] % Display::grid::columns != 0U)
     {
         available[count++] = snake[head] - 1U;
     }
-    if (snake[head] % GRID_COLUMNS < GRID_COLUMNS - 1U)
+    if (snake[head] % Display::grid::columns < Display::grid::maxX)
     {
         available[count++] = snake[head] + 1U;
     }
-    if (snake[head] / GRID_COLUMNS != 0U)
+    if (snake[head] / Display::grid::columns != 0U)
     {
-        available[count++] = snake[head] - GRID_COLUMNS;
+        available[count++] = snake[head] - Display::grid::columns;
     }
-    if (snake[head] / GRID_COLUMNS < GRID_ROWS - 1U)
+    if (snake[head] / Display::grid::columns < Display::grid::maxY)
     {
-        available[count++] = snake[head] + GRID_COLUMNS;
+        available[count++] = snake[head] + Display::grid::columns;
     }
     std::optional<size_t> best{};
     size_t bestDistance{SIZE_MAX};
@@ -133,10 +133,10 @@ std::optional<size_t> SnakeMode::findStepAvailable() const
         {
             continue;
         }
-        const size_t distance{static_cast<size_t>(std::abs(static_cast<int>(available[idx] % GRID_COLUMNS) -
-                                                           static_cast<int>(target % GRID_COLUMNS))) +
-                              static_cast<size_t>(std::abs(static_cast<int>(available[idx] / GRID_COLUMNS) -
-                                                           static_cast<int>(target / GRID_COLUMNS)))};
+        const size_t distance{static_cast<size_t>(std::abs(static_cast<int>(available[idx] % Display::grid::columns) -
+                                                           static_cast<int>(target % Display::grid::columns))) +
+                              static_cast<size_t>(std::abs(static_cast<int>(available[idx] / Display::grid::columns) -
+                                                           static_cast<int>(target / Display::grid::columns)))};
         if (distance < bestDistance)
         {
             best = available[idx];
@@ -225,11 +225,11 @@ void SnakeMode::snakeClear()
 
 bool SnakeMode::snakePushBack(size_t pixel)
 {
-    if (length >= GRID_COLUMNS * GRID_ROWS)
+    if (length >= Display::grid::pixels)
     {
         return false;
     }
-    head = (head + 1U) % (GRID_COLUMNS * GRID_ROWS);
+    head = (head + 1U) % Display::grid::pixels;
     snake[head] = pixel;
     occupied[pixel] = true;
     ++length;
@@ -238,7 +238,7 @@ bool SnakeMode::snakePushBack(size_t pixel)
 
 size_t SnakeMode::snakePopFront()
 {
-    const size_t tail{((GRID_COLUMNS * GRID_ROWS) + head - (length - 1U)) % (GRID_COLUMNS * GRID_ROWS)};
+    const size_t tail{(Display::grid::pixels + head - (length - 1U)) % Display::grid::pixels};
     occupied[snake[tail]] = false;
     --length;
     if (length == 0U)
@@ -250,8 +250,8 @@ size_t SnakeMode::snakePopFront()
 
 size_t SnakeMode::snakeAt(size_t index) const
 {
-    const size_t tail{((GRID_COLUMNS * GRID_ROWS) + head - (length - 1U)) % (GRID_COLUMNS * GRID_ROWS)};
-    return snake[(tail + index) % (GRID_COLUMNS * GRID_ROWS)];
+    const size_t tail{(Display::grid::pixels + head - (length - 1U)) % Display::grid::pixels};
+    return snake[(tail + index) % Display::grid::pixels];
 }
 
 void SnakeMode::setDead()
@@ -262,7 +262,7 @@ void SnakeMode::setDead()
 
 void SnakeMode::setTarget()
 {
-    std::array<size_t, GRID_COLUMNS * GRID_ROWS> available{};
+    std::array<size_t, Display::grid::pixels> available{};
     size_t count{0U};
     for (size_t idx{0U}; idx < available.size(); ++idx)
     {

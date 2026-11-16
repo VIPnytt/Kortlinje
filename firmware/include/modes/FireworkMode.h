@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config/IkeaKortlinje.h"
 #include "modules/ModeModule.h"
+#include "services/DisplayService.h"
 
 #include <cstdint>
 #include <pico/time.h>
@@ -15,10 +15,10 @@ private:
     uint8_t maxRadius{1U};
     uint8_t radius{0U};
     uint8_t rocketX{0U};
-    uint8_t rocketY{GRID_ROWS};
+    uint8_t rocketY{Display::grid::rows};
     uint8_t stage{0U};
 
-    alarm_id_t alarmId{0};
+    alarm_id_t alarmId{0L};
 
     void pad();
     void launching();

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "constants/secrets.h"
 #include "modules/ModeModule.h"
 
 #include <array>
 #include <cstdint>
+#include <meta>
 #include <optional>
 #include <pico/time.h>
 #include <span>
@@ -15,24 +17,23 @@ class WeatherMode final : public ModeModule
 {
 private:
     static constexpr std::array<const char *, 1U> urlsOpenMeteo{
-#if TEMPERATURE_CELSIUS || TEMPERATURE_KELVIN
-        "https://api.open-meteo.com/v1/forecast?latitude=" LATITUDE "&longitude=" LONGITUDE
-        "&current=temperature_2m,weather_code&temperature_unit=celsius",
-#elif TEMPERATURE_FAHRENHEIT
-        "https://api.open-meteo.com/v1/forecast?latitude=" LATITUDE "&longitude=" LONGITUDE
-        "&current=temperature_2m,weather_code&temperature_unit=fahrenheit",
-#else
-        "https://api.open-meteo.com/v1/forecast?latitude=" LATITUDE "&longitude=" LONGITUDE
-        "&current=temperature_2m,weather_code",
-#endif // TEMPERATURE_CELSIUS || TEMPERATURE_KELVIN
+        std::define_static_string(std::string{"https://api.open-meteo.com/v1/forecast?latitude="} +
+                                  Kortlinje::weather::latitude + "&longitude=" + Kortlinje::weather::longitude +
+                                  (Kortlinje::device::temperature_unit == "°F"
+                                       ? "&current=temperature_2m,weather_code&temperature_unit=fahrenheit"
+                                       : "&current=temperature_2m,weather_code&temperature_unit=celsius")),
     };
     static constexpr std::array<const char *, 2U> urlsWttrIn{
-        "https://wttr.in/" LATITUDE "," LONGITUDE "?format=j1",
-        "https://wttr.in/" LATITUDE "," LONGITUDE "?format=j2",
+        std::define_static_string(std::string{"https://wttr.in/"} + Kortlinje::weather::latitude + "," +
+                                  Kortlinje::weather::longitude + "?format=j1"),
+        std::define_static_string(std::string{"https://wttr.in/"} + Kortlinje::weather::latitude + "," +
+                                  Kortlinje::weather::longitude + "?format=j2"),
     };
     static constexpr std::array<const char *, 2U> urlsYr{
-        "https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=" LATITUDE "&lon=" LONGITUDE,
-        "https://api.met.no/weatherapi/nowcast/2.0/complete?lat=" LATITUDE "&lon=" LONGITUDE,
+        std::define_static_string(std::string{"https://api.met.no/weatherapi/locationforecast/2.0/complete?lat="} +
+                                  Kortlinje::weather::latitude + "&lon=" + Kortlinje::weather::longitude),
+        std::define_static_string(std::string{"https://api.met.no/weatherapi/nowcast/2.0/complete?lat="} +
+                                  Kortlinje::weather::latitude + "&lon=" + Kortlinje::weather::longitude),
     };
     static constexpr std::array<uint16_t, 9U> bitmapClear{
         0b000111000U,
@@ -137,7 +138,7 @@ private:
 
     volatile bool pending{false};
 
-    alarm_id_t alarmId{0};
+    alarm_id_t alarmId{0L};
 
     static const std::array<Provider, 3U> providers;
 

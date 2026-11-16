@@ -1,7 +1,5 @@
 #include "modes/CircleMode.h"
 
-#include "services/DisplayService.h"
-
 CircleMode::~CircleMode() { cancel_repeating_timer(&timer); }
 
 void CircleMode::begin() { add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 6U), &onTimer, this, &timer); }
@@ -11,21 +9,22 @@ void CircleMode::begin() { add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 
  */
 void CircleMode::handle()
 {
-    if (tick)
+    if (!tick)
     {
-        tick = false;
-        bool _lit{lit};
-        for (uint8_t _radius{radius}; _radius <= maxRadius; _radius += 3U)
-        {
-            DisplayService::drawEllipseOutline(x, y, static_cast<float>(_radius), _lit);
-            _lit = !_lit;
-        }
-        ++radius;
-        if (radius > 3U)
-        {
-            radius = 1U;
-            lit = !lit;
-        }
+        return;
+    }
+    tick = false;
+    bool _lit{lit};
+    for (uint8_t _radius{radius}; _radius <= maxRadius; _radius += 3U)
+    {
+        DisplayService::drawEllipseOutline(x, y, static_cast<float>(_radius), _lit);
+        _lit = !_lit;
+    }
+    ++radius;
+    if (radius > 3U)
+    {
+        radius = 1U;
+        lit = !lit;
     }
 }
 

@@ -39,7 +39,7 @@ private:
 
     static inline size_t step{0U};
 
-    static inline alarm_id_t alarmId{0};
+    static inline alarm_id_t alarmId{0L};
 
     static inline std::string currentMode{};
 
