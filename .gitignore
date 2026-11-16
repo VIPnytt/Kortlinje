@@ -1,5 +1,5 @@
 /.cache
-/.compile_commands.json
+/compile_commands.json
 /.idea
 /.pio
 /.platformio
@@ -10,7 +10,7 @@
 /firmware/include/constants/secrets.h
 /firmware/src/pio/*.pio.h
 /logs
-/webui/.env*
+/secrets.toml
 /webui/dist
 /webui/node_modules
 /webui/src/constants/secrets.ts

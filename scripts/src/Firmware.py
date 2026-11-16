@@ -1,4 +1,5 @@
 import json
+import logging
 import pathlib
 import typing
 
@@ -20,6 +21,21 @@ class Firmware:
 
     def finalize(self) -> None:
         """Generate the C++ configuration header from TOML options."""
+        units = {
+            "K": "TEMPERATURE_KELVIN",
+            "°C": "TEMPERATURE_CELSIUS",
+            "°F": "TEMPERATURE_FAHRENHEIT",
+        }
+        device = self.project.toml.setdefault("device", {})
+        unit = device.get("temperature_unit")
+        if unit not in units:
+            if unit is not None:
+                logging.getLogger(__name__).warning(
+                    "device.temperature_unit %r is unsupported. Valid values are '°C', '°F' and 'K'.",
+                    unit,
+                )
+            unit = "°C"
+            device["temperature_unit"] = unit
         secrets_lines: list[str] = [
             "#pragma once",
             "",

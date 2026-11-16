@@ -1,7 +1,7 @@
 #pragma once
 
-#include "modules/HandlerModule.h"  
-#include "services/DisplayService.h" 
+#include "modules/HandlerModule.h"
+#include "services/DisplayService.h"
 
 #include <span>
 
