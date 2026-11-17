@@ -9,12 +9,20 @@
 #include "services/WebServerService.h"
 
 #include <ArduinoJson.h>
+#include <RP2040Support.h>
+#include <atomic>
 
 class DeviceService final : public ServiceModule
 {
 
 public:
     static constexpr std::string_view name{"Device"};
+
+    static constexpr std::array<RP2040::resetReason_t, 3U> resetAbnormalities{
+        RP2040::resetReason_t::BROWNOUT_RESET,
+        RP2040::resetReason_t::GLITCH_RESET,
+        RP2040::resetReason_t::WDT_RESET,
+    };
 
     explicit DeviceService() : ServiceModule(name) {};
 
@@ -36,6 +44,8 @@ private:
 
     float voltage{.0F};
 
+    std::atomic<bool> alive{false};
+
     ConnectivityService connectivity{};
 
     DisplayService display{};
@@ -52,8 +62,5 @@ private:
 
     void transmit();
 
-    static void onReceive(JsonObjectConst payload, std::string_view source);
-    static void onWaitSet();
-
-    static uint16_t getSamples();
+    [[nodiscard]] uint16_t getSamples();
 };

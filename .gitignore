@@ -1,11 +1,11 @@
 /.cache
-/compile_commands.json
 /.idea
 /.pio
 /.platformio
 /.ruff_cache
 /.venv
 /.vscode
+/compile_commands.json
 /firmware/include/constants/Kortlinje.h
 /firmware/include/constants/secrets.h
 /firmware/src/pio/*.pio.h

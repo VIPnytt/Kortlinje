@@ -10,13 +10,16 @@
 void ModesService::begin()
 {
     std::string _name{};
-    if (ConfigHandler::get(name, "mode", _name))
+    const RP2040::resetReason_t reason{rp2040.getResetReason()};
+    if (std::ranges::none_of(DeviceService::resetAbnormalities,
+                             [&](RP2040::resetReason_t _reason) { return _reason == reason; }) &&
+        ConfigHandler::get(name, "mode", _name))
     {
         setMode(_name);
     }
     if (mode == nullptr)
     {
-        setMode(names[random(names.size())]);
+        setMode(names[random(static_cast<long>(names.size()))]);
     }
 }
 
@@ -194,10 +197,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     return nullptr;
 }
 
-int64_t __time_critical_func(ModesService::onAlarm)(alarm_id_t id, void *userData)
+int64_t __time_critical_func(ModesService::onAlarm)(alarm_id_t id, void *user_data)
 {
     static_cast<void>(id);
-    static_cast<void>(userData);
+    static_cast<void>(user_data);
     alarmId = 0L;
     tick = true;
     return 0LL;
@@ -320,7 +323,7 @@ void ModesService::setModePrevious()
 void ModesService::transmit()
 {
     JsonDocument doc{};
-    JsonArray list{doc["available"].to<JsonArray>()};
+    JsonArray list{doc["collection"].to<JsonArray>()};
     for (const std::string_view _name : names)
     {
         list.add(_name);

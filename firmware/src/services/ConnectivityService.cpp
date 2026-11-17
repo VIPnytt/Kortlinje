@@ -1,7 +1,7 @@
 #include "services/ConnectivityService.h"
 
 #include "constants/HomeAssistant.h"
-#include "constants/Kortlinje.h"
+#include "constants/secrets.h"
 #include "extensions/AlexaExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
@@ -11,6 +11,7 @@
 #include <array>
 #include <cstring>
 #include <hardware/gpio.h>
+#include <hardware/watchdog.h>
 #include <time.h>
 
 /**
@@ -26,7 +27,7 @@ void ConnectivityService::begin()
     gpio_init(Kortlinje::pin::button_rear);
     gpio_disable_pulls(Kortlinje::pin::button_rear);
     gpio_set_dir(Kortlinje::pin::button_rear, gpio_dir::GPIO_IN);
-    sleep_us(0b1U << 4U);
+    sleep_us(0b1UL << 4U);
     const bool hotspot{!gpio_get(Kortlinje::pin::button_rear)};
     gpio_deinit(Kortlinje::pin::button_rear);
     if (hotspot)
@@ -133,7 +134,9 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
     }
     multi.clearAPList();
     multi.addAP(_ssid.c_str(), _key.empty() ? nullptr : _key.c_str());
+    watchdog_update();
     const bool connected{multi.run() == WL_CONNECTED && WiFi.localIP().isSet()};
+    watchdog_update();
     for (const JsonPairConst pair : doc.as<JsonObjectConst>())
     {
         if (pair.key().c_str() != _ssid)
@@ -154,8 +157,8 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
 void ConnectivityService::initHotspot()
 {
     WiFi.mode(WiFiMode_t::WIFI_AP);
-    const IPAddress apIp{192, 168, 4, 1};
-    WiFi.softAPConfig(apIp, apIp, IPAddress{255, 255, 255, 0});
+    const IPAddress apIp{192U, 168U, 4U, 1U};
+    WiFi.softAPConfig(apIp, apIp, IPAddress{255U, 255U, 255U, 0U});
     WiFi.softAP(Kortlinje::device::name.data());
     dns.setErrorReplyCode(DNSReplyCode::NoError);
     dnsRunning = dns.start(53U, "*", apIp);
@@ -185,11 +188,13 @@ void ConnectivityService::initStation()
     {
         multi.addAP(pair.key().c_str(), pair.value().as<const char *>());
     }
+    watchdog_update();
     if (multi.run() == wl_status_t::WL_CONNECTED && WiFi.localIP().isSet())
     {
         onRoutable();
         transmit();
     }
+    watchdog_update();
     add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 18U), &onTimer, this, &timer);
 }
 
@@ -260,6 +265,9 @@ void ConnectivityService::onRoutable()
     {
         routable = true;
         NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
+        watchdog_update();
+        NTP.waitSet();
+        watchdog_update();
         if (!mdns && MDNS.begin(Kortlinje::device::hostname.data()))
         {
             mdns = true;
@@ -283,10 +291,10 @@ void ConnectivityService::onScan(int8_t count)
         JsonDocument doc{};
         for (int8_t idx{0}; idx < count; ++idx)
         {
-            const auto index{static_cast<uint8_t>(idx)};
-            doc["scan"][idx]["encrypted"].set(WiFi.encryptionType(index) != ENC_TYPE_NONE);
-            doc["scan"][idx]["rssi"].set(WiFi.RSSI(index));
-            doc["scan"][idx]["ssid"].set(WiFi.SSID(index));
+            const auto _index{static_cast<uint8_t>(idx)};
+            doc["scan"][_index]["encrypted"].set(WiFi.encryptionType(idx) != ENC_TYPE_NONE);
+            doc["scan"][_index]["rssi"].set(WiFi.RSSI(idx));
+            doc["scan"][_index]["ssid"].set(WiFi.SSID(idx));
         }
         DeviceService::transmit(doc.as<JsonObjectConst>(), name, false);
     }
@@ -312,18 +320,16 @@ void ConnectivityService::transmit()
         doc["rssi"].set(WiFi.RSSI());
         doc["ssid"].set(WiFi.SSID().c_str());
     }
+    std::string json{};
+    if (ConfigHandler::get(name, "Wi-Fi", json))
     {
-        std::string json{};
-        if (ConfigHandler::get(name, "Wi-Fi", json))
+        JsonDocument _saved{};
+        if (deserializeJson(_saved, json) == DeserializationError::Code::Ok)
         {
-            JsonDocument _saved{};
-            if (deserializeJson(_saved, json) == DeserializationError::Code::Ok)
+            JsonArray saved{doc["saved"].to<JsonArray>()};
+            for (const JsonPairConst pair : _saved.as<JsonObjectConst>())
             {
-                JsonArray saved{doc["saved"].to<JsonArray>()};
-                for (const JsonPairConst pair : _saved.as<JsonObjectConst>())
-                {
-                    saved.add(pair.key());
-                }
+                saved.add(pair.key());
             }
         }
     }

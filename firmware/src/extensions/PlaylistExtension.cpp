@@ -13,6 +13,7 @@
 
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <RP2040Support.h>
 #include <algorithm>
 
 PlaylistExtension::~PlaylistExtension() { cancelTimer(); }

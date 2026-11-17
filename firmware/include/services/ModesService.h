@@ -110,5 +110,5 @@ private:
     static void cancelAlarm();
     static void transmit();
 
-    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *userData);
+    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 };

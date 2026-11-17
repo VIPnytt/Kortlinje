@@ -1,6 +1,7 @@
 #include "extensions/BatteryExtension.h"
 
 #include "constants/secrets.h"
+#include "extensions/AlarmExtension.h"
 #include "pio/battery.pio.h"
 #include "services/DisplayService.h"
 
@@ -9,6 +10,7 @@
 #include <hardware/irq.h>
 #include <hardware/pio.h>
 #include <hardware/pll.h>
+#include <hardware/watchdog.h>
 #include <hardware/xosc.h>
 #include <pico/cyw43_arch.h>
 
@@ -88,6 +90,7 @@ void BatteryExtension::sleep()
     gpio_set_dir(Kortlinje::pin::power_sense, false);
     gpio_set_dormant_irq_enabled(
         Kortlinje::pin::power_sense, static_cast<uint32_t>(gpio_irq_level::GPIO_IRQ_EDGE_RISE), true);
+    watchdog_disable();
     clock_configure(clock_num_t::clk_sys,
                     CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF,
                     CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_XOSC_CLKSRC,
@@ -102,11 +105,11 @@ void BatteryExtension::sleep()
     gpio_set_dormant_irq_enabled(
         Kortlinje::pin::power_sense, static_cast<uint32_t>(gpio_irq_level::GPIO_IRQ_EDGE_RISE), false);
     set_sys_clock_khz(static_cast<uint32_t>(F_CPU) / 1'000UL, true);
+    watchdog_enable(16777U, true);
 #ifdef PICO_CYW43_SUPPORTED
     cyw43_arch_init();
 #endif // PICO_CYW43_SUPPORTED
     Serial.begin();
-    DisplayService::setPower(true);
 #ifdef RP2350_ERRATA_E9
     pio_gpio_init(pio2, Kortlinje::pin::power_sense);
     pio_interrupt_clear(pio2, 3U);
@@ -118,4 +121,6 @@ void BatteryExtension::sleep()
 #else
     attachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense), &onInterrupt, PinStatus::FALLING);
 #endif // RP2350_ERRATA_E9
+    DisplayService::setPower(true);
+    AlarmExtension::reschedule();
 }

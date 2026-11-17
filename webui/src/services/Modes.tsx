@@ -40,8 +40,8 @@ const [getModes, setModes] = createSignal<string[]>([]);
 export const ModesList = getModes;
 export const ModesMode = getMode;
 
-export const receiver = (json: { list?: string[]; mode?: string }) => {
-    json?.list !== undefined && setModes(json.list);
+export const receiver = (json: { collection?: string[]; mode?: string }) => {
+    json?.collection !== undefined && setModes(json.collection);
     json?.mode !== undefined && setMode(json.mode);
 };
 

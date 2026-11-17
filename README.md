@@ -26,11 +26,7 @@ It transforms the stock clock into a connected smart display featuring a local w
 
 ## ⚙️ Hardware & Modding
 
-### Microcontroller
-
 Kortlinje runs on the **RP2350** architecture with Wi-Fi support (such as the *Raspberry Pi Pico 2 W*).
-
-### Wiring & Modding
 
 Modding the clock requires swapping the stock MCU and soldering jumper wires to the internal display drivers, button resistor ladders, buzzer, and onboard sensors. Check out the [Wiki](https://github.com/VIPnytt/Kortlinje/wiki) for step-by-step instructions and pin/wiring diagrams.
 

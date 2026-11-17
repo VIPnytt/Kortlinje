@@ -2,34 +2,26 @@
 
 #include "constants/HomeAssistant.h"
 #include "constants/Kortlinje.h"
-#include "extensions/AlarmExtension.h"
 #include "extensions/ButtonExtension.h"
-#include "handlers/ConfigHandler.h"
-#include "services/DisplayService.h"
-#include "services/ExtensionsService.h"
-#include "services/FontsService.h"
 #include "services/ModesService.h"
-#include "services/WebServerService.h"
 
 #include <LittleFS.h>
 #include <SimpleMDNS.h>
 #include <WiFi.h>
 #include <hardware/adc.h>
+#include <hardware/watchdog.h>
 #include <pico/cyw43_arch.h>
-#include <time.h>
 
 void DeviceService::begin0()
 {
+    Serial.printf("Kortlinje v%s\n", Kortlinje::version.data());
     LittleFS.begin();
     extensions.configure();
     connectivity.begin();
     webServer.begin();
     extensions.begin();
-    if (WiFi.getMode() == WiFiMode_t::WIFI_STA && WiFi.connected())
-    {
-        NTP.waitSet(&onWaitSet);
-    }
     rp2040.fifo.push(1UL);
+    watchdog_enable(16777U, true);
 }
 
 void DeviceService::begin1()
@@ -42,6 +34,10 @@ void DeviceService::begin1()
 
 void DeviceService::handle0()
 {
+    if (alive.exchange(false, std::memory_order_relaxed))
+    {
+        watchdog_update();
+    }
     connectivity.handle();
     extensions.handle();
     if (!ButtonExtension::isEnabled())
@@ -84,6 +80,7 @@ void DeviceService::handle0()
 
 void DeviceService::handle1()
 {
+    alive.store(true, std::memory_order_relaxed);
     if (display.getPower())
     {
         modes.handle();
@@ -94,7 +91,7 @@ void DeviceService::handle1()
 uint16_t DeviceService::getSamples()
 {
     adc_fifo_drain();
-    sleep_us(0b1U << 4U);
+    sleep_us(0b1UL << 4U);
     adc_run(true);
     uint16_t sum{0U};
     for (uint8_t idx{0U}; idx < samples; ++idx)
@@ -148,17 +145,8 @@ void DeviceService::onHomeAssistant(JsonDocument &discovery, std::string topic, 
     }
 }
 
-void DeviceService::onReceive(JsonObjectConst payload, std::string_view source) {}
-
-void DeviceService::onWaitSet() { AlarmExtension::reschedule(); }
-
 void DeviceService::receive(JsonObjectConst payload, std::string_view source, std::string_view destination)
 {
-    if (name == destination)
-    {
-        onReceive(payload, source);
-        return;
-    }
     if (ConnectivityService::name == destination)
     {
         ConnectivityService::onReceive(payload, source);
