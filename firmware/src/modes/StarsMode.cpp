@@ -5,7 +5,7 @@ StarsMode::~StarsMode() { cancel_repeating_timer(&timer); }
 void StarsMode::begin()
 {
     DisplayService::fillFrame(false);
-    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 6U), &onTimer, this, &timer);
+    add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
 }
 
 /**
@@ -28,7 +28,7 @@ void StarsMode::handle()
         {
             DisplayService::setPixel(star.idx, false);
             star.lit = false;
-            star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 10U)));
+            star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 8U)));
         }
         else
         {
@@ -38,7 +38,7 @@ void StarsMode::handle()
             } while (DisplayService::getPixel(star.idx));
             DisplayService::setPixel(star.idx, true);
             star.lit = true;
-            star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 12U)));
+            star.delay = static_cast<uint8_t>(random(static_cast<long>(0b1U << 8U)));
         }
     }
 }

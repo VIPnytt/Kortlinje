@@ -23,9 +23,9 @@ public:
     static constexpr std::string_view name{"Draw"};
 
     explicit DrawMode() : ModeModule(name) {};
+    ~DrawMode() override;
 
     void begin() override;
     void handle() override;
-    void end() override;
     void onReceive(JsonObjectConst payload, std::string_view source) override;
 };

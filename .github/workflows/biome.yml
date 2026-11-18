@@ -24,7 +24,7 @@ jobs:
           working-dir: webui
 
       - name: Biome format
-        run: biome format --reporter=github
+        run: biome format
 
   lint:
     name: Lint
@@ -42,4 +42,4 @@ jobs:
           working-dir: webui
 
       - name: Biome lint
-        run: biome lint --reporter=github
+        run: biome lint

@@ -16,13 +16,13 @@
 #include <RP2040Support.h>
 #include <algorithm>
 
-PlaylistExtension::~PlaylistExtension() { cancelTimer(); }
-
 void PlaylistExtension::begin()
 {
-    ConfigHandler::get(name, "enabled", enabled);
     loadSchedule();
-    if (enabled)
+    const RP2040::resetReason_t reason{rp2040.getResetReason()};
+    if (std::ranges::none_of(DeviceService::resetAbnormalities,
+                             [&](RP2040::resetReason_t _reason) { return _reason == reason; }) &&
+        ConfigHandler::get(name, "enabled", enabled) && enabled)
     {
         step = 0U;
         advance();
@@ -52,7 +52,7 @@ void PlaylistExtension::advance()
     }
     if (!DisplayService::getPower())
     {
-        armTimer(0b1UL << 12U);
+        armTimer(0b1UL << 22U);
         return;
     }
     if (step >= schedule.size())
@@ -65,11 +65,11 @@ void PlaylistExtension::advance()
         currentMode = item.mode;
         ModesService::setMode(currentMode, true, false);
     }
-    const uint32_t durationMs{static_cast<uint32_t>(item.duration) * 1'000UL};
+    const uint64_t duration{static_cast<uint64_t>(item.duration) * 1'000'000ULL};
     step = (step + 1U) % schedule.size();
-    if (durationMs > 0U)
+    if (duration != 0ULL)
     {
-        armTimer(durationMs);
+        armTimer(duration);
     }
     else
     {
@@ -77,18 +77,19 @@ void PlaylistExtension::advance()
     }
 }
 
-void PlaylistExtension::armTimer(uint32_t milliseconds)
+void PlaylistExtension::armTimer(uint64_t delayUs)
 {
     cancelTimer();
-    alarmId = add_alarm_in_ms(milliseconds, &onAlarm, nullptr, true);
+    alarmId = add_alarm_in_us(delayUs, &onAlarm, nullptr, true);
 }
 
 void PlaylistExtension::cancelTimer()
 {
-    if (alarmId > 0L)
+    const alarm_id_t _alarmId{alarmId};
+    if (_alarmId > 0L)
     {
-        cancel_alarm(alarmId);
         alarmId = 0L;
+        cancel_alarm(_alarmId);
     }
 }
 
@@ -199,15 +200,6 @@ void PlaylistExtension::onReceive(JsonObjectConst payload, std::string_view sour
     if (payload["enabled"].is<bool>())
     {
         setEnabled(payload["enabled"].as<bool>());
-    }
-}
-
-void PlaylistExtension::onTransmit(JsonObjectConst payload, std::string_view source)
-{
-    if (enabled && source == ModesService::name && payload["mode"].is<std::string_view>() &&
-        payload["mode"].as<std::string_view>() != currentMode)
-    {
-        setEnabled(false);
     }
 }
 

@@ -26,9 +26,9 @@ void WebUiExtension::handle()
     if (render && pending && WebSocketExtension::server().count() != 0U)
     {
         pending = false;
+        std::array<uint8_t, Display::grid::bytes> bytes{};
         const auto frame{DisplayService::getFrame()};
         render = false;
-        std::array<uint8_t, ((frame.size() + 7U) >> 3U)> bytes{};
         for (size_t idx{0U}; idx < frame.size(); ++idx)
         {
             bytes[idx >> 3U] |= static_cast<uint8_t>(frame[idx]) << (idx & 7U);
@@ -38,7 +38,7 @@ void WebUiExtension::handle()
             ++interval;
             render = true;
         }
-        alarmId = add_alarm_in_ms(interval, &onAlarm, this, true);
+        add_alarm_in_us(interval, &onAlarm, this, true);
     }
 }
 
@@ -47,7 +47,6 @@ int64_t WebUiExtension::onAlarm(alarm_id_t id, void *user_data)
     static_cast<void>(id);
     auto *self{static_cast<WebUiExtension *>(user_data)};
     self->pending = true;
-    self->alarmId = 0L;
     return 0LL;
 }
 

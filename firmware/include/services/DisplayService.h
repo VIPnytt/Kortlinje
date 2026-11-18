@@ -50,13 +50,14 @@ public:
     void flush();
     void transmit();
 
+    static void drawCircleOutline(float x, float y, float radius, bool lit);
+    static void drawCircleSolid(float x, float y, float radius, bool lit);
     static void drawLineHorizontal(uint8_t xMin, size_t columns, uint8_t y, bool lit);
     static void drawLineVertical(uint8_t x, uint8_t yMin, uint8_t yMax, bool lit);
-    static void drawEllipseOutline(float x, float y, float radius, bool lit);
-    static void drawEllipseSolid(float x, float y, float radius, bool lit);
     static void drawRectangleOutline(size_t minX, size_t columns, size_t minY, size_t maxY, bool lit);
     static void drawRectangleSolid(uint8_t minX, uint8_t columns, uint8_t minY, uint8_t maxY, bool lit);
     static void fillColumn(uint8_t x, bool lit);
+    static void fillColumns(uint8_t minX, uint8_t columns, bool lit);
     static void fillFrame(bool lit);
     static void fillRow(uint8_t y, bool lit);
     static void fillRows(size_t minY, size_t rows, bool lit);

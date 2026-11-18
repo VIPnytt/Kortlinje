@@ -1,5 +1,6 @@
 #include "modes/TemperatureMode.h"
 
+#include "constants/HomeAssistant.h"
 #include "fonts/KortlinjeFont.h"
 #include "handlers/ConfigHandler.h"
 #include "handlers/TextHandler.h"
@@ -41,6 +42,31 @@ void TemperatureMode::handle()
             ConfigHandler::set(name, "temperature", temperature);
         }
         transmit();
+    }
+}
+
+void TemperatureMode::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_temperature")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"temperature":{{value}}})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::device_class].set("temperature");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::entity_category].set("config");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:thermometer");
+        component[HomeAssistant::Abbreviations::max].set(0b1U << 9U);
+        component[HomeAssistant::Abbreviations::min].set(-static_cast<int16_t>(0b1U << 9U));
+        component[HomeAssistant::Abbreviations::mode].set("box");
+        component[HomeAssistant::Abbreviations::name].set(name);
+        component[HomeAssistant::Abbreviations::platform].set("number");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::step].set(.1F);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::unit_of_measurement].set(Kortlinje::device::temperature_unit);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.temperature}}");
     }
 }
 

@@ -5,7 +5,7 @@
 
 ScanMode::~ScanMode() { cancel_repeating_timer(&timer); }
 
-void ScanMode::begin() { add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 6U), &onTimer, this, &timer); }
+void ScanMode::begin() { add_repeating_timer_us(-static_cast<int64_t>(0b1U << 16U), &onTimer, this, &timer); }
 
 void ScanMode::handle()
 {

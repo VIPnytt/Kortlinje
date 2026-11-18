@@ -50,8 +50,6 @@ void AnimationMode::handle()
     }
 }
 
-void AnimationMode::end() { stopTimer(); }
-
 void AnimationMode::setFrame(uint8_t _index, std::span<const uint8_t> frame)
 {
     stopTimer();
@@ -83,11 +81,13 @@ void AnimationMode::setFrames(uint8_t count)
     }
 }
 
-void AnimationMode::setInterval(uint16_t _interval)
+void AnimationMode::setInterval(uint32_t milliseconds)
 {
-    if (_interval > 0U && interval != _interval)
+
+    const uint32_t _interval{milliseconds * 1'000U};
+    if (_interval != interval && _interval != 0U)
     {
-        interval = _interval;
+        interval = _interval * 1'000U;
         ConfigHandler::set(name, "interval", interval);
         if (timerRunning)
         {
@@ -101,7 +101,7 @@ void AnimationMode::startTimer()
 {
     if (!timerRunning && !frames.empty())
     {
-        timerRunning = add_repeating_timer_ms(-static_cast<int32_t>(interval), &onTimer, this, &timer);
+        timerRunning = add_repeating_timer_us(-static_cast<int64_t>(interval), &onTimer, this, &timer);
     }
 }
 
@@ -130,7 +130,7 @@ void AnimationMode::transmit(uint8_t _index, std::span<const uint8_t> frame)
         _frame.add(byte);
     }
     doc["index"].set(_index);
-    doc["interval"].set(interval);
+    doc["interval"].set(interval / 1'000U);
     DeviceService::transmit(doc.as<JsonObjectConst>(), name, false);
 }
 
@@ -164,8 +164,8 @@ void AnimationMode::onReceive(JsonObjectConst payload, std::string_view source)
     {
         setFrames(payload["frames"].as<uint8_t>());
     }
-    if (payload["interval"].is<uint16_t>())
+    if (payload["interval"].is<uint32_t>())
     {
-        setInterval(payload["interval"].as<uint16_t>());
+        setInterval(payload["interval"].as<uint32_t>());
     }
 }

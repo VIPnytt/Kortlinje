@@ -284,7 +284,7 @@ static constexpr std::string_view sw_version{"sw"};
 
 namespace HomeAssistant::Abbreviations::Origin
 {
-static constexpr std::string_view name{HomeAssistant::Abbreviations::name};
+static constexpr std::string_view name{HomeAssistant::Abbreviations::Device::name};
 static constexpr std::string_view support_url{"url"};
 static constexpr std::string_view sw_version{HomeAssistant::Abbreviations::Device::sw_version};
 }; // namespace HomeAssistant::Abbreviations::Origin

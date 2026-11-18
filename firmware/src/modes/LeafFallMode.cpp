@@ -17,7 +17,7 @@ void LeafFallMode::begin()
         } while (DisplayService::getPixel(leaf.x, leaf.y));
         DisplayService::setPixel(leaf.x, leaf.y, true);
     }
-    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 6U), &onTimer, this, &timer);
+    add_repeating_timer_us(-static_cast<int64_t>(0b1U << 16U), &onTimer, this, &timer);
 }
 
 /**
@@ -32,7 +32,7 @@ void LeafFallMode::handle()
     tick = false;
     for (Leaf &leaf : leaves)
     {
-        if (random(0b1U << 3U) == 0)
+        if (random(static_cast<long>(0b1U << 3U)) == 0L)
         {
             if (leaf.y >= Display::grid::maxY)
             {

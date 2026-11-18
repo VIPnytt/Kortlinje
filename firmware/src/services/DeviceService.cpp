@@ -14,6 +14,7 @@
 
 void DeviceService::begin0()
 {
+    watchdog_enable(16777U, true);
     Serial.printf("Kortlinje v%s\n", Kortlinje::version.data());
     LittleFS.begin();
     extensions.configure();
@@ -21,7 +22,6 @@ void DeviceService::begin0()
     webServer.begin();
     extensions.begin();
     rp2040.fifo.push(1UL);
-    watchdog_enable(16777U, true);
 }
 
 void DeviceService::begin1()

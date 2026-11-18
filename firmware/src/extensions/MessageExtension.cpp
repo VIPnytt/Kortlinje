@@ -48,7 +48,7 @@ void MessageExtension::handle()
             DisplayService::setPower(true);
             if (!timerRunning)
             {
-                timerRunning = add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 7U), &onTimer, this, &timer);
+                timerRunning = add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
             }
         }
         text = std::make_unique<TextHandler>(message, *font);
@@ -173,7 +173,23 @@ void MessageExtension::onHomeAssistant(JsonDocument &discovery, std::string topi
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.font}}");
     }
     {
-        const std::string id{std::string(name)};
+        const std::string id{std::string(name).append("_repeat")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"repeat":{{value}}})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::entity_category].set("config");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:repeat");
+        component[HomeAssistant::Abbreviations::min].set(0U);
+        component[HomeAssistant::Abbreviations::mode].set("box");
+        component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" repeat"));
+        component[HomeAssistant::Abbreviations::platform].set("number");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.repeat}}");
+    }
+    {
+        const std::string id{std::string(name).append("_text")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::command_template].set(R"({"message":"{{value}}"})");
         component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
@@ -183,23 +199,6 @@ void MessageExtension::onHomeAssistant(JsonDocument &discovery, std::string topi
         component[HomeAssistant::Abbreviations::state_topic].set(topic);
         component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.event}}");
-    }
-    {
-        const std::string id{std::string(name).append("_repeat")};
-        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistant::Abbreviations::command_template].set(R"({"repeat":{{value}}})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
-        component[HomeAssistant::Abbreviations::entity_category].set("config");
-        component[HomeAssistant::Abbreviations::icon].set("mdi:repeat");
-        component[HomeAssistant::Abbreviations::max].set(5U);
-        component[HomeAssistant::Abbreviations::min].set(1U);
-        component[HomeAssistant::Abbreviations::mode].set("slider");
-        component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" repeat"));
-        component[HomeAssistant::Abbreviations::platform].set("number");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
-        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.repeat}}");
     }
 }
 

@@ -4,7 +4,7 @@
 
 RainMode::~RainMode() { cancel_repeating_timer(&timer); }
 
-void RainMode::begin() { add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 4U), &onTimer, this, &timer); }
+void RainMode::begin() { add_repeating_timer_us(-static_cast<int64_t>(0b1U << 14U), &onTimer, this, &timer); }
 
 /**
  * @brief Advances each raindrop at its own constant speed as its tick counter elapses.

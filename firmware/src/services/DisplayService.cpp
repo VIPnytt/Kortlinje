@@ -80,7 +80,7 @@ void DisplayService::handle()
     }
 }
 
-void DisplayService::drawEllipseOutline(float x, float y, float radius, bool lit)
+void DisplayService::drawCircleOutline(float x, float y, float radius, bool lit)
 {
     const float radiusSq{radius * radius};
     for (size_t _x{static_cast<size_t>(max(.0F, ceilf(x - radius)))};
@@ -136,7 +136,7 @@ void DisplayService::drawEllipseOutline(float x, float y, float radius, bool lit
     render = true;
 }
 
-void DisplayService::drawEllipseSolid(float x, float y, float radius, bool lit)
+void DisplayService::drawCircleSolid(float x, float y, float radius, bool lit)
 {
     const float radiusSq{radius * radius};
     for (size_t _y{static_cast<size_t>(max(.0F, ceilf(y - radius)))};
@@ -198,6 +198,15 @@ void DisplayService::fillColumn(uint8_t x, bool lit)
     for (size_t idx{static_cast<size_t>(x)}; idx < Display::grid::pixels; idx += Display::grid::columns)
     {
         frame[idx] = lit;
+    }
+    render = true;
+}
+
+void DisplayService::fillColumns(uint8_t minX, uint8_t columns, bool lit)
+{
+    for (size_t idx{static_cast<size_t>(minX)}; idx < Display::grid::pixels; idx += Display::grid::columns)
+    {
+        std::ranges::fill(std::span{frame}.subspan(idx, columns), lit);
     }
     render = true;
 }

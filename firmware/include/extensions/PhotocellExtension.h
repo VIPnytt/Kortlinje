@@ -14,7 +14,7 @@ private:
     static inline volatile bool lit{false};
     static inline volatile bool pending{true};
 
-    static inline volatile alarm_id_t alarm{0L};
+    static inline volatile alarm_id_t alarmId{0L};
 
     bool enabled{true};
 

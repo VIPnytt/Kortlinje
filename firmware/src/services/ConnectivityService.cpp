@@ -38,6 +38,7 @@ void ConnectivityService::begin()
     {
         initStation();
     }
+    add_repeating_timer_us(-static_cast<int64_t>(0b1U << 28U), &onTimer, this, &timer);
 }
 
 void ConnectivityService::handle()
@@ -51,7 +52,7 @@ void ConnectivityService::handle()
         pendingKey.clear();
         connect(ssid, key);
     }
-    if (pendingScan)
+    else if (pendingScan)
     {
         pendingScan = false;
         if (!scanning)
@@ -59,7 +60,7 @@ void ConnectivityService::handle()
             scanning = WiFi.scanNetworks(true) != -2;
         }
     }
-    if (scanning)
+    else if (scanning)
     {
         const int8_t count{WiFi.scanComplete()};
         if (count >= 0)
@@ -73,7 +74,7 @@ void ConnectivityService::handle()
             scanning = false;
         }
     }
-    if (dnsRunning)
+    else if (dnsRunning)
     {
         dns.processNextRequest();
     }
@@ -135,7 +136,7 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
     multi.clearAPList();
     multi.addAP(_ssid.c_str(), _key.empty() ? nullptr : _key.c_str());
     watchdog_update();
-    const bool connected{multi.run() == WL_CONNECTED && WiFi.localIP().isSet()};
+    const bool connected{multi.run(0b1U << 14U) == WL_CONNECTED && WiFi.localIP().isSet()};
     watchdog_update();
     for (const JsonPairConst pair : doc.as<JsonObjectConst>())
     {
@@ -189,13 +190,12 @@ void ConnectivityService::initStation()
         multi.addAP(pair.key().c_str(), pair.value().as<const char *>());
     }
     watchdog_update();
-    if (multi.run() == wl_status_t::WL_CONNECTED && WiFi.localIP().isSet())
+    if (multi.run(0b1U << 14U) == wl_status_t::WL_CONNECTED && WiFi.localIP().isSet())
     {
         onRoutable();
         transmit();
     }
     watchdog_update();
-    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 18U), &onTimer, this, &timer);
 }
 
 /**
@@ -266,7 +266,7 @@ void ConnectivityService::onRoutable()
         routable = true;
         NTP.begin("1.pool.ntp.org", "2.pool.ntp.org");
         watchdog_update();
-        NTP.waitSet();
+        NTP.waitSet(0b1U << 14U);
         watchdog_update();
         if (!mdns && MDNS.begin(Kortlinje::device::hostname.data()))
         {

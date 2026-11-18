@@ -1,9 +1,9 @@
 #include "modes/TickerMode.h"
 
+#include "constants/HomeAssistant.h"
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
-#include "services/ExtensionsService.h"
 #include "services/FontsService.h"
 
 TickerMode::~TickerMode() { stopTimer(); }
@@ -48,10 +48,40 @@ void TickerMode::handle()
     }
 }
 
-void TickerMode::end()
+void TickerMode::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
 {
-    stopTimer();
-    text.reset();
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_font")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"font":"{{value}}"})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::entity_category].set("config");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:format-font");
+        component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" font"));
+        JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
+        for (const std::string_view _name : FontsService::names)
+        {
+            options.add(_name);
+        }
+        component[HomeAssistant::Abbreviations::platform].set("select");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.font}}");
+    }
+    {
+        const std::string id{std::string(name).append("_text")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"message":"{{value}}"})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:message");
+        component[HomeAssistant::Abbreviations::name].set(name);
+        component[HomeAssistant::Abbreviations::platform].set("text");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.event}}");
+    }
 }
 
 void TickerMode::onReceive(JsonObjectConst payload, std::string_view source)
@@ -96,7 +126,7 @@ void TickerMode::startTimer()
 {
     if (!timerRunning)
     {
-        timerRunning = add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 7U), &onTimer, this, &timer);
+        timerRunning = add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
     }
 }
 

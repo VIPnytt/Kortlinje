@@ -14,9 +14,7 @@ private:
 
     volatile bool pending{true};
 
-    static inline uint32_t interval{0b1U << 6U};
-
-    alarm_id_t alarmId{0L};
+    static inline uint64_t interval{0b1ULL << 16U};
 
     static void onGetCss(AsyncWebServerRequest *request);
     static void onGetJavascript(AsyncWebServerRequest *request);

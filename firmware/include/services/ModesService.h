@@ -97,7 +97,6 @@ public:
 
 private:
     static inline volatile bool active{true};
-    static inline bool begun{false};
     static inline volatile bool busy{false};
     static inline volatile bool pending{false};
     static inline bool scheduled{false};

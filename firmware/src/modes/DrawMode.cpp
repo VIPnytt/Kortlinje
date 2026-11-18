@@ -5,6 +5,8 @@
 
 #include <algorithm>
 
+DrawMode::~DrawMode() { save(true); }
+
 void DrawMode::begin()
 {
     load(true);
@@ -35,8 +37,6 @@ void DrawMode::handle()
         pending = false;
     }
 }
-
-void DrawMode::end() { save(true); }
 
 void DrawMode::load(bool cache)
 {

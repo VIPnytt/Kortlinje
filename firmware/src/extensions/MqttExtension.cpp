@@ -1,7 +1,6 @@
 #include "extensions/MqttExtension.h"
 
 #include "constants/HomeAssistant.h"
-#include "constants/Kortlinje.h"
 #include "services/ConnectivityService.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
@@ -10,27 +9,68 @@
 
 #include <WiFi.h>
 #include <array>
-#include <meta>
+#include <cstring>
+#include <hardware/watchdog.h>
 #include <vector>
 
 /**
- * @brief Publishes the device's Home Assistant MQTT discovery configuration.
+ * @brief Configures the MQTT client and Last Will and Testament.
  */
 void MqttExtension::begin()
 {
+    net.setNoDelay(true);
     client.onMessageAdvanced(&onMessage);
     client.setCleanSession(false);
-    client.setWill(std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/availability"),
-                   "",
-                   true,
-                   1);
+    client.setTimeout(static_cast<int>(0b1U << 14U));
+    client.setWill(availabilityTopic.data(), "", true, 1);
     client.begin(net);
     client.setHost(Kortlinje::mqtt::host.data(), 1'883);
-    if (client.connect(Kortlinje::device::hostname.data(), Kortlinje::mqtt::user.data(), Kortlinje::mqtt::pass.data()))
+}
+
+void MqttExtension::handle()
+{
+    if (client.connected())
     {
-        onConnect();
+        client.loop();
     }
-    const std::string topic{std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/")};
+    else if (tick && WiFi.isConnected())
+    {
+        tick = false;
+        add_alarm_in_us(0b1ULL << 26U, &onAlarm, this, true);
+        watchdog_update();
+        if (client.connect(
+                Kortlinje::device::hostname.data(), Kortlinje::mqtt::user.data(), Kortlinje::mqtt::pass.data()))
+        {
+            client.subscribe(commandTopic.data(), 2);
+            client.publish(availabilityTopic.data(), "online", true, 1);
+            if (!discovered)
+            {
+                discover();
+            }
+        }
+        watchdog_update();
+    }
+}
+
+/**
+ * @brief Disconnects from the MQTT broker after publishing a retained unavailable status.
+ */
+void MqttExtension::disconnect()
+{
+    if (client.connected())
+    {
+        client.publish(availabilityTopic.data(), "", 0, true, 1);
+        client.loop();
+        client.disconnect();
+    }
+}
+
+/**
+ * @brief Builds and publishes the device's Home Assistant MQTT discovery configuration.
+ */
+void MqttExtension::discover()
+{
+    const std::string topic{topicPrefix};
     const std::string unique{std::format("0x{}_", rp2040.getChipID())};
     JsonDocument discovery{};
     ConnectivityService::onHomeAssistant(discovery, topic, unique);
@@ -48,8 +88,7 @@ void MqttExtension::begin()
     {
         JsonObject availability{discovery[HomeAssistant::Abbreviations::availability].to<JsonObject>()};
         availability[HomeAssistant::Abbreviations::payload_not_available].set("");
-        availability[HomeAssistant::Abbreviations::topic].set(
-            std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/availability"));
+        availability[HomeAssistant::Abbreviations::topic].set(availabilityTopic);
     }
     {
         JsonObject device{discovery[HomeAssistant::Abbreviations::device].to<JsonObject>()};
@@ -73,58 +112,19 @@ void MqttExtension::begin()
     }
     const size_t length{measureJson(discovery)};
     std::vector<char> payload(length + 1U);
-    serializeJson(discovery, payload.data(), length + 1U);
-    client.publish(discoveryTopic.c_str(), payload.data(), static_cast<int>(length), true, 0);
-}
-
-void MqttExtension::handle()
-{
-    if (client.connected())
-    {
-        client.loop();
-    }
-    else if (WiFi.isConnected() && millis() - lastMillis > 0b1UL << 16U)
-    {
-        lastMillis = millis();
-        if (client.connect(
-                Kortlinje::device::hostname.data(), Kortlinje::mqtt::user.data(), Kortlinje::mqtt::pass.data()))
-        {
-            onConnect();
-        }
-    }
+    serializeJson(discovery, payload.data(), payload.size());
+    net.flush();
+    discovered = client.publish(discoveryTopic.c_str(), payload.data(), static_cast<int>(length), true, 0);
 }
 
 /**
- * @brief Disconnects from the MQTT broker after publishing a retained unavailable status.
+ * @brief Hardware alarm ISR that re-enables reconnection attempts after the cooldown window.
  */
-void MqttExtension::disconnect()
+int64_t __time_critical_func(MqttExtension::onAlarm)(alarm_id_t id, void *user_data)
 {
-    lastMillis = millis();
-    if (client.connected())
-    {
-        client.publish(
-            std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/availability"),
-            "",
-            0,
-            true,
-            1);
-        client.loop();
-        client.disconnect();
-    }
-}
-
-/**
- * @brief Handles a successful MQTT connection.
- *
- * Subscribes to device set commands and publishes the retained online availability status.
- */
-void MqttExtension::onConnect()
-{
-    client.subscribe(std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/+/set"), 2);
-    client.publish(std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/availability"),
-                   "online",
-                   true,
-                   1);
+    static_cast<void>(id);
+    static_cast<MqttExtension *>(user_data)->tick = true;
+    return 0LL;
 }
 
 /**
@@ -138,12 +138,17 @@ void MqttExtension::onConnect()
 void MqttExtension::onMessage(MQTTClient *_client, char *topic, char *bytes, int length)
 {
     static_cast<void>(_client);
+    const std::string_view _topic{topic};
+    if (_topic.size() <= topicPrefix.size() + suffixLength)
+    {
+        return;
+    }
     JsonDocument doc{};
     if (deserializeJson(doc, bytes, static_cast<size_t>(length)) == DeserializationError::Code::Ok)
     {
-        const std::string_view _topic{topic};
-        DeviceService::receive(
-            doc.as<JsonObjectConst>(), name, _topic.substr(prefixLength, _topic.size() - prefixLength - suffixLength));
+        DeviceService::receive(doc.as<JsonObjectConst>(),
+                               name,
+                               _topic.substr(topicPrefix.size(), _topic.size() - topicPrefix.size() - suffixLength));
     }
 }
 
@@ -155,14 +160,19 @@ void MqttExtension::onMessage(MQTTClient *_client, char *topic, char *bytes, int
  */
 void MqttExtension::onTransmit(JsonObjectConst payload, std::string_view source)
 {
-    const size_t length{measureJson(payload)};
-    std::vector<char> message(length + 1U);
-    serializeJson(payload, message.data(), length + 1U);
-    client.publish(std::string(std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/"))
-                       .append(source)
-                       .c_str(),
-                   message.data(),
-                   static_cast<int>(length),
-                   false,
-                   payload["event"].isUnbound() ? 0 : 2);
+    std::array<char, 0b1U << 6U> topic{};
+    if (!client.connected() || source.size() >= topic.size() - topicPrefix.size())
+    {
+        return;
+    }
+    std::memcpy(topic.data(), topicPrefix.data(), topicPrefix.size());
+    std::memcpy(topic.data() + topicPrefix.size(), source.data(), source.size());
+    topic[topicPrefix.size() + source.size()] = '\0';
+    std::array<char, 0b1U << 10U> message{};
+    const size_t length{serializeJson(payload, message.data(), message.size())};
+    if (length < message.size())
+    {
+        client.publish(
+            topic.data(), message.data(), static_cast<int>(length), false, payload["event"].isUnbound() ? 0 : 2);
+    }
 }

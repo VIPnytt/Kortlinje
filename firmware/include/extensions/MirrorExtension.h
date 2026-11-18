@@ -13,7 +13,9 @@ private:
     static constexpr ip_addr_t addr IPADDR4_INIT_BYTES(255U, 255U, 255U, 255U);
 
     bool enabled{false};
-    volatile bool pending{false};
+    volatile bool tick{false};
+
+    static inline uint64_t interval{0b1ULL << 16U};
 
     alarm_id_t alarmId{0L};
 

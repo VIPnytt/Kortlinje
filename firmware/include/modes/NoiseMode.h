@@ -14,8 +14,8 @@ class NoiseMode final : public ModeModule
 private:
     volatile bool tick{false};
 
-    std::array<size_t, Display::grid::pixels / 9U> dots{};
-    std::array<size_t, Display::grid::pixels / 9U>::iterator it{dots.begin()};
+    std::array<size_t, Display::grid::pixels / (0b1U << 3U)> dots{};
+    std::array<size_t, Display::grid::pixels / (0b1U << 3U)>::iterator it{dots.begin()};
 
     repeating_timer timer{};
 

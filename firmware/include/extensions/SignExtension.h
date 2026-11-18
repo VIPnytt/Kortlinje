@@ -15,7 +15,7 @@ private:
     bool pending{false};
     volatile bool tick{false};
 
-    uint32_t duration{0b1U << 15U};
+    uint8_t duration{0b1U << 5U};
 
     volatile alarm_id_t alarmId{0L};
 

@@ -1,5 +1,6 @@
 #include "modes/WeatherMode.h"
 
+#include "constants/HomeAssistant.h"
 #include "constants/Kortlinje.h"
 #include "fonts/KortlinjeFont.h"
 #include "fonts/SmallFont.h"
@@ -43,11 +44,11 @@ void WeatherMode::begin()
 
 void WeatherMode::handle()
 {
-    if (!pending || !WiFi.isConnected())
+    if (!tick || !WiFi.isConnected())
     {
         return;
     }
-    pending = false;
+    tick = false;
     if (urls.empty())
     {
         return;
@@ -61,7 +62,7 @@ void WeatherMode::handle()
         {
             draw();
             transmit();
-            schedule(0b1UL << 19U);
+            schedule(0b1ULL << 29U);
             return;
         }
         urls.pop_back();
@@ -72,25 +73,24 @@ void WeatherMode::handle()
     }
     else
     {
-        schedule(0b1UL << 16U);
+        schedule(0b1ULL << 26U);
         return;
     }
     if (!urls.empty())
     {
-        schedule(0b1UL << 10U);
+        schedule(0b1ULL << 20U);
     }
 }
 
-void WeatherMode::end() { cancelAlarm(); }
-
 void WeatherMode::cancelAlarm()
 {
-    if (alarmId > 0L)
+    const alarm_id_t _alarmId{alarmId};
+    if (_alarmId > 0L)
     {
-        cancel_alarm(alarmId);
         alarmId = 0L;
+        cancel_alarm(_alarmId);
     }
-    pending = false;
+    tick = false;
 }
 
 void WeatherMode::draw()
@@ -178,8 +178,39 @@ int64_t __time_critical_func(WeatherMode::onAlarm)(alarm_id_t id, void *user_dat
     static_cast<void>(id);
     auto *self{static_cast<WeatherMode *>(user_data)};
     self->alarmId = 0L;
-    self->pending = true;
+    self->tick = true;
     return 0LL;
+}
+
+/**
+ * @brief Registers the weather provider selector with Home Assistant.
+ *
+ * @param discovery Home Assistant discovery document to update.
+ * @param topic Base topic for the selector's command and state messages.
+ * @param unique Prefix used to construct the selector's unique identifier.
+ */
+void WeatherMode::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+{
+    topic.append(name);
+    {
+        const std::string id{std::string(name).append("_provider")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"provider":"{{value}}"})");
+        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::entity_category].set("config");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:weather-partly-cloudy");
+        component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" provider"));
+        JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
+        for (const Provider _provider : providers)
+        {
+            options.add(_provider.name);
+        }
+        component[HomeAssistant::Abbreviations::platform].set("select");
+        component[HomeAssistant::Abbreviations::state_topic].set(topic);
+        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.provider}}");
+    }
 }
 
 void WeatherMode::onReceive(JsonObjectConst payload, std::string_view source)
@@ -444,10 +475,10 @@ bool WeatherMode::parseYr(std::string_view body, std::optional<Condition> &cond,
     return false;
 }
 
-void WeatherMode::schedule(uint32_t delayMs)
+void WeatherMode::schedule(uint64_t delayUs)
 {
     cancelAlarm();
-    alarmId = add_alarm_in_ms(delayMs, &onAlarm, this, true);
+    alarmId = add_alarm_in_us(delayUs, &onAlarm, this, true);
 }
 
 void WeatherMode::setProvider(std::string_view providerName)
@@ -465,7 +496,7 @@ void WeatherMode::setProvider(std::string_view providerName)
             urls.assign(entry.urls.begin(), entry.urls.end());
             condition.reset();
             temperature.reset();
-            pending = true;
+            tick = true;
             ConfigHandler::set(name, "provider", provider->name);
             transmit();
             return;

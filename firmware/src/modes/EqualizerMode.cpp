@@ -1,17 +1,19 @@
 #include "modes/EqualizerMode.h"
 
+#include "services/DisplayService.h"
+
 EqualizerMode::~EqualizerMode() { cancel_repeating_timer(&timer); }
 
 void EqualizerMode::begin()
 {
-    for (uint8_t x{width}; x < Display::grid::columns; x += width + 1U)
+    uint8_t x{width};
+    for (; x < Display::grid::columns - width; x += width + 1U)
     {
-        for (uint8_t y{0U}; y < Display::grid::rows; ++y)
-        {
-            DisplayService::setPixel(x, y, false);
-        }
+        DisplayService::fillColumn(x, false);
     }
-    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 4U), &onTimer, this, &timer);
+    DisplayService::fillColumns(x, Display::grid::columns - x, false);
+    bars.fill({Display::grid::maxY, Display::grid::maxY});
+    add_repeating_timer_us(-static_cast<int64_t>(0b1U << 14U), &onTimer, this, &timer);
 }
 
 void EqualizerMode::handle()
@@ -28,7 +30,7 @@ void EqualizerMode::handle()
         {
             bar.second = static_cast<uint8_t>(random(static_cast<long>(Display::grid::rows)));
         }
-        else if (random(0b1U << 3U) == 0)
+        else if (random(static_cast<long>(0b1U << 3U)) == 0L)
         {
             const uint8_t minX{static_cast<uint8_t>(idx * (width + 1U))};
             if (bar.first < bar.second)
@@ -38,9 +40,9 @@ void EqualizerMode::handle()
             }
             else if (bar.first > bar.second)
             {
+                DisplayService::drawLineHorizontal(minX, width, bar.first, true);
                 --bar.first;
             }
-            DisplayService::drawRectangleSolid(minX, width, bar.first, Display::grid::maxY, true);
         }
         ++idx;
     }

@@ -9,31 +9,17 @@
 
 class PlaylistExtension final : public ExtensionModule
 {
-public:
-    struct Item
-    {
-        std::string_view mode{};
-        uint16_t duration{0U};
-    };
-
-    explicit PlaylistExtension() : ExtensionModule(name) {};
-    ~PlaylistExtension() override;
-
-    void begin() override;
-    void handle() override;
-    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
-    void onReceive(JsonObjectConst payload, std::string_view source) override;
-    void onTransmit(JsonObjectConst payload, std::string_view source) override;
-
-    static void setEnabled(bool enable);
-
-    [[nodiscard]] static bool getEnabled();
-
 private:
     static constexpr std::string_view name{"Playlist"};
 
     static constexpr const char *schedulePath{"/playlist.json"};
     static constexpr const char *scheduleTempPath{"/playlist.tmp"};
+
+    struct Item
+    {
+        std::string_view mode{};
+        uint16_t duration{0U};
+    };
 
     static inline bool enabled{false};
 
@@ -52,9 +38,21 @@ private:
     void setSchedule(std::vector<Item> items);
 
     static void advance();
-    static void armTimer(uint32_t milliseconds);
+    static void armTimer(uint64_t delayUs);
     static void cancelTimer();
     static void transmit();
 
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
+
+public:
+    explicit PlaylistExtension() : ExtensionModule(name) {};
+
+    void begin() override;
+    void handle() override;
+    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
+    void onReceive(JsonObjectConst payload, std::string_view source) override;
+
+    static void setEnabled(bool enable);
+
+    [[nodiscard]] static bool getEnabled();
 };

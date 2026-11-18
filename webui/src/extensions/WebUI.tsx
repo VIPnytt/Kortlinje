@@ -282,7 +282,7 @@ export const Canonical = () => {
         }).then((response) => {
             if (response.status === 200) {
                 WebSocketWS.close();
-                location.href = `http://${DEVICE_HOSTNAME}.local`;
+                location.replace(`http://${DEVICE_HOSTNAME}.local/${location.hash}`);
             }
         });
 };

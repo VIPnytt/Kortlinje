@@ -16,14 +16,13 @@ void MirrorExtension::begin() { transmit(); }
  */
 void MirrorExtension::handle()
 {
-    if (enabled && render && pending)
+    if (enabled && render && tick)
     {
-        pending = false;
-        render = false;
+        tick = false;
         std::array<uint8_t, 10U + Display::grid::bytes> ddp{
             (0b1U << 6U) | 0b1U,
             0U,
-            (0b100U << 3U) | 0b001U,
+            (0b100U << 3U) | 0b1U,
             1U,
             0U,
             0U,
@@ -33,6 +32,7 @@ void MirrorExtension::handle()
             static_cast<uint8_t>(Display::grid::bytes & 0xFFU),
         };
         const auto frame{DisplayService::getFrame()};
+        render = false;
         for (size_t idx{0U}; idx < frame.size(); ++idx)
         {
             if (frame[idx])
@@ -40,8 +40,12 @@ void MirrorExtension::handle()
                 ddp[10U + (idx >> 3U)] |= static_cast<uint8_t>(0b1U << (idx & 7U));
             }
         }
-        udp.write(ddp.data(), ddp.size());
-        alarmId = add_alarm_in_ms(0b1U << 5U, &onAlarm, this, true);
+        if (udp.write(ddp.data(), ddp.size()) != ddp.size())
+        {
+            ++interval;
+            render = true;
+        }
+        alarmId = add_alarm_in_us(interval, &onAlarm, this, true);
     }
 }
 
@@ -62,18 +66,19 @@ void MirrorExtension::setEnabled(bool enable)
     {
         enabled = true;
         render = true;
-        pending = true;
+        tick = true;
     }
     else
     {
-        if (alarmId > 0L)
+        const alarm_id_t _alarmId{alarmId};
+        if (_alarmId > 0L)
         {
-            cancel_alarm(alarmId);
             alarmId = 0L;
+            cancel_alarm(_alarmId);
         }
         udp.close();
         enabled = false;
-        pending = false;
+        tick = false;
     }
     transmit();
 }
@@ -82,7 +87,7 @@ int64_t __time_critical_func(MirrorExtension::onAlarm)(alarm_id_t id, void *user
 {
     static_cast<void>(id);
     auto *self{static_cast<MirrorExtension *>(user_data)};
-    self->pending = true;
+    self->tick = true;
     self->alarmId = 0L;
     return 0LL;
 }
@@ -103,7 +108,7 @@ void MirrorExtension::onTransmit(JsonObjectConst payload, std::string_view sourc
         constexpr std::array<uint8_t, 10U + Display::grid::bytes> ddp{
             (0b1U << 6U) | 0b1U,
             0U,
-            (0b100U << 3U) | 0b001U,
+            (0b100U << 3U) | 0b1U,
             1U,
             0U,
             0U,

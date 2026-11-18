@@ -81,10 +81,11 @@ void AlarmExtension::save()
 
 void AlarmExtension::cancelTimer()
 {
-    if (alarmId > 0L)
+    const alarm_id_t _alarmId{alarmId};
+    if (_alarmId > 0L)
     {
-        cancel_alarm(alarmId);
         alarmId = 0L;
+        cancel_alarm(_alarmId);
     }
 }
 
@@ -172,7 +173,7 @@ int64_t __time_critical_func(AlarmExtension::onAlarm)(alarm_id_t id, void *user_
         pio_sm_set_enabled(pio2, 0U, true);
         DisplayService::setPixel(DisplayService::Symbol::SNOOZE, false);
         DisplayService::setPower(true);
-        alarmId = add_alarm_in_ms(0b1UL << 20U, &onAlarm, nullptr, true);
+        alarmId = add_alarm_in_us(0b1ULL << 30U, &onAlarm, nullptr, true);
     }
     return 0LL;
 }
@@ -206,8 +207,7 @@ void AlarmExtension::reschedule()
     }
     if (epoch > now)
     {
-        alarmId = add_alarm_in_ms(
-            static_cast<uint32_t>(static_cast<uint64_t>(epoch - now) * 1'000ULL), &onAlarm, nullptr, true);
+        alarmId = add_alarm_in_us(static_cast<uint64_t>(epoch - now) * 1'000'000ULL, &onAlarm, nullptr, true);
     }
 }
 
@@ -272,7 +272,7 @@ void AlarmExtension::snooze()
     cancelTimer();
     pio_sm_set_enabled(pio2, 0U, false);
     pio_sm_exec(pio2, 0U, pio_encode_set(pio_src_dest::pio_pins, 0U));
-    alarmId = add_alarm_in_ms(0b1UL << 19U, &onAlarm, nullptr, true);
+    alarmId = add_alarm_in_us(0b1ULL << 29U, &onAlarm, nullptr, true);
     state = State::SNOOZED;
     DisplayService::setPixel(DisplayService::Symbol::SNOOZE, true);
 }

@@ -25,21 +25,20 @@ public:
 private:
     bool dnsRunning{false};
     bool mdns{false};
+    static inline volatile bool pending{false};
+    static inline bool pendingConnect{false};
+    static inline bool pendingScan{false};
     bool routable{false};
     bool scanning{false};
 
     repeating_timer timer{};
 
+    static inline std::string pendingSsid{};
+    static inline std::string pendingKey{};
+
     DNSServer dns{};
 
     WiFiMulti multi{};
-
-    static inline volatile bool pending{false};
-    static inline bool pendingConnect{false};
-    static inline bool pendingScan{false};
-
-    static inline std::string pendingSsid{};
-    static inline std::string pendingKey{};
 
     void connect(std::string_view ssid, std::string_view key);
     void initStation();

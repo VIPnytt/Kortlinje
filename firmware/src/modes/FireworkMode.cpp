@@ -25,8 +25,6 @@ void FireworkMode::handle()
     }
 }
 
-void FireworkMode::end() { stopAlarm(); }
-
 /**
  * @brief Initializes a rocket launch when the firework trigger is activated.
  *
@@ -42,7 +40,7 @@ void FireworkMode::pad()
         rocketY = Display::grid::rows;
         stage = 1U;
     }
-    startAlarm(static_cast<uint32_t>(random(static_cast<long>(0b1U << 8U))));
+    startAlarm(static_cast<uint64_t>(random(static_cast<long>(0b1U << 18U))));
 }
 
 /**
@@ -67,7 +65,7 @@ void FireworkMode::launching()
         maxRadius = static_cast<uint8_t>(random(1L, static_cast<long>(Display::grid::rows / 2U) + 1U));
         stage = 2U;
     }
-    startAlarm(0b1U << 7U);
+    startAlarm(0b1U << 17U);
 }
 
 /**
@@ -83,14 +81,14 @@ void FireworkMode::exploding()
     if (radius < maxRadius)
     {
         ++radius;
-        DisplayService::drawEllipseSolid(rocketX, rocketY, radius, true);
+        DisplayService::drawCircleSolid(rocketX, rocketY, radius, true);
         startAlarm(radius < maxRadius
-                       ? 0b1U << 8U
-                       : static_cast<uint32_t>(random(static_cast<long>(0b1U << 8U), static_cast<long>(0b1U << 11U))));
+                       ? 0b1U << 18U
+                       : static_cast<uint32_t>(random(static_cast<long>(0b1U << 18U), static_cast<long>(0b1U << 21U))));
     }
     else
     {
-        DisplayService::drawEllipseSolid(rocketX, rocketY, radius, false);
+        DisplayService::drawCircleSolid(rocketX, rocketY, radius, false);
         stage = 0U;
     }
 }
@@ -104,18 +102,19 @@ int64_t __time_critical_func(FireworkMode::onAlarm)(alarm_id_t id, void *user_da
     return 0LL;
 }
 
-void FireworkMode::startAlarm(uint32_t delayMs)
+void FireworkMode::startAlarm(uint64_t delayUs)
 {
     stopAlarm();
-    alarmId = add_alarm_in_ms(delayMs, &onAlarm, this, true);
+    alarmId = add_alarm_in_us(delayUs, &onAlarm, this, true);
 }
 
 void FireworkMode::stopAlarm()
 {
-    if (alarmId > 0L)
+    const alarm_id_t _alarmId{alarmId};
+    if (_alarmId > 0L)
     {
-        cancel_alarm(alarmId);
         alarmId = 0L;
+        cancel_alarm(_alarmId);
     }
     tick = false;
 }

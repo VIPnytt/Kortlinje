@@ -4,7 +4,7 @@
 
 BlinkMode::~BlinkMode() { cancel_repeating_timer(&timer); }
 
-void BlinkMode::begin() { add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 10U), &onTimer, this, &timer); }
+void BlinkMode::begin() { add_repeating_timer_us(-static_cast<int64_t>(0b1U << 20U), &onTimer, this, &timer); }
 
 /**
  * @brief Toggles the display state between all pixels lit and unlit on each timer tick.

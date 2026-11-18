@@ -10,10 +10,7 @@ SnakeMode::~SnakeMode() { cancel_repeating_timer(&timer); }
 void SnakeMode::begin()
 {
     DisplayService::fillFrame(false);
-    snakeClear();
-    target = static_cast<size_t>(random(0L, static_cast<long>(Display::grid::pixels)));
-    stage = Stage::READY;
-    add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 7U), &onTimer, this, &timer);
+    add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
 }
 
 void SnakeMode::handle()
@@ -42,7 +39,7 @@ void SnakeMode::handle()
 
 void SnakeMode::idle()
 {
-    snakeReset(static_cast<size_t>(random(0L, static_cast<long>(Display::grid::pixels))));
+    snakeReset(static_cast<size_t>(random(static_cast<long>(Display::grid::pixels))));
     DisplayService::setPixel(snake[head], true);
     setTarget();
     stage = Stage::MOVE;

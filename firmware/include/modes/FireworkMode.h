@@ -24,7 +24,7 @@ private:
     void launching();
     void exploding();
 
-    void startAlarm(uint32_t delayMs);
+    void startAlarm(uint64_t delayUs);
     void stopAlarm();
 
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
@@ -37,5 +37,4 @@ public:
 
     void begin() override;
     void handle() override;
-    void end() override;
 };

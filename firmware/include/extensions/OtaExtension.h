@@ -10,6 +10,7 @@ private:
     static constexpr std::string_view name{"OTA"};
 
     static void onStart();
+    static void onProgress(unsigned int progress, unsigned int total);
 
 public:
     explicit OtaExtension() : ExtensionModule(name) {};

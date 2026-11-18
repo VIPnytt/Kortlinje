@@ -4,7 +4,7 @@
 
 LinesMode::~LinesMode() { cancel_repeating_timer(&timer); }
 
-void LinesMode::begin() { add_repeating_timer_ms(-static_cast<int32_t>(0b1U << 8U), &onTimer, this, &timer); }
+void LinesMode::begin() { add_repeating_timer_us(-static_cast<int64_t>(0b1U << 18U), &onTimer, this, &timer); }
 
 /**
  * @brief Advances the line animation when its update interval has elapsed.

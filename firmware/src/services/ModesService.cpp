@@ -1,11 +1,14 @@
 #include "services/ModesService.h"
 
 #include "constants/HomeAssistant.h"
+#include "extensions/PlaylistExtension.h"
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
 #include "handlers/TextHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
+
+#include <RP2040Support.h>
 
 void ModesService::begin()
 {
@@ -36,11 +39,12 @@ void ModesService::handle()
         {
             pending = false;
             scheduled = true;
+            PlaylistExtension::setEnabled(false);
             DisplayService::fillFrame(false);
             const SmallFont font{};
             TextHandler(std::string(mode->name), font).draw();
             cancelAlarm();
-            alarmId = add_alarm_in_ms(0b1UL << 11U, &onAlarm, nullptr, true);
+            alarmId = add_alarm_in_us(0b1ULL << 21U, &onAlarm, nullptr, true);
         }
         else if (scheduled)
         {
@@ -49,7 +53,6 @@ void ModesService::handle()
                 scheduled = false;
                 tick = false;
                 mode->begin();
-                begun = true;
                 ConfigHandler::set(name, "mode", mode->name);
                 transmit();
             }
@@ -64,10 +67,11 @@ void ModesService::handle()
 
 void ModesService::cancelAlarm()
 {
-    if (alarmId > 0L)
+    const alarm_id_t _alarmId{alarmId};
+    if (_alarmId > 0L)
     {
-        cancel_alarm(alarmId);
         alarmId = 0L;
+        cancel_alarm(_alarmId);
     }
     tick = false;
 }
@@ -265,11 +269,6 @@ void ModesService::setMode(std::string_view modeName, bool power, bool splash)
         cancelAlarm();
         if (mode)
         {
-            if (begun)
-            {
-                mode->end();
-                begun = false;
-            }
             mode.reset();
         }
         mode = std::move(_mode);

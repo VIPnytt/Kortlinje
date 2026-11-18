@@ -1,24 +1,19 @@
 #include "modes/PingPongMode.h"
 
-#include "handlers/TextHandler.h"
 #include "services/DeviceService.h"
 
 #include <algorithm>
 #include <cmath>
 
-PingPongMode::~PingPongMode() { stopAlarm(); }
+PingPongMode::~PingPongMode() { cancel_alarm(alarmId); }
 
 void PingPongMode::begin()
 {
     DisplayService::fillFrame(false);
-    paddleL = paddleR = static_cast<uint8_t>(random(1L, static_cast<long>(Display::grid::maxY)));
     DisplayService::drawLineVertical(0U, paddleL - 1U, paddleL + 1U, true);
     DisplayService::drawLineVertical(Display::grid::maxX, paddleR - 1U, paddleR + 1U, true);
-    xDec = x = Display::grid::maxX - 1U;
-    yDec = y = paddleR;
-    deg = static_cast<uint16_t>(random(150L, 211L)); // ±30°
     DisplayService::setPixel(x, y, true);
-    startAlarm();
+    alarmId = add_alarm_in_us(interval, &onAlarm, this, true);
 }
 
 void PingPongMode::handle()
@@ -30,12 +25,10 @@ void PingPongMode::handle()
     tick = false;
     if (xDec <= 1.0F && deg >= 90U && deg < 270U)
     {
-        // Left paddle reflection
         deg = (random(60L, 121L) + 270U) % 360U; // ±30°
     }
     else if (xDec >= static_cast<float>(Display::grid::maxX - 1U) && (deg < 90U || deg >= 270U))
     {
-        // Right paddle reflection
         deg = static_cast<uint16_t>(random(150L, 211L)); // ±30°
     }
     if (xDec <= .0F || xDec >= static_cast<float>(Display::grid::maxX))
@@ -52,6 +45,7 @@ void PingPongMode::handle()
     const float dx{cosf(rad)};
     const float dy{-sinf(rad)};
     const float maxComponent{std::max(fabsf(dx), fabsf(dy))};
+    interval = static_cast<int64_t>(static_cast<float>(0b1U << 15U) / maxComponent);
     DisplayService::setPixel(x, y, false);
     xDec += dx / maxComponent;
     yDec += dy / maxComponent;
@@ -85,37 +79,12 @@ void PingPongMode::handle()
         --paddleR;
         DisplayService::setPixel(Display::grid::maxX, paddleR - 1U, true);
     }
-    startAlarm();
 }
-
-void PingPongMode::end() { stopAlarm(); }
 
 int64_t __time_critical_func(PingPongMode::onAlarm)(alarm_id_t id, void *user_data)
 {
     static_cast<void>(id);
     PingPongMode *self{static_cast<PingPongMode *>(user_data)};
     self->tick = true;
-    self->alarmId = 0L;
-    return 0LL;
-}
-
-void PingPongMode::startAlarm()
-{
-    stopAlarm();
-    const float rad{static_cast<float>(deg) * static_cast<float>(DEG_TO_RAD)};
-    alarmId = add_alarm_in_us(static_cast<uint64_t>(static_cast<float>(0b1U << 15U) /
-                                                    std::max(.01F, std::max(fabsf(cosf(rad)), fabsf(sinf(rad))))),
-                              &onAlarm,
-                              this,
-                              true);
-}
-
-void PingPongMode::stopAlarm()
-{
-    if (alarmId > 0L)
-    {
-        cancel_alarm(alarmId);
-        alarmId = 0L;
-    }
-    tick = false;
+    return self->interval;
 }

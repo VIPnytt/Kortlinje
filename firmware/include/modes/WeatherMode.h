@@ -136,7 +136,7 @@ private:
         bool (*parse)(std::string_view body, std::optional<Condition> &condition, std::optional<int16_t> &temperature);
     };
 
-    volatile bool pending{false};
+    volatile bool tick{false};
 
     alarm_id_t alarmId{0L};
 
@@ -152,7 +152,7 @@ private:
 
     void cancelAlarm();
     void draw();
-    void schedule(uint32_t delayMs);
+    void schedule(uint64_t delayUs);
     void setProvider(std::string_view providerName);
     void transmit();
 
@@ -181,6 +181,6 @@ public:
 
     void begin() override;
     void handle() override;
-    void end() override;
+    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
     void onReceive(JsonObjectConst payload, std::string_view source) override;
 };

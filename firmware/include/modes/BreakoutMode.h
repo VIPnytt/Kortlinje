@@ -22,6 +22,8 @@ private:
     int hour{24};
     int minute{60};
 
+    volatile int64_t interval{static_cast<int64_t>(0b1U << 16U)};
+
     float xDec{static_cast<float>(Display::grid::maxX - 1U)};
     float yDec{static_cast<float>(Display::grid::rows / 2U)};
 
@@ -44,5 +46,4 @@ public:
 
     void begin() override;
     void handle() override;
-    void end() override;
 };

@@ -3,7 +3,6 @@
 #include "modules/ModeModule.h"
 #include "services/DisplayService.h"
 
-#include <ArduinoOTA.h>
 #include <array>
 #include <pico/time.h>
 

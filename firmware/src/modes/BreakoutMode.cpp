@@ -1,30 +1,20 @@
 #include "modes/BreakoutMode.h"
 
-#include "constants/Kortlinje.h"
 #include "fonts/KortlinjeFont.h"
-#include "handlers/BitmapHandler.h"
 #include "handlers/TextHandler.h"
-#include "services/ExtensionsService.h"
 
 #include <algorithm>
 #include <cmath>
 
-BreakoutMode::~BreakoutMode() { stopAlarm(); }
+BreakoutMode::~BreakoutMode() { cancel_alarm(alarmId); }
 
 void BreakoutMode::begin()
 {
-    DisplayService::fillFrame(false);
-    for (uint8_t column{0U}; column <= Display::grid::maxX - 3U; ++column)
-    {
-        DisplayService::fillColumn(column, true);
-    }
-    paddleY = static_cast<uint8_t>(random(1L, static_cast<long>(Display::grid::maxY)));
+    DisplayService::fillFrame(true);
+    DisplayService::fillColumns(Display::grid::columns - 3U, 3U, false);
     DisplayService::drawLineVertical(Display::grid::maxX, paddleY - 1U, paddleY + 1U, true);
-    deg = static_cast<uint16_t>(random(150L, 211L)); // ±30°
-    xDec = x = Display::grid::maxX - 1U;
-    yDec = y = paddleY;
     DisplayService::setPixel(x, y, true);
-    startAlarm();
+    alarmId = add_alarm_in_us(static_cast<uint64_t>(interval), &onAlarm, this, true);
 }
 
 void BreakoutMode::handle()
@@ -116,37 +106,13 @@ void BreakoutMode::handle()
         ++paddleY;
         DisplayService::setPixel(Display::grid::maxX, paddleY + 1U, true);
     }
-    startAlarm();
+    interval = static_cast<int64_t>(static_cast<float>(0b1U << 16U) / std::max(0.01F, moveMaxComponent));
 }
-
-void BreakoutMode::end() { stopAlarm(); }
 
 int64_t __time_critical_func(BreakoutMode::onAlarm)(alarm_id_t id, void *user_data)
 {
     static_cast<void>(id);
     auto *self{static_cast<BreakoutMode *>(user_data)};
     self->tick = true;
-    self->alarmId = 0L;
-    return 0LL;
-}
-
-void BreakoutMode::startAlarm()
-{
-    stopAlarm();
-    const float rad{static_cast<float>(deg) * static_cast<float>(DEG_TO_RAD)};
-    alarmId = add_alarm_in_us(static_cast<uint64_t>(static_cast<float>(0b1U << 16U) /
-                                                    std::max(0.01F, std::max(fabsf(cosf(rad)), fabsf(sinf(rad))))),
-                              &onAlarm,
-                              this,
-                              true);
-}
-
-void BreakoutMode::stopAlarm()
-{
-    if (alarmId > 0L)
-    {
-        cancel_alarm(alarmId);
-        alarmId = 0L;
-    }
-    tick = false;
+    return self->interval;
 }

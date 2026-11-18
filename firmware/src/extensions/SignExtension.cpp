@@ -34,11 +34,13 @@ void SignExtension::handle()
         }
         DisplayService::fillFrame(false);
         BitmapHandler(std::span<const uint64_t>{bitmap}).draw();
-        if (alarmId > 0L)
+        const alarm_id_t _alarmId{alarmId};
+        if (_alarmId > 0L)
         {
-            cancel_alarm(alarmId);
+            alarmId = 0L;
+            cancel_alarm(_alarmId);
         }
-        alarmId = add_alarm_in_ms(duration, &SignExtension::onAlarm, this, true);
+        alarmId = add_alarm_in_us(static_cast<uint64_t>(duration) * 1'000'000ULL, &SignExtension::onAlarm, this, true);
         JsonDocument doc{};
         doc["event"].set("sign");
         DeviceService::transmit(doc.as<JsonObjectConst>(), name, false);
@@ -94,10 +96,9 @@ void SignExtension::onReceive(JsonObjectConst payload, std::string_view source)
 
 void SignExtension::setDuration(uint8_t seconds)
 {
-    const uint32_t _duration{seconds * 1'000U};
-    if (_duration != duration && _duration != 0U)
+    if (seconds != duration && seconds != 0U)
     {
-        duration = _duration;
+        duration = seconds;
         ConfigHandler::set(name, "duration", duration);
         transmit();
     }
@@ -109,6 +110,6 @@ void SignExtension::setDuration(uint8_t seconds)
 void SignExtension::transmit()
 {
     JsonDocument doc{};
-    doc["duration"].set(duration / 1'000U);
+    doc["duration"].set(duration);
     DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

@@ -19,6 +19,7 @@ public:
 
     void begin() override;
     void handle() override;
+    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
 
     static void set(float _temperature);
 };

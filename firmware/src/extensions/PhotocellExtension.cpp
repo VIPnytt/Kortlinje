@@ -70,11 +70,11 @@ void PhotocellExtension::handle()
 
 void PhotocellExtension::cancelAlarm()
 {
-    const alarm_id_t _alarm{alarm};
-    if (_alarm != 0)
+    const alarm_id_t _alarmId{alarmId};
+    if (_alarmId > 0L)
     {
-        alarm = 0;
-        cancel_alarm(_alarm);
+        alarmId = 0L;
+        cancel_alarm(_alarmId);
     }
 }
 
@@ -86,7 +86,7 @@ int64_t __time_critical_func(PhotocellExtension::onAlarm)(alarm_id_t id, void *u
 {
     static_cast<void>(id);
     static_cast<void>(user_data);
-    alarm = 0L;
+    alarmId = 0L;
     lit = false;
     pending = true;
     return 0LL;
@@ -149,9 +149,9 @@ void __time_critical_func(PhotocellExtension::onPio)()
                 pending = true;
             }
         }
-        else if (lit && alarm == 0)
+        else if (lit && alarmId <= 0L)
         {
-            alarm = add_alarm_in_ms(0b1UL << 15U, &onAlarm, nullptr, true);
+            alarmId = add_alarm_in_us(0b1ULL << 25U, &onAlarm, nullptr, true);
         }
     }
 }

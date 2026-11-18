@@ -19,7 +19,7 @@ private:
 
     uint8_t index{0U};
 
-    uint16_t interval{0b1U << 9U};
+    uint32_t interval{0b1U << 19U};
 
     repeating_timer timer{};
 
@@ -27,7 +27,7 @@ private:
 
     void setFrame(uint8_t _index, std::span<const uint8_t> frame);
     void setFrames(uint8_t count);
-    void setInterval(uint16_t _interval);
+    void setInterval(uint32_t milliseconds);
 
     void startTimer();
     void stopTimer();
@@ -44,7 +44,6 @@ public:
 
     void begin() override;
     void handle() override;
-    void end() override;
 
     void onReceive(JsonObjectConst payload, std::string_view source) override;
 };
