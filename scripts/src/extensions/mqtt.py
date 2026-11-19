@@ -17,5 +17,5 @@ class Mqtt:
 
     def configure(self) -> None:
         mqtt = self.project.toml.setdefault("mqtt", {})
-        for key in ("host", "user", "pass"):
+        for key in ("host", "username", "password"):
             mqtt.setdefault(key, "")
