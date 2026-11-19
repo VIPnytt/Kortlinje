@@ -6,7 +6,6 @@ class TemperatureMode final : public ModeModule
 {
 private:
     static inline bool pending{false};
-    static inline bool saved{true};
 
     static inline float temperature{.0F};
 
@@ -17,7 +16,6 @@ public:
 
     explicit TemperatureMode() : ModeModule(name) {};
 
-    void begin() override;
     void handle() override;
     void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
 

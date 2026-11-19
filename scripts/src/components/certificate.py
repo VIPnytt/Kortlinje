@@ -11,8 +11,8 @@ import cryptography.hazmat.primitives.serialization
 import cryptography.x509
 
 if typing.TYPE_CHECKING:
-    from ..Kortlinje import Kortlinje
-    from .Types import COMMAND_LINE_TARGETS
+    from ..kortlinje import Kortlinje
+    from .types import COMMAND_LINE_TARGETS
 else:
     from SCons.Script import COMMAND_LINE_TARGETS
 

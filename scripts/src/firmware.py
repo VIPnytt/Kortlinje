@@ -6,11 +6,11 @@ import typing
 from .config.version import VERSION
 
 if typing.TYPE_CHECKING:
-    from .Kortlinje import Kortlinje
+    from .kortlinje import Kortlinje
 
 
 class Firmware:
-    NAME: typing.Final[str] = "Firmware"
+    NAME: typing.Literal["Firmware"] = "Firmware"
     path: pathlib.Path
     project: "Kortlinje"
 

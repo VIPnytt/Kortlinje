@@ -60,11 +60,8 @@ void PlaylistExtension::advance()
         step = 0U;
     }
     const Item &item{schedule[step]};
-    if (std::ranges::find(ModesService::names, item.mode) != ModesService::names.end())
-    {
-        currentMode = item.mode;
-        ModesService::setMode(currentMode, true, false);
-    }
+    currentMode = item.mode;
+    ModesService::setMode(currentMode, true, false);
     const uint64_t duration{static_cast<uint64_t>(item.duration) * 1'000'000ULL};
     step = (step + 1U) % schedule.size();
     if (duration != 0ULL)
@@ -110,14 +107,10 @@ void PlaylistExtension::loadSchedule()
             {
                 if (item["mode"].is<std::string_view>() && item["duration"].is<uint16_t>())
                 {
-                    const auto _mode{std::ranges::find(ModesService::names, item["mode"].as<std::string_view>())};
-                    if (_mode != ModesService::names.end())
-                    {
-                        schedule.push_back({
-                            .mode = *_mode,
-                            .duration = item["duration"].as<uint16_t>(),
-                        });
-                    }
+                    schedule.push_back({
+                        .mode{item["mode"].as<std::string_view>()},
+                        .duration = item["duration"].as<uint16_t>(),
+                    });
                 }
             }
         }
@@ -185,14 +178,10 @@ void PlaylistExtension::onReceive(JsonObjectConst payload, std::string_view sour
         {
             if (item["mode"].is<std::string_view>() && item["duration"].is<uint16_t>())
             {
-                const auto _mode{std::ranges::find(ModesService::names, item["mode"].as<std::string_view>())};
-                if (_mode != ModesService::names.end())
-                {
-                    nextItem.push_back({
-                        .mode = *_mode,
-                        .duration = item["duration"].as<uint16_t>(),
-                    });
-                }
+                nextItem.push_back({
+                    .mode{item["mode"].as<std::string_view>()},
+                    .duration = item["duration"].as<uint16_t>(),
+                });
             }
         }
         setSchedule(std::move(nextItem));

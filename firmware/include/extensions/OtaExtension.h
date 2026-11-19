@@ -2,17 +2,17 @@
 
 #include "modules/ExtensionModule.h"
 
-#include <ArduinoOTA.h>
-
 class OtaExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"OTA"};
+    void transmit();
 
     static void onStart();
     static void onProgress(unsigned int progress, unsigned int total);
 
 public:
+    static constexpr std::string_view name{"OTA"};
+
     explicit OtaExtension() : ExtensionModule(name) {};
 
     void begin() override;

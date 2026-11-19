@@ -1,41 +1,12 @@
 #pragma once
 
-#include "modes/AnimationMode.h"
-#include "modes/BlindsMode.h"
-#include "modes/BlinkMode.h"
-#include "modes/BreakoutMode.h"
-#include "modes/BrightMode.h"
-#include "modes/CircleMode.h"
-#include "modes/ClockMode.h"
-#include "modes/CountdownMode.h"
-#include "modes/DateMode.h"
-#include "modes/DrawMode.h"
-#include "modes/EpochCounterMode.h"
-#include "modes/EqualizerMode.h"
-#include "modes/FireworkMode.h"
-#include "modes/GameOfLifeMode.h"
-#include "modes/GlitterMode.h"
-#include "modes/HumidityMode.h"
-#include "modes/LeafFallMode.h"
-#include "modes/LinesMode.h"
-#include "modes/NoiseMode.h"
-#include "modes/PingPongMode.h"
-#include "modes/RainMode.h"
-#include "modes/ScanMode.h"
-#include "modes/SnakeMode.h"
-#include "modes/StarsMode.h"
-#include "modes/TemperatureMode.h"
-#include "modes/TickerMode.h"
-#include "modes/WaveformMode.h"
-#include "modes/WeatherMode.h"
-#include "modes/WeekdayMode.h"
 #include "modules/ModeModule.h"
 #include "modules/ServiceModule.h"
 
-#include <array>
 #include <cstdint>
 #include <memory>
 #include <pico/time.h>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -44,38 +15,6 @@ class ModesService final : public ServiceModule
 
 public:
     static constexpr std::string_view name{"Modes"};
-
-    static constexpr std::array<std::string_view, 29U> names{
-        AnimationMode::name,
-        BlindsMode::name,
-        BlinkMode::name,
-        BreakoutMode::name,
-        BrightMode::name,
-        CircleMode::name,
-        ClockMode::name,
-        CountdownMode::name,
-        DateMode::name,
-        DrawMode::name,
-        EpochCounterMode::name,
-        EqualizerMode::name,
-        FireworkMode::name,
-        GameOfLifeMode::name,
-        GlitterMode::name,
-        HumidityMode::name,
-        LeafFallMode::name,
-        LinesMode::name,
-        NoiseMode::name,
-        PingPongMode::name,
-        RainMode::name,
-        ScanMode::name,
-        SnakeMode::name,
-        StarsMode::name,
-        TemperatureMode::name,
-        TickerMode::name,
-        WaveformMode::name,
-        WeatherMode::name,
-        WeekdayMode::name,
-    };
 
     explicit ModesService() : ServiceModule(name) {};
 
@@ -94,6 +33,8 @@ public:
     [[nodiscard]] static ModeModule *getMode();
 
     [[nodiscard]] static std::unique_ptr<ModeModule> getMode(std::string_view modeName);
+
+    [[nodiscard]] static std::span<const std::string_view> getNames();
 
 private:
     static inline volatile bool active{true};

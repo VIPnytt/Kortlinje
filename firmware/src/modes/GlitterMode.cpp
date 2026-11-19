@@ -4,7 +4,7 @@
 
 GlitterMode::~GlitterMode() { cancel_repeating_timer(&timer); }
 
-void GlitterMode::begin() { add_repeating_timer_us(-static_cast<int64_t>(0b1U << 10U), &onTimer, this, &timer); }
+void GlitterMode::begin() { add_repeating_timer_us(-static_cast<int64_t>(0b1U << 12U), &onTimer, this, &timer); }
 
 void GlitterMode::handle()
 {

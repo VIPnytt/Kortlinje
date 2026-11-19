@@ -9,6 +9,7 @@
 
 #include <hardware/clocks.h>
 #include <hardware/irq.h>
+#include <hardware/pio.h>
 
 void ClimateExtension::configure()
 {

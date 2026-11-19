@@ -10,14 +10,14 @@ import nodejs_wheel
 from ..config.version import VERSION
 
 if typing.TYPE_CHECKING:
-    from ..components.Types import COMMAND_LINE_TARGETS
-    from ..Kortlinje import Kortlinje
+    from ..components.types import COMMAND_LINE_TARGETS
+    from ..kortlinje import Kortlinje
 else:
     from SCons.Script import COMMAND_LINE_TARGETS
 
 
 class WebUI:
-    NAME: typing.Final[str] = "Web UI"
+    NAME: typing.Literal["Web UI"] = "Web UI"
     path: pathlib.Path
     project: "Kortlinje"
 

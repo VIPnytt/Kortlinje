@@ -8,15 +8,13 @@
 class ButtonExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"Buttons"};
-
     static constexpr uint channel{NUM_DMA_CHANNELS - 1U};
 
     static constexpr uint32_t count{0b1U << 3U};
 
     static constexpr float divider{static_cast<float>(0xFFFFU)};
 
-    enum Button : uint8_t
+    enum class Button : uint8_t
     {
         NONE,
         ALARM,
@@ -97,6 +95,8 @@ private:
     static void onInterrupt();
 
 public:
+    static constexpr std::string_view name{"Button"};
+
     explicit ButtonExtension() : ExtensionModule(name) {};
 
     void configure() override;

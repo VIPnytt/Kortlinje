@@ -1,5 +1,6 @@
 #include "extensions/BatteryExtension.h"
 
+#include "constants/board.h"
 #include "constants/secrets.h"
 #include "extensions/AlarmExtension.h"
 #include "pio/battery.pio.h"
@@ -16,39 +17,43 @@
 
 void BatteryExtension::configure()
 {
-#ifdef RP2350_ERRATA_E9
-    pio_add_program_at_offset(pio2, &battery_e9_program, PIO_INSTRUCTION_COUNT - battery_e9_program.length);
-    pio_sm_claim(pio2, NUM_PIO_STATE_MACHINES - 1U);
-#endif // RP2350_ERRATA_E9
+    if constexpr (Kortlinje::board::type == "RP2350" && Kortlinje::board::revision <= 0xA2U)
+    {
+        pio_add_program_at_offset(pio2, &battery_e9_program, PIO_INSTRUCTION_COUNT - battery_e9_program.length);
+        pio_sm_claim(pio2, NUM_PIO_STATE_MACHINES - 1U);
+    }
 }
 
 void BatteryExtension::begin()
 {
-#ifdef RP2350_ERRATA_E9
-    pio_sm_config config{battery_e9_program_get_default_config(PIO_INSTRUCTION_COUNT - battery_e9_program.length)};
-    sm_config_set_set_pins(&config, Kortlinje::pin::power_sense, 1U);
-    sm_config_set_in_pins(&config, Kortlinje::pin::power_sense);
-    sm_config_set_jmp_pin(&config, Kortlinje::pin::power_sense);
-    sm_config_set_clkdiv_int_frac8(&config, static_cast<uint32_t>(F_CPU) / (0b1UL << 20U), 0U);
-    pio_gpio_init(pio2, Kortlinje::pin::power_sense);
-    gpio_disable_pulls(Kortlinje::pin::power_sense);
-    gpio_set_drive_strength(Kortlinje::pin::power_sense, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
-    pio_sm_set_pins(pio2, NUM_PIO_STATE_MACHINES - 1U, 0U);
-    pio_sm_set_consecutive_pindirs(pio2, NUM_PIO_STATE_MACHINES - 1U, Kortlinje::pin::power_sense, 1U, false);
-    pio_sm_init(pio2,
-                NUM_PIO_STATE_MACHINES - 1U,
-                PIO_INSTRUCTION_COUNT - battery_e9_program.length + battery_e9_offset_vbus,
-                &config);
-    pio_sm_clear_fifos(pio2, NUM_PIO_STATE_MACHINES - 1U);
-    pio_interrupt_clear(pio2, 3U);
-    pio_set_irq1_source_enabled(pio2, pio_interrupt_source::pis_interrupt3, true);
-    irq_set_exclusive_handler(irq_num_rp2350::PIO2_IRQ_1, &onInterrupt);
-    irq_set_enabled(irq_num_rp2350::PIO2_IRQ_1, true);
-    pio_sm_set_enabled(pio2, NUM_PIO_STATE_MACHINES - 1U, true);
-#else
-    pinMode(static_cast<pin_size_t>(Kortlinje::pin::power_sense), PinMode::INPUT);
-    attachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense), &onInterrupt, PinStatus::FALLING);
-#endif // RP2350_ERRATA_E9
+    if constexpr (Kortlinje::board::type == "RP2350" && Kortlinje::board::revision <= 0xA2U)
+    {
+        pio_sm_config config{battery_e9_program_get_default_config(PIO_INSTRUCTION_COUNT - battery_e9_program.length)};
+        sm_config_set_set_pins(&config, Kortlinje::pin::power_sense, 1U);
+        sm_config_set_in_pins(&config, Kortlinje::pin::power_sense);
+        sm_config_set_jmp_pin(&config, Kortlinje::pin::power_sense);
+        sm_config_set_clkdiv_int_frac8(&config, static_cast<uint32_t>(F_CPU) / (0b1UL << 20U), 0U);
+        pio_gpio_init(pio2, Kortlinje::pin::power_sense);
+        gpio_disable_pulls(Kortlinje::pin::power_sense);
+        gpio_set_drive_strength(Kortlinje::pin::power_sense, gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
+        pio_sm_set_pins(pio2, NUM_PIO_STATE_MACHINES - 1U, 0U);
+        pio_sm_set_consecutive_pindirs(pio2, NUM_PIO_STATE_MACHINES - 1U, Kortlinje::pin::power_sense, 1U, false);
+        pio_sm_init(pio2,
+                    NUM_PIO_STATE_MACHINES - 1U,
+                    PIO_INSTRUCTION_COUNT - battery_e9_program.length + battery_e9_offset_vbus,
+                    &config);
+        pio_sm_clear_fifos(pio2, NUM_PIO_STATE_MACHINES - 1U);
+        pio_interrupt_clear(pio2, 3U);
+        pio_set_irq1_source_enabled(pio2, pio_interrupt_source::pis_interrupt3, true);
+        irq_set_exclusive_handler(irq_num_rp2350::PIO2_IRQ_1, &onIrq);
+        irq_set_enabled(irq_num_rp2350::PIO2_IRQ_1, true);
+        pio_sm_set_enabled(pio2, NUM_PIO_STATE_MACHINES - 1U, true);
+    }
+    else
+    {
+        pinMode(static_cast<pin_size_t>(Kortlinje::pin::power_sense), PinMode::INPUT);
+        attachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense), &onInterrupt, PinStatus::FALLING);
+    }
 }
 
 void BatteryExtension::handle()
@@ -60,15 +65,22 @@ void BatteryExtension::handle()
     }
 }
 
-#ifdef RP2350_ERRATA_E9
-void __time_critical_func(BatteryExtension::onInterrupt)()
+void __time_critical_func(BatteryExtension::onIrq)()
 {
-    pio_interrupt_clear(pio2, 3U);
-    pending = true;
+    if constexpr (Kortlinje::board::type == "RP2350" && Kortlinje::board::revision <= 0xA2U)
+    {
+        pio_interrupt_clear(pio2, 3U);
+        pending = true;
+    }
 }
-#else
-void BatteryExtension::onInterrupt() { pending = true; }
-#endif // RP2350_ERRATA_E9
+
+void BatteryExtension::onInterrupt()
+{
+    if constexpr (Kortlinje::board::type != "RP2350" || Kortlinje::board::revision > 0xA2U)
+    {
+        pending = true;
+    }
+}
 
 void BatteryExtension::sleep()
 {
@@ -78,12 +90,15 @@ void BatteryExtension::sleep()
 #ifdef PICO_CYW43_SUPPORTED
     cyw43_arch_deinit();
 #endif // PICO_CYW43_SUPPORTED
-#ifdef RP2350_ERRATA_E9
-    irq_set_enabled(irq_num_rp2350::PIO2_IRQ_1, false);
-    pio_sm_set_enabled(pio2, NUM_PIO_STATE_MACHINES - 1U, false);
-#else
-    detachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense));
-#endif // RP2350_ERRATA_E9
+    if constexpr (Kortlinje::board::type == "RP2350" && Kortlinje::board::revision <= 0xA2U)
+    {
+        irq_set_enabled(irq_num_rp2350::PIO2_IRQ_1, false);
+        pio_sm_set_enabled(pio2, NUM_PIO_STATE_MACHINES - 1U, false);
+    }
+    else
+    {
+        detachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense));
+    }
     gpio_init(Kortlinje::pin::power_sense);
     gpio_disable_pulls(Kortlinje::pin::power_sense);
     gpio_set_input_enabled(Kortlinje::pin::power_sense, true);
@@ -110,17 +125,21 @@ void BatteryExtension::sleep()
     cyw43_arch_init();
 #endif // PICO_CYW43_SUPPORTED
     Serial.begin();
-#ifdef RP2350_ERRATA_E9
-    pio_gpio_init(pio2, Kortlinje::pin::power_sense);
-    pio_interrupt_clear(pio2, 3U);
-    pio_sm_restart(pio2, NUM_PIO_STATE_MACHINES - 1U);
-    pio_sm_clkdiv_restart(pio2, NUM_PIO_STATE_MACHINES - 1U);
-    pio_sm_exec(pio2, NUM_PIO_STATE_MACHINES - 1U, pio_encode_jmp(PIO_INSTRUCTION_COUNT - battery_e9_program.length));
-    irq_set_enabled(irq_num_rp2350::PIO2_IRQ_1, true);
-    pio_sm_set_enabled(pio2, NUM_PIO_STATE_MACHINES - 1U, true);
-#else
-    attachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense), &onInterrupt, PinStatus::FALLING);
-#endif // RP2350_ERRATA_E9
+    if constexpr (Kortlinje::board::type == "RP2350" && Kortlinje::board::revision <= 0xA2U)
+    {
+        pio_gpio_init(pio2, Kortlinje::pin::power_sense);
+        pio_interrupt_clear(pio2, 3U);
+        pio_sm_restart(pio2, NUM_PIO_STATE_MACHINES - 1U);
+        pio_sm_clkdiv_restart(pio2, NUM_PIO_STATE_MACHINES - 1U);
+        pio_sm_exec(
+            pio2, NUM_PIO_STATE_MACHINES - 1U, pio_encode_jmp(PIO_INSTRUCTION_COUNT - battery_e9_program.length));
+        irq_set_enabled(irq_num_rp2350::PIO2_IRQ_1, true);
+        pio_sm_set_enabled(pio2, NUM_PIO_STATE_MACHINES - 1U, true);
+    }
+    else
+    {
+        attachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense), &onInterrupt, PinStatus::FALLING);
+    }
     DisplayService::setPower(true);
     AlarmExtension::reschedule();
 }

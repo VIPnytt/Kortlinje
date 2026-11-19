@@ -1,12 +1,15 @@
 #include "extensions/OtaExtension.h"
 
-#include "constants/Kortlinje.h"
+#include "constants/board.h"
 #include "extensions/MqttExtension.h"
 #include "fonts/KortlinjeFont.h"
 #include "handlers/TextHandler.h"
+#include "services/DeviceService.h"
 #include "services/DisplayService.h"
 
+#include <ArduinoOTA.h>
 #include <hardware/watchdog.h>
+#include <pico/platform.h>
 
 void OtaExtension::begin()
 {
@@ -18,6 +21,7 @@ void OtaExtension::begin()
     ArduinoOTA.onProgress(&onProgress);
     ArduinoOTA.onStart(&onStart);
     ArduinoOTA.begin(false);
+    transmit();
 }
 
 void OtaExtension::handle() { ArduinoOTA.handle(); }
@@ -36,4 +40,11 @@ void OtaExtension::onStart()
     TextHandler(std::string("OTA"), font).draw();
     DisplayService::setPower(true);
     MqttExtension::disconnect();
+}
+
+void OtaExtension::transmit()
+{
+    JsonDocument doc{};
+    doc[Kortlinje::board::type].set(0xA0U | rp2350_rom_version());
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

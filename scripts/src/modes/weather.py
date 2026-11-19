@@ -1,7 +1,7 @@
 import typing
 
 if typing.TYPE_CHECKING:
-    from ..Kortlinje import Kortlinje
+    from ..kortlinje import Kortlinje
 
 
 class Weather:
@@ -10,7 +10,7 @@ class Weather:
         "api.open-meteo.com",
         "wttr.in",
     )
-    NAME: typing.Final[str] = "Weather"
+    NAME: typing.Literal["Weather"] = "Weather"
 
     def __init__(self, project: "Kortlinje") -> None:
         """Initialize the weather mode with a project reference."""

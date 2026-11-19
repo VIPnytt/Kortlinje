@@ -3,7 +3,7 @@ import sys
 import typing
 
 if typing.TYPE_CHECKING:
-    from .src.components.Types import COMMAND_LINE_TARGETS, Environment, Import
+    from .src.components.types import COMMAND_LINE_TARGETS, Environment, Import
 else:
     from SCons.Script import COMMAND_LINE_TARGETS, Environment, Import
 
@@ -18,7 +18,6 @@ def main() -> None:
     """
     if not {
         "erase",
-        "menuconfig",
         "size",
     }.isdisjoint(COMMAND_LINE_TARGETS):
         return
@@ -42,7 +41,7 @@ def main() -> None:
             subprocess.run(pip.args, check=True)
         subprocess.run(uv.args, check=True)
 
-    from src.Kortlinje import Kortlinje
+    from src.kortlinje import Kortlinje
 
     if env.IsCleanTarget():
         Kortlinje.clean()

@@ -1,7 +1,6 @@
 #include "modes/ScanMode.h"
 
 #include "services/DisplayService.h"
-#include "services/ExtensionsService.h"
 
 ScanMode::~ScanMode() { cancel_repeating_timer(&timer); }
 

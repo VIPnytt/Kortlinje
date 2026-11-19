@@ -7,48 +7,48 @@ Article number: `906.204.68`
 ### LED panel diagram
 
 ```text
- DA1 ──────────┐
-CLK1 ─────────┐│
-      ┌───────┼┼────────────────────────┐
-      │┌┴┴┴┴┴┴┴┴┴┴┴┴┴┴┐ U1       R31 ┌┴┐│
-      │└┬┬┬┬┬┬┬┬┬┬┬┬┬┬┘              └┬┘│
-      │                               └─┼─ Buzzer
-      │  U2                             │
-      │ ┌─┐                          B1 ┼ B1
-      │ ┤ ├                          B2 ┼ B2
-      │ ┤ ├                          B3 ┼ B3
-      │ ┤ ├                          B4 ┼ B4
-      │ ┤ ├                          B5 ┼ B5
-      │ ┤ ├                             │
-      │ ┤ ├    U3                     1 ┤
- DA2 ─┼─┤ ├   ┌─┐                     2 ┤
-CLK2 ─┼─┤ ├   ┤ ├                     3 ┤
-      │ ┤ ├   ┤ ├    U6               4 ┼─ BAT+
-      │ ┤ ├   ┤ ├   ┌─┐                 │
-      │ ┤ ├   ┤ ├   ┤ ├             VDD ┼─ +5.0 V DC
-      │ ┤ ├   ┤ ├   ┤ ├   Q2  D43   GND ┼─ 0 V DC
-      │ ┤ ├   ┤ ├   ┤ ├  ┌─┴─┐┌┴┐    CC ┼─ USB CC
-      │ ┤ ├   ┤ ├   ┤ ├  └┬─┬┘└┬┘       │
-      │ └─┘   ┤ ├   ┤ ├     └──┴────────┼─ +4.7 V DC
-      │       ┤ ├   ┤ ├                 │
-      ├ K1    ┤ ├   ┤ ├─────────────────┼─ Data
-      ├ K2    ┤ ├   ┤ ├─────────────────┼─ Enable
-      ├ K3    ┤ ├   └─┘ R32 ┌─┐         │
-      │       └─┘          ─┤ ├┬────────┼─ Power
- DA3 ─┼────────┐            └─┘│        │
-CLK3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───┼─ Light
-      │┌┴┴┴┴┴┴┴┴┴┴┴┴┴┴┐    ─┤ ├┘  ┌─┴─┐ │
-      │└┬┬┬┬┬┬┬┬┬┬┬┬┬┬┘U4   └─┘   └┬─┬┘ │
-      └─────────────────────────────────┘
+ display_sda1 ──────────┐
+display_sclk1 ─────────┐│
+               ┌───────┼┼────────────────────────┐
+               │┌┴┴┴┴┴┴┴┴┴┴┴┴┴┴┐ U1       R31 ┌┴┐│
+               │└┬┬┬┬┬┬┬┬┬┬┬┬┬┬┘              └┬┘│
+               │                               └─┼─ audio_buzzer
+               │  U2                             │
+               │ ┌─┐                          B1 ┼ B1
+               │ ┤ ├                          B2 ┼ B2
+               │ ┤ ├                          B3 ┼ B3
+               │ ┤ ├                          B4 ┼ B4
+               │ ┤ ├                          B5 ┼ B5
+               │ ┤ ├                             │
+               │ ┤ ├    U3                     1 ┤
+ display_sda2 ─┼─┤ ├   ┌─┐                     2 ┤
+display_sclk2 ─┼─┤ ├   ┤ ├                     3 ┤
+               │ ┤ ├   ┤ ├    U6               4 ┼─ BAT+
+               │ ┤ ├   ┤ ├   ┌─┐                 │
+               │ ┤ ├   ┤ ├   ┤ ├             VDD ┼─ +5.0 V DC
+               │ ┤ ├   ┤ ├   ┤ ├   Q2  D43   GND ┼─ 0 V DC
+               │ ┤ ├   ┤ ├   ┤ ├  ┌─┴─┐┌┴┐    CC ┼─ USB CC
+               │ ┤ ├   ┤ ├   ┤ ├  └┬─┬┘└┬┘       │
+               │ └─┘   ┤ ├   ┤ ├     └──┴────────┼─ +4.7 V DC
+               │       ┤ ├   ┤ ├                 │
+               ├ K1    ┤ ├   ┤ ├─────────────────┼─ climate_pdm
+               ├ K2    ┤ ├   ┤ ├─────────────────┼─ climate_en
+               ├ K3    ┤ ├   └─┘ R32 ┌─┐         │
+               │       └─┘          ─┤ ├┬────────┼─ power_sense
+ display_sda3 ─┼────────┐            └─┘│        │
+display_sclk3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───┼─ light_sense
+               │┌┴┴┴┴┴┴┴┴┴┴┴┴┴┴┐    ─┤ ├┘  ┌─┴─┐ │
+               │└┬┬┬┬┬┬┬┬┬┬┬┬┬┬┘U4   └─┘   └┬─┬┘ │
+               └─────────────────────────────────┘
 ```
 
 ### Buttons top diagram
 
 ```text
 ┌───┐
-│ 1 ┼─ 0 V DC    [white]
-│ 2 ┼─ Buttons   [red]
-│ 3 ┼─ +3.3 V DC [black]
+│ 1 ┼─ 0 V DC     [white]
+│ 2 ┼─ button_top [red]
+│ 3 ┼─ +3.3 V DC  [black]
 └───┘
 ```
 
@@ -56,10 +56,10 @@ CLK3 ─┼───────┐│        R33 ┌─┐│ Q3 ┌───�
 
 ```text
 ┌───┐
-│ 1 ┼─ +3.3 V DC [blue]
-│ 2 ┼─ Buttons   [black]
-│ 3 ┼─ 0 V DC    [red]
-│ 4 ┼─ BAT+      [white]
+│ 1 ┼─ +3.3 V DC   [blue]
+│ 2 ┼─ button_rear [black]
+│ 3 ┼─ 0 V DC      [red]
+│ 4 ┼─ BAT+        [white]
 └───┘
 ```
 
@@ -94,20 +94,20 @@ Green ┼─ USB CC
 │  3V3 ├─ +3.3 V DC
 │  GND ├─ 0 V DC
 │      │
-│  ADC ├─ Buttons top
-│  ADC ├─ Buttons rear
+│  ADC ├─ button_top
+│  ADC ├─ button_rear
 │      │
-│   GP ├─ SCLK1
-│   GP ├─ SCLK2
-│   GP ├─ SCLK3
-│   GP ├─ SDA1
-│   GP ├─ SDA2
-│   GP ├─ SDA3
-│   GP ├─ Buzzer
-│   GP ├─ Light
-│   GP ├─ Enable
-│   GP ├─ Data
-│   GP ├─ Power
+│   GP ├─ audio_buzzer
+│   GP ├─ display_sclk1
+│   GP ├─ display_sclk2
+│   GP ├─ display_sclk3
+│   GP ├─ display_sda1
+│   GP ├─ display_sda2
+│   GP ├─ display_sda3
+│   GP ├─ climate_en
+│   GP ├─ climate_pdm
+│   GP ├─ light_sense
+│   GP ├─ power_sense
 └──────┘              
 ```
 
@@ -131,29 +131,13 @@ For simplified wiring without battery backup, these deviations take place:
 
 - Connect 5 V to `VDD`
 - Do not connect 4.7 V to `Q2`/`D43`
-- Skip the *Power* sensing line to `R32`/`R33`
+- Skip the `power_sense` wire to `R32`/`R33`
 
 ### Wiring
 
 Wire up everything in accordance with diagrams. It’s advised to defer the USB cable, buttons and environmental sensors to the end.
 
 ## 🔧 Configuration
-
-| Label        | Type           | Constant        |
-| ------------ | -------------- | --------------- |
-| `SCLK1`      | Digital output | `display_sclk1` |
-| `SCLK2`      | Digital output | `display_sclk2` |
-| `SCLK3`      | Digital output | `display_sclk3` |
-| `SDA1`       | Digital output | `display_sda1`  |
-| `SDA2`       | Digital output | `display_sda2`  |
-| `SDA3`       | Digital output | `display_sda3`  |
-| Buzzer       | Digital output | `audio_buzzer`  |
-| Enable       | Digital output | `climate_en`    |
-| Data         | Digital input  | `climate_pdm`   |
-| Light        | Digital input  | `light_sense`   |
-| Power        | Digital input  | `power_sense`   |
-| Buttons top  | Analog input   | `button_top`    |
-| Buttons rear | Analog input   | `button_rear`   |
 
 ### Power and ground
 

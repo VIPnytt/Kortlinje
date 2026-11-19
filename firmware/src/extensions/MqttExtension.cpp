@@ -4,7 +4,6 @@
 #include "services/ConnectivityService.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
-#include "services/ExtensionsService.h"
 #include "services/ModesService.h"
 
 #include <WiFi.h>
@@ -81,7 +80,7 @@ void MqttExtension::discover()
     {
         extension->onHomeAssistant(discovery, topic, unique);
     }
-    for (const std::string_view _mode : ModesService::names)
+    for (const std::string_view _mode : ModesService::getNames())
     {
         ModesService::getMode(_mode)->onHomeAssistant(discovery, topic, unique);
     }

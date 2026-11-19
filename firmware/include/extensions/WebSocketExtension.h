@@ -8,8 +8,6 @@
 class WebSocketExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"WebSocket"};
-
     static inline std::vector<uint8_t> buffer{};
 
     static inline AsyncWebSocket socket{"/ws"};
@@ -18,6 +16,8 @@ private:
                         const uint8_t *data, size_t len);
 
 public:
+    static constexpr std::string_view name{"WebSocket"};
+
     explicit WebSocketExtension() : ExtensionModule(name) {};
 
     void begin() override;

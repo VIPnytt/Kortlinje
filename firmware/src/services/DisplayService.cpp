@@ -17,30 +17,18 @@ void DisplayService::begin()
 #ifdef PIN_LED
     pinMode(PIN_LED, PinMode::OUTPUT_2MA);
 #endif // PIN_LED
-#ifdef VK1640_SCLK_1M25
-    pio_add_program_at_offset(pio0, &display_1m25_program, 0U);
-#else
     pio_add_program_at_offset(pio0, &display_program, 0U);
-#endif // VK1640_SCLK_1M25
     for (size_t chip{0U}; chip < chips; ++chip)
     {
         pio_sm_claim(pio0, chip);
         dma_channel_claim(chip);
-#ifdef VK1640_SCLK_1M25
-        pio_sm_config pio{display_1m25_program_get_default_config(0U)};
-#else
         pio_sm_config pio{display_program_get_default_config(0U)};
-#endif // VK1640_SCLK_1M25
         sm_config_set_sideset_pins(&pio, sclk[chip]);
         sm_config_set_out_pins(&pio, sda[chip], 1U);
         sm_config_set_set_pins(&pio, sda[chip], 1U);
         sm_config_set_out_shift(&pio, true, false, 32U);
         sm_config_set_fifo_join(&pio, pio_fifo_join::PIO_FIFO_JOIN_TX);
-#ifdef VK1640_SCLK_1M25
-        sm_config_set_clkdiv_int_frac8(&pio, static_cast<uint32_t>(F_CPU) / 5'000'000UL, 0U);
-#else
         sm_config_set_clkdiv_int_frac8(&pio, static_cast<uint32_t>(F_CPU) / 4'000'000UL, 0U);
-#endif // VK1640_SCLK_1M25
         pio_gpio_init(pio0, sclk[chip]);
         pio_gpio_init(pio0, sda[chip]);
         gpio_set_drive_strength(sclk[chip], gpio_drive_strength::GPIO_DRIVE_STRENGTH_2MA);
@@ -49,11 +37,7 @@ void DisplayService::begin()
         pio_sm_set_consecutive_pindirs(pio0, chip, sda[chip], 1U, true);
         const uint32_t mask{(0b1UL << sda[chip]) | (0b1UL << sclk[chip])};
         pio_sm_set_pins_with_mask(pio0, chip, mask, mask);
-#ifdef VK1640_SCLK_1M25
-        pio_sm_init(pio0, chip, display_1m25_offset_idle, &pio);
-#else
         pio_sm_init(pio0, chip, display_offset_idle, &pio);
-#endif // VK1640_SCLK_1M25
         pio_sm_set_enabled(pio0, chip, true);
         dma_channel_config_t dma{dma_channel_get_default_config(chip)};
         channel_config_set_transfer_data_size(&dma, dma_channel_transfer_size::DMA_SIZE_32);
@@ -742,7 +726,7 @@ void DisplayService::onHomeAssistant(JsonDocument &discovery, std::string topic,
     component[HomeAssistant::Abbreviations::effect_command_template].set(R"({"mode":"{{value}}"})");
     component[HomeAssistant::Abbreviations::effect_command_topic].set(topicModes + "/set");
     JsonArray effectList{component[HomeAssistant::Abbreviations::effect_list].to<JsonArray>()};
-    for (const std::string_view _mode : ModesService::names)
+    for (const std::string_view _mode : ModesService::getNames())
     {
         effectList.add(_mode);
     }

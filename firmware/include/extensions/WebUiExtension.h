@@ -10,8 +10,6 @@
 class WebUiExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"Web UI"};
-
     volatile bool pending{true};
 
     static inline uint64_t interval{0b1ULL << 16U};
@@ -24,6 +22,8 @@ private:
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
+    static constexpr std::string_view name{"Web UI"};
+
     explicit WebUiExtension() : ExtensionModule(name) {};
 
     static inline bool render{false};

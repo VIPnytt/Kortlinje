@@ -14,11 +14,12 @@ void MessageExtension::begin()
 {
     ConfigHandler::get(name, "font", fontName);
     ConfigHandler::get(name, "repeat", repeat);
-    if (std::ranges::find(FontsService::names, fontName) == FontsService::names.end())
+    const std::span<const std::string_view> names{FontsService::getNames()};
+    if (std::ranges::find(names, fontName) == names.end())
     {
         fontName = SmallFont::name;
     }
-    font = FontsService::get(fontName);
+    font = FontsService::getFont(fontName);
     pending = true;
 }
 
@@ -27,7 +28,7 @@ void MessageExtension::handle()
     if (pending)
     {
         pending = false;
-        font = FontsService::get(fontName);
+        font = FontsService::getFont(fontName);
         if (active)
         {
             text = std::make_unique<TextHandler>(message, *font);
@@ -104,7 +105,8 @@ void MessageExtension::setMessage(std::string_view _message)
 
 void MessageExtension::setFont(std::string_view _fontName)
 {
-    if (_fontName != fontName && std::ranges::find(FontsService::names, _fontName) != FontsService::names.end())
+    const std::span<const std::string_view> names{FontsService::getNames()};
+    if (_fontName != fontName && std::ranges::find(names, _fontName) != names.end())
     {
         fontName = _fontName;
         ConfigHandler::set(name, "font", fontName);
@@ -133,17 +135,14 @@ void MessageExtension::transmit()
 void MessageExtension::onReceive(JsonObjectConst payload, std::string_view source)
 {
     static_cast<void>(source);
-    // Font
     if (payload["font"].is<std::string_view>())
     {
         setFont(payload["font"].as<std::string_view>());
     }
-    // Message
     if (payload["message"].is<std::string_view>())
     {
         setMessage(payload["message"].as<std::string_view>());
     }
-    // Repeat
     if (payload["repeat"].is<uint8_t>())
     {
         setRepeat(payload["repeat"].as<uint8_t>());
@@ -163,7 +162,7 @@ void MessageExtension::onHomeAssistant(JsonDocument &discovery, std::string topi
         component[HomeAssistant::Abbreviations::icon].set("mdi:format-font");
         component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" font"));
         JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
-        for (const std::string_view _name : FontsService::names)
+        for (const std::string_view _name : FontsService::getNames())
         {
             options.add(_name);
         }

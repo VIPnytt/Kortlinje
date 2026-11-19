@@ -2,13 +2,9 @@
 
 #include "modules/ExtensionModule.h"
 
-#include <hardware/pio.h>
-
 class ClimateExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"Climate"};
-
     static inline volatile bool pending{false};
 
     static inline volatile uint8_t humidity{0U};
@@ -21,6 +17,8 @@ private:
     static void onSampler();
 
 public:
+    static constexpr std::string_view name{"Climate"};
+
     explicit ClimateExtension() : ExtensionModule(name) {};
 
     void configure() override;

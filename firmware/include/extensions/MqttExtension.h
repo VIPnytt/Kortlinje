@@ -4,7 +4,6 @@
 #include "constants/secrets.h"
 #include "modules/ExtensionModule.h"
 
-#include <Arduino.h>
 #include <MQTTClient.h>
 #include <WiFi.h>
 #include <format>
@@ -16,8 +15,6 @@
 class MqttExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"MQTT"};
-
     static constexpr std::string_view topicPrefix{
         std::define_static_string(std::string{"kortlinje/"} + Kortlinje::device::hostname + "/")};
     static constexpr std::string_view availabilityTopic{
@@ -39,6 +36,8 @@ private:
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
+    static constexpr std::string_view name{"MQTT"};
+
     explicit MqttExtension() : ExtensionModule(name) {};
 
     static inline MQTTClient client{static_cast<int>(0b1U << 7U), static_cast<int>(0b1U << 8U)};

@@ -2,14 +2,13 @@ import hashlib
 import typing
 
 if typing.TYPE_CHECKING:
-    from ..components.Types import COMMAND_LINE_TARGETS
-    from ..Kortlinje import Kortlinje
+    from ..kortlinje import Kortlinje
 else:
-    from SCons.Script import COMMAND_LINE_TARGETS
+    pass
 
 
 class Ota:
-    NAME: typing.Final[str] = "OTA"
+    NAME: typing.Literal["OTA"] = "OTA"
     project: "Kortlinje"
     auth: str | None
 
@@ -33,12 +32,8 @@ class Ota:
         """
         Configure OTA upload settings, including the protocol, host-based port, and authentication flags.
         """
-        protocol = self.project.env.GetProjectOption("upload_protocol", None)
-        if protocol != "espota" and any(target.endswith("ota") for target in COMMAND_LINE_TARGETS):
-            protocol = "espota"
-            self.project.env.Replace(UPLOAD_PROTOCOL=protocol)
         if (
-            protocol == "espota"
+            self.project.env.GetProjectOption("upload_protocol", "None") == "espota"
             and not self.project.env.GetProjectOption("upload_flags", None)
             and not self.project.env.GetProjectOption("upload_port", None)
         ):

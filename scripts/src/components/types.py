@@ -6,12 +6,41 @@ BUILD_TARGETS = globals().get("BUILD_TARGETS", [])
 COMMAND_LINE_TARGETS = globals().get("COMMAND_LINE_TARGETS", [])
 
 
+class Action:
+    """SCons executable action wrapper."""
+
+    list: list[typing.Any]
+
+
+class Executor:
+    """SCons target action executor."""
+
+    action_list: list[Action]
+
+
 class BoardConfig:
     def get(self, key: str, default: typing.Any = None) -> typing.Any:
         """Declare board configuration lookup; this placeholder raises NotImplementedError."""
         raise NotImplementedError
 
     def update(self, key: str, value: typing.Any) -> None:
+        raise NotImplementedError
+
+
+class PioPlatform:
+    """PlatformIO platform manager interface."""
+
+    packages: dict[str, dict[str, typing.Any]]
+
+    def get_package_dir(self, name: str) -> str | None:
+        """Return the filesystem directory path for an installed PlatformIO package.
+
+        Parameters:
+            name (str): The package identifier (e.g., 'tool-picotool-rp2040-earlephilhower').
+
+        Returns:
+            str | None: The resolved package directory path, or None if unavailable.
+        """
         raise NotImplementedError
 
 
@@ -24,12 +53,16 @@ class ProjectConfig:
 class Node:
     """SCons directed acyclic graph (DAG) filesystem node."""
 
-    def get_path(self) -> str:
-        """Return the path string representation of the node."""
-        raise NotImplementedError
-
     def exists(self) -> bool:
         """Check whether the node exists on the filesystem."""
+        raise NotImplementedError
+
+    def get_executor(self) -> Executor:
+        """Return the action executor bound to this node."""
+        raise NotImplementedError
+
+    def get_path(self) -> str:
+        """Return the path string representation of the node."""
         raise NotImplementedError
 
 
@@ -45,13 +78,44 @@ class Environment:
     def AddPostAction(
         self,
         target: str | Node | collections.abc.Sequence[str | Node],
-        action: collections.abc.Callable[[list[str], list[str], "Environment"], int | None],
+        action: str | Action | collections.abc.Callable[[list[str], list[str], "Environment"], int | None],
     ) -> None:
         """Register an action to run after the specified build target completes.
 
         Parameters:
             target (str | Node | collections.abc.Sequence[str | Node]): The build target associated with the action.
             action (collections.abc.Callable[[list[str], list[str], Environment], int | None]): A callback receiving the target name, command arguments, and environment.
+        """
+        raise NotImplementedError
+
+    def AddPreAction(
+        self,
+        target: str | Node | collections.abc.Sequence[str | Node],
+        action: str | Action | collections.abc.Callable[[list[str], list[str], "Environment"], int | None],
+    ) -> None:
+        """Register an action to run before the specified build target executes.
+
+        Parameters:
+            target (str | Node | collections.abc.Sequence[str | Node]): The build target associated with the action.
+            action (str | Action | collections.abc.Callable[[list[str], list[str], Environment], int | None]): A command, SCons Action, or callback receiving the target name, command arguments, and environment.
+        """
+        raise NotImplementedError
+
+    def Alias(
+        self,
+        alias: str,
+        source: str | Node | collections.abc.Sequence[str | Node] | None = None,
+        action: typing.Any = None,
+    ) -> list[Node]:
+        """Create or lookup one or more SCons Alias nodes.
+
+        Parameters:
+            alias (str): The alias target name (e.g., 'upload').
+            source (str | Node | collections.abc.Sequence[str | Node] | None): Optional prerequisite targets.
+            action (typing.Any): Optional action(s) attached to the alias.
+
+        Returns:
+            list[Node]: The list of Alias nodes matching the identifier.
         """
         raise NotImplementedError
 
@@ -113,6 +177,14 @@ class Environment:
     def IsCleanTarget(self) -> bool:
         raise NotImplementedError
 
+    def PioPlatform(self) -> PioPlatform:
+        """Return the active PlatformIO platform instance.
+
+        Returns:
+            PioPlatform: The platform instance for the current build environment.
+        """
+        raise NotImplementedError
+
     def Replace(self, **kwargs: typing.Any) -> None:
         raise NotImplementedError
 
@@ -120,6 +192,22 @@ class Environment:
         raise NotImplementedError
 
     def subst(self, key: str) -> str:
+        raise NotImplementedError
+
+    def VerboseAction(
+        self,
+        action: collections.abc.Callable[[list[typing.Any], list[typing.Any], "Environment"], typing.Any] | str,
+        actstr: str,
+    ) -> typing.Any:
+        """Wrap an SCons action with a custom summary message when verbose mode is off.
+
+        Parameters:
+            action (collections.abc.Callable | str): The callback or shell command to execute.
+            actstr (str): The status string displayed in the terminal.
+
+        Returns:
+            typing.Any: The wrapped SCons Action object.
+        """
         raise NotImplementedError
 
 

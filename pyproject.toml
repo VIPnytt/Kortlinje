@@ -45,8 +45,3 @@ extend-exclude = [
     ".pio",
 ]
 line-length = 120
-
-[tool.ruff.lint]
-ignore = [
-    "N999",
-]

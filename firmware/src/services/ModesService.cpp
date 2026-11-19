@@ -5,10 +5,41 @@
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
 #include "handlers/TextHandler.h"
+#include "modes/AnimationMode.h"
+#include "modes/BlindsMode.h"
+#include "modes/BlinkMode.h"
+#include "modes/BreakoutMode.h"
+#include "modes/BrightMode.h"
+#include "modes/CircleMode.h"
+#include "modes/ClockMode.h"
+#include "modes/CountdownMode.h"
+#include "modes/DateMode.h"
+#include "modes/DrawMode.h"
+#include "modes/EpochCounterMode.h"
+#include "modes/EqualizerMode.h"
+#include "modes/FireworkMode.h"
+#include "modes/GameOfLifeMode.h"
+#include "modes/GlitterMode.h"
+#include "modes/HumidityMode.h"
+#include "modes/LeafFallMode.h"
+#include "modes/LinesMode.h"
+#include "modes/NoiseMode.h"
+#include "modes/PingPongMode.h"
+#include "modes/RainMode.h"
+#include "modes/ScanMode.h"
+#include "modes/SnakeMode.h"
+#include "modes/StarsMode.h"
+#include "modes/TemperatureMode.h"
+#include "modes/TickerMode.h"
+#include "modes/WaveformMode.h"
+#include "modes/WeatherMode.h"
+#include "modes/WeekdayMode.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 
 #include <RP2040Support.h>
+#include <array>
+
 
 void ModesService::begin()
 {
@@ -22,6 +53,7 @@ void ModesService::begin()
     }
     if (mode == nullptr)
     {
+        const std::span<const std::string_view> names{getNames()};
         setMode(names[random(static_cast<long>(names.size()))]);
     }
 }
@@ -201,6 +233,42 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     return nullptr;
 }
 
+std::span<const std::string_view> ModesService::getNames()
+{
+    static constexpr std::array names{
+        AnimationMode::name,
+        BlindsMode::name,
+        BlinkMode::name,
+        BreakoutMode::name,
+        BrightMode::name,
+        CircleMode::name,
+        ClockMode::name,
+        CountdownMode::name,
+        DateMode::name,
+        DrawMode::name,
+        EpochCounterMode::name,
+        EqualizerMode::name,
+        FireworkMode::name,
+        GameOfLifeMode::name,
+        GlitterMode::name,
+        HumidityMode::name,
+        LeafFallMode::name,
+        LinesMode::name,
+        NoiseMode::name,
+        PingPongMode::name,
+        RainMode::name,
+        ScanMode::name,
+        SnakeMode::name,
+        StarsMode::name,
+        TemperatureMode::name,
+        TickerMode::name,
+        WaveformMode::name,
+        WeatherMode::name,
+        WeekdayMode::name,
+    };
+    return names;
+}
+
 int64_t __time_critical_func(ModesService::onAlarm)(alarm_id_t id, void *user_data)
 {
     static_cast<void>(id);
@@ -228,7 +296,7 @@ void ModesService::onHomeAssistant(JsonDocument &discovery, std::string topic, s
         component[HomeAssistant::Abbreviations::icon].set("mdi:format-list-bulleted");
         component[HomeAssistant::Abbreviations::name].set("Mode");
         JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
-        for (const std::string_view _name : names)
+        for (const std::string_view _name : getNames())
         {
             options.add(_name);
         }
@@ -290,6 +358,7 @@ void ModesService::setModeNext()
     {
         return;
     }
+    const std::span<const std::string_view> names{getNames()};
     for (size_t idx{0U}; idx < names.size(); ++idx)
     {
         if (names[idx] == mode->name)
@@ -308,6 +377,7 @@ void ModesService::setModePrevious()
     {
         return;
     }
+    const std::span<const std::string_view> names{getNames()};
     for (size_t idx{0U}; idx < names.size(); ++idx)
     {
         if (names[idx] == mode->name)
@@ -323,7 +393,7 @@ void ModesService::transmit()
 {
     JsonDocument doc{};
     JsonArray list{doc["collection"].to<JsonArray>()};
-    for (const std::string_view _name : names)
+    for (const std::string_view _name : getNames())
     {
         list.add(_name);
     }

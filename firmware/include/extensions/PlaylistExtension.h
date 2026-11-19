@@ -10,8 +10,6 @@
 class PlaylistExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"Playlist"};
-
     static constexpr const char *schedulePath{"/playlist.json"};
     static constexpr const char *scheduleTempPath{"/playlist.tmp"};
 
@@ -45,6 +43,8 @@ private:
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
+    static constexpr std::string_view name{"Playlist"};
+
     explicit PlaylistExtension() : ExtensionModule(name) {};
 
     void begin() override;

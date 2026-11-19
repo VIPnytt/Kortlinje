@@ -2,15 +2,12 @@
 
 #include "modules/ExtensionModule.h"
 
-#include <hardware/pio.h>
 #include <pico/time.h>
 #include <string_view>
 
 class PhotocellExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"Photocell"};
-
     static inline volatile bool lit{false};
     static inline volatile bool pending{true};
 
@@ -25,6 +22,8 @@ private:
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
 public:
+    static constexpr std::string_view name{"Photocell"};
+
     explicit PhotocellExtension() : ExtensionModule(name) {};
 
     void configure() override;

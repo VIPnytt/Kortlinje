@@ -9,7 +9,7 @@ import zoneinfo
 import tzlocal
 
 if typing.TYPE_CHECKING:
-    from ..Kortlinje import Kortlinje
+    from ..kortlinje import Kortlinje
 
 
 class Time:

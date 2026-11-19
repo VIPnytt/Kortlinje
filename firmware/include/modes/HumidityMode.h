@@ -6,7 +6,6 @@ class HumidityMode final : public ModeModule
 {
 private:
     static inline bool pending{false};
-    static inline bool saved{true};
 
     static inline uint8_t humidity{0U};
 
@@ -17,7 +16,6 @@ public:
 
     explicit HumidityMode() : ModeModule(name) {};
 
-    void begin() override;
     void handle() override;
     void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
 

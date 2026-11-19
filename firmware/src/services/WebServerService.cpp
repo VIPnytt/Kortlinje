@@ -10,7 +10,7 @@ void WebServerService::begin()
     http.begin();
 }
 
-void WebServerService::onEmpty(AsyncWebServerRequest *request) {}
+void WebServerService::onEmpty(AsyncWebServerRequest *request) { static_cast<void>(request); }
 
 void WebServerService::onNotFound(AsyncWebServerRequest *request)
 {

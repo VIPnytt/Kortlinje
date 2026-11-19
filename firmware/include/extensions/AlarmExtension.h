@@ -9,8 +9,6 @@
 class AlarmExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"Alarm"};
-
     enum class State : uint8_t
     {
         IDLE,
@@ -45,6 +43,8 @@ private:
     [[nodiscard]] static time_t getEpoch(time_t now, AlarmTime config);
 
 public:
+    static constexpr std::string_view name{"Alarm"};
+
     explicit AlarmExtension() : ExtensionModule(name) {};
 
     void configure() override;

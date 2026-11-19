@@ -16,7 +16,7 @@ void TickerMode::begin()
     {
         setFont(fontName);
     }
-    if (!font)
+    if (font == nullptr)
     {
         setFont(SmallFont::name);
     }
@@ -61,7 +61,7 @@ void TickerMode::onHomeAssistant(JsonDocument &discovery, std::string topic, std
         component[HomeAssistant::Abbreviations::icon].set("mdi:format-font");
         component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" font"));
         JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
-        for (const std::string_view _name : FontsService::names)
+        for (const std::string_view _name : FontsService::getNames())
         {
             options.add(_name);
         }
@@ -104,9 +104,10 @@ bool __time_critical_func(TickerMode::onTimer)(repeating_timer *rt)
 
 void TickerMode::setFont(std::string_view fontName)
 {
-    if (std::ranges::find(FontsService::names, fontName) != FontsService::names.end())
+    const std::span<const std::string_view> names{FontsService::getNames()};
+    if (std::ranges::find(names, fontName) != names.end())
     {
-        font = FontsService::get(fontName);
+        font = FontsService::getFont(fontName);
         ConfigHandler::set(name, "font", fontName);
         pending = true;
     }

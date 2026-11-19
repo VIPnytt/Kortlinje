@@ -162,13 +162,11 @@ void DeviceService::receive(JsonObjectConst payload, std::string_view source, st
         ModesService::onReceive(payload, source);
         return;
     }
-    for (ExtensionModule *extension : ExtensionsService::getAll())
+    ExtensionModule *_extension{ExtensionsService::getExtension(destination)};
+    if (_extension != nullptr)
     {
-        if (extension->name == destination)
-        {
-            extension->onReceive(payload, source);
-            return;
-        }
+        _extension->onReceive(payload, source);
+        return;
     }
     ModeModule *mode{ModesService::getMode()};
     if (mode != nullptr && mode->name == destination)
@@ -176,7 +174,7 @@ void DeviceService::receive(JsonObjectConst payload, std::string_view source, st
         mode->onReceive(payload, source);
         return;
     }
-    std::unique_ptr<ModeModule> _mode{ModesService::getMode(destination)};
+    const std::unique_ptr<ModeModule> _mode{ModesService::getMode(destination)};
     if (_mode != nullptr)
     {
         _mode->onReceive(payload, source);

@@ -10,8 +10,6 @@
 class AlexaExtension final : public ExtensionModule
 {
 private:
-    static constexpr std::string_view name{"Alexa"};
-
     static inline AsyncUDP upnp{};
 
     static void onGetDescription(AsyncWebServerRequest *request);
@@ -26,6 +24,8 @@ private:
     [[nodiscard]] static std::array<char, 0b1U << 8U> light();
 
 public:
+    static constexpr std::string_view name{"Alexa"};
+
     explicit AlexaExtension() : ExtensionModule(name) {};
 
     void begin() override;

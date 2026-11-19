@@ -17,23 +17,3 @@ clock:
     out    pins, 1         side 0 [1]
     jmp    y--, clock      side 1 [1]
 .wrap
-
-.program display_1m25
-.side_set 1
-stop:
-    set    pins, 0         side 0 [2]
-    set    pins, 0         side 1 [2]
-    set    pins, 1         side 1 [4]
-public idle:
-    pull   block           side 1 [2]
-    set    pins, 0         side 1 [2]
-    set    pins, 0         side 0 [2]
-.wrap_target
-    pull   block           side 0
-    out    x, 1            side 0
-    jmp    x--, stop       side 0
-    set    y, 7            side 0
-clock:
-    out    pins, 1         side 0 [1]
-    jmp    y--, clock      side 1 [1]
-.wrap
