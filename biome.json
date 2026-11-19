@@ -10,6 +10,9 @@
         "indentWidth": 4,
         "lineWidth": 120
     },
+    "tailwind": {
+        "stylesheet": "./webui/src/style.css"
+    },
     "vcs": {
         "clientKind": "git",
         "enabled": true,

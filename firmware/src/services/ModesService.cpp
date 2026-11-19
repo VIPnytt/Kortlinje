@@ -40,7 +40,6 @@
 #include <RP2040Support.h>
 #include <array>
 
-
 void ModesService::begin()
 {
     std::string _name{};
