@@ -76,8 +76,8 @@ jobs:
           cat <<'EOL' > secrets.toml
           [mqtt]
           host = '127.0.0.1'
-          pass = 'redacted'
-          user = 'redacted'
+          password = 'redacted'
+          username = 'redacted'
           [pin]
           audio_buzzer = 1
           button_rear = 26

@@ -7,5 +7,5 @@ const [getFonts, setFonts] = createSignal<string[]>([]);
 export const FontsList = getFonts;
 
 export const receiver = (json: { list?: string[] }) => {
-    json?.list !== undefined && setFonts(json.list);
+  json?.list !== undefined && setFonts(json.list);
 };

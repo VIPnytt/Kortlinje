@@ -48,7 +48,6 @@ class WebUI:
             "DEVICE_HOSTNAME": device.get("hostname"),
             "DEVICE_NAME": device.get("name"),
             "DEVICE_TEMPERATURE_UNIT": device.get("temperature_unit"),
-            "OTA_PASSWORD": self.project.toml.get("ota", {}).get("password") != "",
         }.items():
             if isinstance(value, bool):
                 ts_type = "boolean"

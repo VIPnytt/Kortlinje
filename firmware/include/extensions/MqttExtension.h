@@ -26,8 +26,6 @@ private:
     static inline bool discovered{false};
     static inline volatile bool tick{true};
 
-    static inline const std::string discoveryTopic{std::format("homeassistant/device/0x{}/config", rp2040.getChipID())};
-
     static inline WiFiClient net{};
 
     static void discover();

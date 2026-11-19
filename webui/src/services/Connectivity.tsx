@@ -1,17 +1,17 @@
 import {
-    mdiContentSave,
-    mdiWifi,
-    mdiWifiRefresh,
-    mdiWifiStrength1,
-    mdiWifiStrength1Lock,
-    mdiWifiStrength2,
-    mdiWifiStrength2Lock,
-    mdiWifiStrength3,
-    mdiWifiStrength3Lock,
-    mdiWifiStrength4,
-    mdiWifiStrength4Lock,
-    mdiWifiStrengthLockOutline,
-    mdiWifiStrengthOutline,
+  mdiContentSave,
+  mdiWifi,
+  mdiWifiRefresh,
+  mdiWifiStrength1,
+  mdiWifiStrength1Lock,
+  mdiWifiStrength2,
+  mdiWifiStrength2Lock,
+  mdiWifiStrength3,
+  mdiWifiStrength3Lock,
+  mdiWifiStrength4,
+  mdiWifiStrength4Lock,
+  mdiWifiStrengthLockOutline,
+  mdiWifiStrengthOutline,
 } from "@mdi/js";
 import { type Component, createSignal, For, Index } from "solid-js";
 
@@ -23,8 +23,8 @@ import { SidebarSectionSecondary, WebUISidebarSet } from "../extensions/WebUI";
 export const name = "Connectivity";
 
 interface WiFi {
-    rssi: number;
-    ssid: string;
+  rssi: number;
+  ssid: string;
 }
 
 const [getCredentialKey, setCredentialKey] = createSignal<string>("");
@@ -38,9 +38,9 @@ const [getSsid, setSsid] = createSignal<string | undefined>(undefined);
  * Omitted or undefined fields leave the corresponding state unchanged.
  */
 export const receiver = (json: { saved?: string[]; scan?: WiFi[]; ssid?: string | undefined }) => {
-    json?.saved !== undefined && setSaved(json.saved);
-    json?.scan !== undefined && setScan(json.scan);
-    json?.ssid !== undefined && setSsid(json.ssid);
+  json?.saved !== undefined && setSaved(json.saved);
+  json?.scan !== undefined && setScan(json.scan);
+  json?.ssid !== undefined && setSsid(json.ssid);
 };
 
 const { toast } = Toast();
@@ -50,162 +50,150 @@ const { toast } = Toast();
  * Enables submission for a nonempty SSID and a password that is empty or at least eight characters long.
  */
 export const MainThird: Component = () => {
-    /**
-     * Requests a Wi-Fi connection with the entered SSID, omitting an empty password.
-     * Queues the request if the WebSocket is not open and shows a notice for up to 60 seconds.
-     */
-    const handleConnect = () => {
-        WebSocketWS.send(
-            JSON.stringify({
-                [name]: getCredentialKey().length
-                    ? {
-                          key: getCredentialKey(),
-                          ssid: getCredentialSsid(),
-                      }
-                    : {
-                          ssid: getCredentialSsid(),
-                      },
-            }),
-        );
-        toast("Connecting to Wi-Fi...", 60e3);
-    };
-
-    return (
-        <div class="main">
-            <div class="space-y-3 p-5">
-                <h2>Wi-Fi</h2>
-                <div class="box">
-                    <div class="space-y-2">
-                        <div class="grid gap-3">
-                            <h3>SSID</h3>
-                            <input
-                                class="w-full"
-                                autofocus
-                                autocomplete="username"
-                                id="ssid"
-                                list="scan"
-                                oninput={(e) => setCredentialSsid(e.currentTarget.value)}
-                                placeholder={getSsid() ?? "Name"}
-                                type="text"
-                                value={getCredentialSsid()}
-                            />
-                            <datalist id="scan">
-                                <For each={getScan().filter((scan) => scan.ssid?.length)}>
-                                    {(scan) => <option value={scan.ssid}></option>}
-                                </For>
-                            </datalist>
-                            <h3>Encryption key</h3>
-                            <input
-                                class="w-full"
-                                autocomplete="current-password"
-                                id="key"
-                                oninput={(e) => setCredentialKey(e.currentTarget.value)}
-                                placeholder={!getCredentialSsid() && getSsid() ? "********" : "Password"}
-                                type="password"
-                            />
-                        </div>
-                        <button
-                            class={`action-deactivated mt-3 w-full ${getCredentialKey().length >= 8 ? "action-positive" : ""}`}
-                            disabled={
-                                !getCredentialSsid().length ||
-                                (getCredentialKey().length > 0 && getCredentialKey().length < 8)
-                            }
-                            id="connect"
-                            onclick={handleConnect}
-                            type="button"
-                        >
-                            <Icon
-                                class="mr-2"
-                                path={mdiContentSave}
-                            />
-                            Connect
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+  /**
+   * Requests a Wi-Fi connection with the entered SSID, omitting an empty password.
+   * Queues the request if the WebSocket is not open and shows a notice for up to 60 seconds.
+   */
+  const handleConnect = () => {
+    WebSocketWS.send(
+      JSON.stringify({
+        [name]: getCredentialKey().length
+          ? {
+              key: getCredentialKey(),
+              ssid: getCredentialSsid(),
+            }
+          : {
+              ssid: getCredentialSsid(),
+            },
+      }),
     );
+    toast("Connecting to Wi-Fi...", 60e3);
+  };
+
+  return (
+    <div class="main">
+      <div class="space-y-3 p-5">
+        <h2>Wi-Fi</h2>
+        <div class="box">
+          <div class="space-y-2">
+            <div class="grid gap-3">
+              <h3>SSID</h3>
+              <input
+                class="w-full"
+                autofocus
+                autocomplete="username"
+                id="ssid"
+                list="scan"
+                oninput={(e) => setCredentialSsid(e.currentTarget.value)}
+                placeholder={getSsid() ?? "Name"}
+                type="text"
+                value={getCredentialSsid()}
+              />
+              <datalist id="scan">
+                <For each={getScan().filter((scan) => scan.ssid?.length)}>
+                  {(scan) => <option value={scan.ssid}></option>}
+                </For>
+              </datalist>
+              <h3>Encryption key</h3>
+              <input
+                class="w-full"
+                autocomplete="current-password"
+                id="key"
+                oninput={(e) => setCredentialKey(e.currentTarget.value)}
+                placeholder={!getCredentialSsid() && getSsid() ? "********" : "Password"}
+                type="password"
+              />
+            </div>
+            <button
+              class={`action-deactivated mt-3 w-full ${getCredentialKey().length >= 8 ? "action-positive" : ""}`}
+              disabled={
+                !getCredentialSsid().length ||
+                (getCredentialKey().length > 0 && getCredentialKey().length < 8)
+              }
+              id="connect"
+              onclick={handleConnect}
+              type="button"
+            >
+              <Icon class="mr-2" path={mdiContentSave} />
+              Connect
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const SidebarThird: Component = () => {
-    const handleSelect = (ssid: string) => {
-        if (innerWidth < 800) {
-            WebUISidebarSet(false);
-        }
-        setCredentialSsid(ssid);
-        (document.getElementById("key") as HTMLInputElement).focus();
-    };
-
-    if (!getScan().length) {
-        WebSocketWS.send(
-            JSON.stringify({
-                [name]: {
-                    action: "scan",
-                },
-            }),
-        );
+  const handleSelect = (ssid: string) => {
+    if (innerWidth < 800) {
+      WebUISidebarSet(false);
     }
+    setCredentialSsid(ssid);
+    (document.getElementById("key") as HTMLInputElement).focus();
+  };
 
-    return (
-        <SidebarSectionSecondary title="Networks">
-            {getScan().length === 0 ? (
-                <div class="link">
-                    <Icon
-                        class="mr-2"
-                        path={mdiWifiRefresh}
-                    />
-                    Scanning...
-                </div>
-            ) : (
-                <Index each={getScan().toSorted((a, b) => b.rssi - a.rssi)}>
-                    {(item) => (
-                        <button
-                            class="cursor-pointer link normal-case space-y-2 w-full"
-                            onclick={() => handleSelect(item().ssid)}
-                            type="button"
-                        >
-                            <Icon
-                                class="mr-2"
-                                path={
-                                    item().rssi >= -45
-                                        ? getSaved().includes(item().ssid)
-                                            ? mdiWifiStrength4
-                                            : mdiWifiStrength4Lock
-                                        : item().rssi >= -55
-                                          ? getSaved().includes(item().ssid)
-                                              ? mdiWifiStrength3
-                                              : mdiWifiStrength3Lock
-                                          : item().rssi >= -65
-                                            ? getSaved().includes(item().ssid)
-                                                ? mdiWifiStrength2
-                                                : mdiWifiStrength2Lock
-                                            : item().rssi >= -75
-                                              ? getSaved().includes(item().ssid)
-                                                  ? mdiWifiStrength1
-                                                  : mdiWifiStrength1Lock
-                                              : getSaved().includes(item().ssid)
-                                                ? mdiWifiStrengthOutline
-                                                : mdiWifiStrengthLockOutline
-                                }
-                            />
-                            {item().ssid}
-                        </button>
-                    )}
-                </Index>
-            )}
-        </SidebarSectionSecondary>
+  if (!getScan().length) {
+    WebSocketWS.send(
+      JSON.stringify({
+        [name]: {
+          action: "scan",
+        },
+      }),
     );
+  }
+
+  return (
+    <SidebarSectionSecondary title="Networks">
+      {getScan().length === 0 ? (
+        <div class="link">
+          <Icon class="mr-2" path={mdiWifiRefresh} />
+          Scanning...
+        </div>
+      ) : (
+        <Index each={getScan().toSorted((a, b) => b.rssi - a.rssi)}>
+          {(item) => (
+            <button
+              class="cursor-pointer link normal-case space-y-2 w-full"
+              onclick={() => handleSelect(item().ssid)}
+              type="button"
+            >
+              <Icon
+                class="mr-2"
+                path={
+                  item().rssi >= -45
+                    ? getSaved().includes(item().ssid)
+                      ? mdiWifiStrength4
+                      : mdiWifiStrength4Lock
+                    : item().rssi >= -55
+                      ? getSaved().includes(item().ssid)
+                        ? mdiWifiStrength3
+                        : mdiWifiStrength3Lock
+                      : item().rssi >= -65
+                        ? getSaved().includes(item().ssid)
+                          ? mdiWifiStrength2
+                          : mdiWifiStrength2Lock
+                        : item().rssi >= -75
+                          ? getSaved().includes(item().ssid)
+                            ? mdiWifiStrength1
+                            : mdiWifiStrength1Lock
+                          : getSaved().includes(item().ssid)
+                            ? mdiWifiStrengthOutline
+                            : mdiWifiStrengthLockOutline
+                }
+              />
+              {item().ssid}
+            </button>
+          )}
+        </Index>
+      )}
+    </SidebarSectionSecondary>
+  );
 };
 
 export const SidebarSecondaryComponent: Component = () => (
-    <a
-        class="link"
-        href={`#/${name.toLowerCase()}`}
-    >
-        <Icon
-            class="mr-2"
-            path={mdiWifi}
-        />
-        {getSsid() ?? "Wi-Fi"}
-    </a>
+  <a class="link" href={`#/${name.toLowerCase()}`}>
+    <Icon class="mr-2" path={mdiWifi} />
+    {getSsid() ?? "Wi-Fi"}
+  </a>
 );

@@ -11,6 +11,7 @@ from .components.certificate import Certificate
 from .components.dependency import Dependency
 from .components.time import Time
 from .config.version import VERSION
+from .extensions.mqtt import Mqtt
 from .extensions.ota import Ota
 from .extensions.webui import WebUI
 from .firmware import Firmware
@@ -25,13 +26,14 @@ else:
 class Kortlinje:
     board: Board
     certificate: Certificate | None = None
-    dependency: Dependency | None = None
+    dependency: Dependency
     env: Environment
-    firmware: Firmware | None = None
-    ota: Ota | None = None
-    time: Time | None = None
+    firmware: Firmware
+    mqtt: Mqtt
+    ota: Ota
+    time: Time
     toml: dict[str, typing.Any]
-    weather: Weather | None = None
+    weather: Weather
     webui: WebUI | None = None
 
     def __init__(self, env: Environment) -> None:
@@ -47,6 +49,7 @@ class Kortlinje:
         self.certificate = Certificate(self)
         self.dependency = Dependency(self)
         self.firmware = Firmware(self)
+        self.mqtt = Mqtt(self)
         self.ota = Ota(self)
         self.time = Time(self)
         self.weather = Weather(self)
@@ -80,30 +83,25 @@ class Kortlinje:
         )
         if self.certificate:
             self.certificate.initialize()
-        if self.dependency:
-            self.dependency.initialize()
+        self.dependency.initialize()
         if self.webui:
             self.webui.initialize()
 
     def configure(self) -> None:
         """Configure the enabled OTA, time, and weather components."""
         self.board.configure()
-        if self.ota:
-            self.ota.configure()
-        if self.time:
-            self.time.configure()
-        if self.weather:
-            self.weather.configure()
+        self.mqtt.configure()
+        self.ota.configure()
+        self.time.configure()
+        self.weather.configure()
 
     def finalize(self) -> None:
         """Write the certificate bundle and finalize enabled firmware, OTA, and Web UI components."""
         self.board.finalize()
         if self.certificate:
             self.certificate.finalize()
-        if self.firmware:
-            self.firmware.finalize()
-        if self.ota:
-            self.ota.finalize()
+        self.firmware.finalize()
+        self.ota.finalize()
         if self.webui:
             self.webui.finalize()
 

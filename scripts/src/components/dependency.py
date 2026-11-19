@@ -29,7 +29,6 @@ class Dependency:
         The update check is skipped for the ``compiledb`` command-line target.
         """
         if COMMAND_LINE_TARGETS == ["compiledb"]:
-            self.project.dependency = None
             return
         try:
             tag = json.load(

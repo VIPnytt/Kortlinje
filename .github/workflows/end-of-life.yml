@@ -37,7 +37,7 @@ jobs:
     needs: idle-check
     runs-on: ubuntu-latest
     if: ${{ fromJSON(needs.idle-check.outputs.active) }}
-  
+
     outputs:
       version: ${{ steps.lock.outputs.version }}
 

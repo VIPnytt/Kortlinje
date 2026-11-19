@@ -6,6 +6,7 @@
 #include "handlers/TextHandler.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
+#include "services/ModesService.h"
 
 #include <ArduinoOTA.h>
 #include <hardware/watchdog.h>
@@ -35,6 +36,7 @@ void OtaExtension::onProgress(unsigned int progress, unsigned int total)
 
 void OtaExtension::onStart()
 {
+    ModesService::setActive(false);
     DisplayService::fillFrame(false);
     const KortlinjeFont font{};
     TextHandler(std::string("OTA"), font).draw();
@@ -44,7 +46,10 @@ void OtaExtension::onStart()
 
 void OtaExtension::transmit()
 {
-    JsonDocument doc{};
-    doc[Kortlinje::board::type].set(0xA0U | rp2350_rom_version());
-    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
+    if constexpr (Kortlinje::board::type == "RP2350")
+    {
+        JsonDocument doc{};
+        doc[Kortlinje::board::type].set(0xA0U | rp2350_rom_version());
+        DeviceService::transmit(doc.as<JsonObjectConst>(), name);
+    }
 }

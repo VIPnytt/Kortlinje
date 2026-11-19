@@ -1,16 +1,16 @@
 bug:
   - head-branch:
-    - ^fix/
+      - ^fix/
 
 chore:
   - head-branch:
-    - ^chore/
+      - ^chore/
 
 documentation:
   - head-branch:
-    - ^coderabbit/document-pr-
-    - ^docs/
+      - ^coderabbit/document-pr-
+      - ^docs/
 
 enhancement:
   - head-branch:
-    - ^feat/
+      - ^feat/

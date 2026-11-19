@@ -18,146 +18,137 @@ const [getFont, setFont] = createSignal<string>("");
 const [getMessage, setMessage] = createSignal<string>("");
 
 export const receiver = (json: { font?: string; message?: string }) => {
-    json?.font !== undefined && setFont(json.font);
-    json?.message !== undefined && setMessage(json.message);
+  json?.font !== undefined && setFont(json.font);
+  json?.message !== undefined && setMessage(json.message);
 };
 
 export const Link: Component = () => (
-    <Tooltip text="Text ticker">
-        <a
-            class="link"
-            href={`#/${ModesName.toLowerCase()}/${name.toLowerCase()}`}
-        >
-            <Icon
-                class="mr-2"
-                path={mdiFormatText}
-            />
-            {name}
-        </a>
-    </Tooltip>
+  <Tooltip text="Text ticker">
+    <a class="link" href={`#/${ModesName.toLowerCase()}/${name.toLowerCase()}`}>
+      <Icon class="mr-2" path={mdiFormatText} />
+      {name}
+    </a>
+  </Tooltip>
 );
 
 export const Sidebar: Component = () => {
-    const handleFont = (font: string) => {
-        setFont(font);
-        WebSocketWS.send(
-            JSON.stringify({
-                [name]: {
-                    font: getFont(),
-                },
-            }),
-        );
-    };
-
-    const handleMessage = (message: string) => {
-        setMessage(message);
-        WebSocketWS.send(
-            JSON.stringify({
-                [name]: {
-                    message: getMessage(),
-                },
-            }),
-        );
-    };
-
-    return (
-        <SidebarSection>
-            <div class="action grid-cols-[--spacing(4)_1fr]">
-                <Icon path={mdiFormatText} />
-                <input
-                    class="mt-1 w-full"
-                    maxlength="255"
-                    onchange={(e) => handleMessage(e.currentTarget.value)}
-                    placeholder="Message"
-                    spellcheck="true"
-                    type="text"
-                    value={getMessage()}
-                />
-            </div>
-            <div class="action grid-cols-[--spacing(4)_1fr]">
-                <Icon path={mdiFormatFont} />
-                <Tooltip text="Character availability may vary">
-                    <select
-                        class="w-full"
-                        value={getFont()}
-                        onchange={(e) => handleFont(e.currentTarget.value)}
-                    >
-                        <For each={FontsList()}>{(font) => <option>{font}</option>}</For>
-                    </select>
-                </Tooltip>
-            </div>
-        </SidebarSection>
+  const handleFont = (font: string) => {
+    setFont(font);
+    WebSocketWS.send(
+      JSON.stringify({
+        [name]: {
+          font: getFont(),
+        },
+      }),
     );
+  };
+
+  const handleMessage = (message: string) => {
+    setMessage(message);
+    WebSocketWS.send(
+      JSON.stringify({
+        [name]: {
+          message: getMessage(),
+        },
+      }),
+    );
+  };
+
+  return (
+    <SidebarSection>
+      <div class="action grid-cols-[--spacing(4)_1fr]">
+        <Icon path={mdiFormatText} />
+        <input
+          class="mt-1 w-full"
+          maxlength="255"
+          onchange={(e) => handleMessage(e.currentTarget.value)}
+          placeholder="Message"
+          spellcheck="true"
+          type="text"
+          value={getMessage()}
+        />
+      </div>
+      <div class="action grid-cols-[--spacing(4)_1fr]">
+        <Icon path={mdiFormatFont} />
+        <Tooltip text="Character availability may vary">
+          <select
+            class="w-full"
+            value={getFont()}
+            onchange={(e) => handleFont(e.currentTarget.value)}
+          >
+            <For each={FontsList()}>{(font) => <option>{font}</option>}</For>
+          </select>
+        </Tooltip>
+      </div>
+    </SidebarSection>
+  );
 };
 
 export const Main: Component = () => {
-    const handleSave = () => {
-        WebSocketWS.send(
-            JSON.stringify({
-                [name]: {
-                    font: getFont(),
-                    message: getMessage(),
-                },
-                ...(!DisplayPower() && {
-                    [DisplayName]: {
-                        power: true,
-                    },
-                }),
-                ...(ModesMode() !== name && {
-                    [ModesName]: {
-                        mode: name,
-                    },
-                }),
-            }),
-        );
-        toast(`${name} saved`);
-    };
-
-    return (
-        <div class="main">
-            <div class="space-y-3 p-5">
-                <h2>{name}</h2>
-                <div class="box">
-                    <div class="space-y-3">
-                        <div class="action grid-cols-[--spacing(4)_1fr]">
-                            <Icon path={mdiFormatText} />
-                            <input
-                                class="w-full"
-                                maxlength="255"
-                                oninput={(e) => setMessage(e.currentTarget.value)}
-                                placeholder="Message"
-                                spellcheck="true"
-                                type="text"
-                                value={getMessage()}
-                            />
-                        </div>
-                        <div class="action grid-cols-[--spacing(4)_1fr]">
-                            <Icon path={mdiFormatFont} />
-                            <Tooltip text="Character availability may vary">
-                                <select
-                                    class="w-full"
-                                    onchange={(e) => setFont(e.currentTarget.value)}
-                                    value={getFont()}
-                                >
-                                    <For each={FontsList()}>{(font) => <option>{font}</option>}</For>
-                                </select>
-                            </Tooltip>
-                        </div>
-                        <button
-                            class="action-positive mt-3 w-full"
-                            disabled={!getFont() || !getMessage()}
-                            onclick={handleSave}
-                            type="button"
-                        >
-                            <Icon
-                                class="mr-2"
-                                path={mdiMessage}
-                            />
-                            Display
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+  const handleSave = () => {
+    WebSocketWS.send(
+      JSON.stringify({
+        [name]: {
+          font: getFont(),
+          message: getMessage(),
+        },
+        ...(!DisplayPower() && {
+          [DisplayName]: {
+            power: true,
+          },
+        }),
+        ...(ModesMode() !== name && {
+          [ModesName]: {
+            mode: name,
+          },
+        }),
+      }),
     );
+    toast(`${name} saved`);
+  };
+
+  return (
+    <div class="main">
+      <div class="space-y-3 p-5">
+        <h2>{name}</h2>
+        <div class="box">
+          <div class="space-y-3">
+            <div class="action grid-cols-[--spacing(4)_1fr]">
+              <Icon path={mdiFormatText} />
+              <input
+                class="w-full"
+                maxlength="255"
+                oninput={(e) => setMessage(e.currentTarget.value)}
+                placeholder="Message"
+                spellcheck="true"
+                type="text"
+                value={getMessage()}
+              />
+            </div>
+            <div class="action grid-cols-[--spacing(4)_1fr]">
+              <Icon path={mdiFormatFont} />
+              <Tooltip text="Character availability may vary">
+                <select
+                  class="w-full"
+                  onchange={(e) => setFont(e.currentTarget.value)}
+                  value={getFont()}
+                >
+                  <For each={FontsList()}>{(font) => <option>{font}</option>}</For>
+                </select>
+              </Tooltip>
+            </div>
+            <button
+              class="action-positive mt-3 w-full"
+              disabled={!getFont() || !getMessage()}
+              onclick={handleSave}
+              type="button"
+            >
+              <Icon class="mr-2" path={mdiMessage} />
+              Display
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };

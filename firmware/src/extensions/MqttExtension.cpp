@@ -17,37 +17,43 @@
  */
 void MqttExtension::begin()
 {
-    net.setNoDelay(true);
-    client.onMessageAdvanced(&onMessage);
-    client.setCleanSession(false);
-    client.setTimeout(static_cast<int>(0b1U << 14U));
-    client.setWill(availabilityTopic.data(), "", true, 1);
-    client.begin(net);
-    client.setHost(Kortlinje::mqtt::host.data(), 1'883);
+    if constexpr (!Kortlinje::mqtt::host.empty())
+    {
+        net.setNoDelay(true);
+        client.onMessageAdvanced(&onMessage);
+        client.setCleanSession(false);
+        client.setWill(availabilityTopic.data(), "", true, 1);
+        client.begin(net);
+        client.setHost(Kortlinje::mqtt::host.data(), 1'883);
+    }
 }
 
 void MqttExtension::handle()
 {
-    if (client.connected())
+    if constexpr (!Kortlinje::mqtt::host.empty())
     {
-        client.loop();
-    }
-    else if (tick && WiFi.isConnected())
-    {
-        tick = false;
-        add_alarm_in_us(0b1ULL << 26U, &onAlarm, this, true);
-        watchdog_update();
-        if (client.connect(
-                Kortlinje::device::hostname.data(), Kortlinje::mqtt::user.data(), Kortlinje::mqtt::pass.data()))
+        if (client.connected())
         {
-            client.subscribe(commandTopic.data(), 2);
-            client.publish(availabilityTopic.data(), "online", true, 1);
-            if (!discovered)
-            {
-                discover();
-            }
+            client.loop();
         }
-        watchdog_update();
+        else if (tick && WiFi.isConnected())
+        {
+            tick = false;
+            add_alarm_in_us(0b1ULL << 26U, &onAlarm, this, true);
+            watchdog_update();
+            if (client.connect(Kortlinje::device::hostname.data(),
+                               Kortlinje::mqtt::username.data(),
+                               Kortlinje::mqtt::password.data()))
+            {
+                client.subscribe(commandTopic.data(), 2);
+                client.publish(availabilityTopic.data(), "online", true, 1);
+                if (!discovered)
+                {
+                    discover();
+                }
+            }
+            watchdog_update();
+        }
     }
 }
 
@@ -56,11 +62,14 @@ void MqttExtension::handle()
  */
 void MqttExtension::disconnect()
 {
-    if (client.connected())
+    if constexpr (!Kortlinje::mqtt::host.empty())
     {
-        client.publish(availabilityTopic.data(), "", 0, true, 1);
-        client.loop();
-        client.disconnect();
+        if (client.connected())
+        {
+            client.publish(availabilityTopic.data(), "", 0, true, 1);
+            client.loop();
+            client.disconnect();
+        }
     }
 }
 
@@ -113,7 +122,11 @@ void MqttExtension::discover()
     std::vector<char> payload(length + 1U);
     serializeJson(discovery, payload.data(), payload.size());
     net.flush();
-    discovered = client.publish(discoveryTopic.c_str(), payload.data(), static_cast<int>(length), true, 0);
+    discovered = client.publish(std::format("homeassistant/device/0x{}/config", rp2040.getChipID()).c_str(),
+                                payload.data(),
+                                static_cast<int>(length),
+                                true,
+                                0);
 }
 
 /**
@@ -159,19 +172,22 @@ void MqttExtension::onMessage(MQTTClient *_client, char *topic, char *bytes, int
  */
 void MqttExtension::onTransmit(JsonObjectConst payload, std::string_view source)
 {
-    std::array<char, 0b1U << 6U> topic{};
-    if (!client.connected() || source.size() >= topic.size() - topicPrefix.size())
+    if constexpr (!Kortlinje::mqtt::host.empty())
     {
-        return;
-    }
-    std::memcpy(topic.data(), topicPrefix.data(), topicPrefix.size());
-    std::memcpy(topic.data() + topicPrefix.size(), source.data(), source.size());
-    topic[topicPrefix.size() + source.size()] = '\0';
-    std::array<char, 0b1U << 10U> message{};
-    const size_t length{serializeJson(payload, message.data(), message.size())};
-    if (length < message.size())
-    {
-        client.publish(
-            topic.data(), message.data(), static_cast<int>(length), false, payload["event"].isUnbound() ? 0 : 2);
+        std::array<char, 0b1U << 6U> topic{};
+        if (!client.connected() || source.size() >= topic.size() - topicPrefix.size())
+        {
+            return;
+        }
+        std::memcpy(topic.data(), topicPrefix.data(), topicPrefix.size());
+        std::memcpy(topic.data() + topicPrefix.size(), source.data(), source.size());
+        topic[topicPrefix.size() + source.size()] = '\0';
+        std::array<char, 0b1U << 10U> message{};
+        const size_t length{serializeJson(payload, message.data(), message.size())};
+        if (length < message.size())
+        {
+            client.publish(
+                topic.data(), message.data(), static_cast<int>(length), false, payload["event"].isUnbound() ? 0 : 2);
+        }
     }
 }

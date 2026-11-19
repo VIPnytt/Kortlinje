@@ -55,8 +55,8 @@ jobs:
           temperature_unit = 'K'
           [mqtt]
           host = '127.0.0.1'
-          pass = 'redacted'
-          user = 'redacted'
+          password = 'redacted'
+          username = 'redacted'
           [ota]
           password = 'redacted'
           [pin]
@@ -74,8 +74,12 @@ jobs:
           light_sense = 10
           power_sense = 11
           [time]
-          format = 12
+          format = 24
+          posix = 'UTC0'
           zone = 'Etc/Universal'
+          [weather]
+          latitude = 0.000
+          longitude = 0.000
           [wifi]
           psk = 'redacted'
           ssid = 'redacted'
@@ -115,10 +119,6 @@ jobs:
           PIO_ENVIRONMENT: ${{ matrix.environment }}
         run: |
           cat <<'EOL' > secrets.toml
-          [mqtt]
-          host = '127.0.0.1'
-          pass = 'redacted'
-          user = 'redacted'
           [pin]
           audio_buzzer = 1
           button_rear = 26

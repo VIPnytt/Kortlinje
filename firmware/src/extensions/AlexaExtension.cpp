@@ -205,7 +205,7 @@ void AlexaExtension::onUpnp(AsyncUDPPacket &packet)
         const bool root{std::ranges::search(request, std::string_view{"upnp:rootdevice"}).begin() != request.end()};
         const uint64_t _mac{mac()};
         const IPAddress ip{WiFi.localIP()};
-        std::array<uint8_t, 320U> response{};
+        std::array<uint8_t, 0b1U << 8U> response{};
         const auto [end, _]{std::format_to_n(response.begin(),
                                              response.size(),
                                              "HTTP/1.1 200 OK\r\n"

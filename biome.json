@@ -1,21 +1,18 @@
 {
-    "$schema": "./webui/node_modules/@biomejs/biome/configuration_schema.json",
-    "files": {
-        "ignoreUnknown": true
-    },
-    "formatter": {
-        "attributePosition": "multiline",
-        "expand": "always",
-        "indentStyle": "space",
-        "indentWidth": 4,
-        "lineWidth": 120
-    },
-    "tailwind": {
-        "stylesheet": "./webui/src/style.css"
-    },
-    "vcs": {
-        "clientKind": "git",
-        "enabled": true,
-        "useIgnoreFile": true
-    }
+  "$schema": "./webui/node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "ignoreUnknown": true
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "lineWidth": 100
+  },
+  "tailwind": {
+    "stylesheet": "./webui/src/style.css"
+  },
+  "vcs": {
+    "clientKind": "git",
+    "enabled": true,
+    "useIgnoreFile": true
+  }
 }

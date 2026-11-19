@@ -1,6 +1,6 @@
 # 💡 Kortlinje
 
-**Kortlinje** is an open-source RP2350 firmware mod for the *IKEA Kortlinje* LED display alarm clock, adding Wi-Fi connectivity, a web interface, smart-home integrations, and custom display modes.
+**Kortlinje** is an open-source RP2350 firmware mod for the _IKEA Kortlinje_ LED display alarm clock, adding Wi-Fi connectivity, a web interface, smart-home integrations, and custom display modes.
 
 It transforms the stock clock into a connected smart display featuring a local web interface, smart-home integrations, and over two dozen custom display modes—all while retaining its core bedside functionality.
 
@@ -26,7 +26,7 @@ It transforms the stock clock into a connected smart display featuring a local w
 
 ## ⚙️ Hardware & Modding
 
-Kortlinje runs on the **RP2350** architecture with Wi-Fi support (such as the *Raspberry Pi Pico 2 W*).
+Kortlinje runs on the **RP2350** architecture with Wi-Fi support (such as the _Raspberry Pi Pico 2 W_).
 
 Modding the clock requires swapping the stock MCU and soldering jumper wires to the internal display drivers, button resistor ladders, buzzer, and onboard sensors. Check out the [Wiki](https://github.com/VIPnytt/Kortlinje/wiki) for step-by-step instructions and pin/wiring diagrams.
 
