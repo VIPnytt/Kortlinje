@@ -41,7 +41,7 @@ The build scripts require PlatformIO to run on Python 3.13 or newer. If Platform
 
 ### 1. Configure (optional)
 
-Copy [secrets.example.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml) to `secrets.toml` to change pins, device name, temperature unit, MQTT, OTA password or weather location. The copy is ignored by Git, so credentials stay local. Without it, the build uses the defaults from the example file. Wi-Fi credentials are optional too, as Wi-Fi can be set up from the hotspot and web interface.
+Copy [secrets.example.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml) to `secrets.toml` to change pins, device name, temperature unit, MQTT, OTA password or weather location. The copy is ignored by Git, so credentials stay local. Without it, the build uses the defaults from the example file. Wi-Fi credentials are optional too, as the clock starts a hotspot for Wi-Fi setup when no network is saved.
 
 ### 2. Build and Flash
 
@@ -51,7 +51,7 @@ Connect your RP2350 board, open the project workspace in PlatformIO, and trigger
 
 Once flashed, Kortlinje integrates directly into your local network and smart home ecosystem:
 
-- **Wi-Fi Provisioning**: If no configured Wi-Fi network is found on boot, hold the rear cogwheel button to spin up an AP hotspot and configure credentials directly from your phone or PC.
+- **Wi-Fi Provisioning**: With no saved Wi-Fi network, the clock starts an AP hotspot on boot, so credentials can be configured directly from your phone or PC. To add or change networks later, hold the rear cogwheel button while booting to start the hotspot again.
 - **Home Assistant**: Native discovery support via MQTT for automatic entity creation, switches, and sensor telemetry, including CO₂ when the sensor is fitted.
 - **Voice Control**: Alexa bridge emulation for app and voice control of display power and brightness.
 - **Developer API**: REST endpoints and real-time WebSocket streams for custom scripts and home automation hubs.

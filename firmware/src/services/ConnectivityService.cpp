@@ -17,7 +17,8 @@
 /**
  * @brief Configures Wi-Fi, checks the boot button for hotspot mode, and starts NTP synchronization.
  *
- * Initializes Soft-AP mode only if button_rear reads LOW during boot; otherwise starts station mode.
+ * Initializes Soft-AP mode if button_rear reads LOW during boot or no Wi-Fi network is saved; otherwise starts station
+ * mode.
  */
 void ConnectivityService::begin()
 {
@@ -168,10 +169,11 @@ void ConnectivityService::initHotspot()
 
 /**
  * @brief Loads saved Wi-Fi credentials and starts station-mode connection attempts.
+ *
+ * Falls back to hotspot operation when no network is saved.
  */
 void ConnectivityService::initStation()
 {
-    WiFi.mode(WiFiMode_t::WIFI_STA);
     JsonDocument doc{};
     std::string json{};
     if (ConfigHandler::get(name, "Wi-Fi", json))
@@ -187,6 +189,12 @@ void ConnectivityService::initStation()
             ConfigHandler::set(name, "Wi-Fi", json);
         }
     }
+    if (doc.as<JsonObjectConst>().size() == 0U)
+    {
+        initHotspot();
+        return;
+    }
+    WiFi.mode(WiFiMode_t::WIFI_STA);
     multi.clearAPList();
     for (const JsonPairConst pair : doc.as<JsonObjectConst>())
     {
