@@ -178,11 +178,14 @@ void ConnectivityService::initStation()
     {
         deserializeJson(doc, json);
     }
-    if (doc[Kortlinje::wifi::ssid].isUnbound())
+    if constexpr (!Kortlinje::wifi::ssid.empty())
     {
-        doc[Kortlinje::wifi::ssid].set(Kortlinje::wifi::psk);
-        serializeJson(doc, json);
-        ConfigHandler::set(name, "Wi-Fi", json);
+        if (doc[Kortlinje::wifi::ssid].isUnbound())
+        {
+            doc[Kortlinje::wifi::ssid].set(Kortlinje::wifi::psk);
+            serializeJson(doc, json);
+            ConfigHandler::set(name, "Wi-Fi", json);
+        }
     }
     multi.clearAPList();
     for (const JsonPairConst pair : doc.as<JsonObjectConst>())

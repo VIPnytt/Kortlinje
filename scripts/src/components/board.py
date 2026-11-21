@@ -125,7 +125,8 @@ class Board:
             print(" ".join(filter(None, parts)))
 
     def _generic(self) -> None:
-        data = tomllib.loads(pathlib.Path("secrets.toml").read_text(encoding="utf-8"))
+        secrets = pathlib.Path("secrets.toml")
+        data = tomllib.loads(secrets.read_text(encoding="utf-8")) if secrets.is_file() else {}
         hostname = data.get("device", {}).get("hostname") or "kortlinje"
         self._espota(f"{hostname}.local")
 

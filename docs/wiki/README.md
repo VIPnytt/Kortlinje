@@ -152,6 +152,8 @@ Wire up everything in accordance with diagrams. It’s advised to defer the USB 
 
 ## 🔧 Configuration
 
+Pins and other build settings live in a local `secrets.toml`, copied from [secrets.example.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml). Every setting is optional, so only the pins that differ from the defaults need to be listed.
+
 ### Power and ground
 
 - Connect 5.0 V `VBUS` to `VDD`
@@ -164,7 +166,7 @@ Wire up everything in accordance with diagrams. It’s advised to defer the USB 
 
 Any 5 V tolerant GPIO pin can be used for the `VK1640` `SCLK` clock lines.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -177,7 +179,7 @@ display_sclk3 = 3
 
 Any 5 V tolerant GPIO pin can be used for the `VK1640` `DIN` data lines.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -190,7 +192,7 @@ display_sda3 = 6
 
 Any GPIO pin can be used for control signals to the buzzer.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -201,7 +203,7 @@ audio_buzzer = 7
 
 Any GPIO pin can be used to activate the `U6` chip.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -212,7 +214,7 @@ climate_en = 8
 
 Any 5 V tolerant GPIO pin can be used to read temperature and humidity data from the `U6` chip.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -223,7 +225,7 @@ climate_pdm = 9
 
 Any 5 V tolerant GPIO pin can be used to detect ambient light presence.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -238,7 +240,7 @@ Used to wake up the RP2350 from sleep when USB power is applied, and to put it b
 
 Any 5 V tolerant GPIO pin can be used to detect the presence of USB power.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -249,7 +251,7 @@ power_sense = 11
 
 Any analog input pin can be used to detect button presses.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -260,7 +262,7 @@ button_top = 26
 
 Any analog input pin can be used to detect button presses.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]
@@ -276,7 +278,7 @@ A Sensirion `SCD40`, `SCD41` or `SCD43` breakout adds a CO2 reading in ppm, show
 
 Any free I2C pin pair can be used, where `co2_sda` is an even pin and `co2_scl` is the pin right after it, such as `12`/`13`, `14`/`15`, `16`/`17`, `18`/`19` or `20`/`21`.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml):
 
 ```toml
 [pin]

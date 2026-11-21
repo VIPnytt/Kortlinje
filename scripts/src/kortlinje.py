@@ -10,6 +10,7 @@ from .components.board import Board
 from .components.certificate import Certificate
 from .components.dependency import Dependency
 from .components.time import Time
+from .config.pins import PINS
 from .config.version import VERSION
 from .extensions.mqtt import Mqtt
 from .extensions.ota import Ota
@@ -45,7 +46,8 @@ class Kortlinje:
         Parameters:
             env (Environment): SCons build environment used to configure project components.
         """
-        self.toml = tomllib.loads(pathlib.Path("secrets.toml").read_text(encoding="utf-8"))
+        secrets = pathlib.Path("secrets.toml")
+        self.toml = tomllib.loads(secrets.read_text(encoding="utf-8")) if secrets.is_file() else {}
         self.env = env
         self.board = Board(self.env)
         self.certificate = Certificate(self)
@@ -71,7 +73,7 @@ class Kortlinje:
         """
         Initialize project settings and enabled components.
 
-        Determines default application and host names, normalizes configured hostnames, and initializes the available project components.
+        Determines default application and host names, normalizes configured hostnames, defaults pins and Wi-Fi credentials, and initializes the available project components.
         """
         device = self.toml.setdefault("device", {})
         name = device.setdefault("name", "Kortlinje")
@@ -84,6 +86,12 @@ class Kortlinje:
                 unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii").lower(),
             ).strip("-")
         )
+        pin = self.toml.setdefault("pin", {})
+        for key, value in PINS.items():
+            pin.setdefault(key, value)
+        wifi = self.toml.setdefault("wifi", {})
+        for key in ("psk", "ssid"):
+            wifi.setdefault(key, "")
         if self.certificate:
             self.certificate.initialize()
         self.dependency.initialize()

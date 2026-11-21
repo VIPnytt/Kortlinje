@@ -1,0 +1,15 @@
+PINS: dict[str, int] = {
+    "audio_buzzer": 1,
+    "button_rear": 27,
+    "button_top": 26,
+    "climate_en": 3,
+    "climate_pdm": 2,
+    "display_sclk1": 4,
+    "display_sclk2": 5,
+    "display_sclk3": 6,
+    "display_sda1": 7,
+    "display_sda2": 8,
+    "display_sda3": 9,
+    "light_sense": 10,
+    "power_sense": 11,
+}

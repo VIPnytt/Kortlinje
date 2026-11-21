@@ -39,9 +39,9 @@ The project uses [PlatformIO IDE](https://platformio.org/platformio-ide) for dep
 
 The build scripts require PlatformIO to run on Python 3.13 or newer. If PlatformIO's built-in Python is older, install a recent Python, disable the `platformio-ide.useBuiltinPython` setting in VS Code, delete `~/.platformio/penv` and restart VS Code.
 
-### 1. Configure Secrets
+### 1. Configure (optional)
 
-Copy or rename your configuration settings in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml) to include your Wi-Fi credentials and local preferences.
+Copy [secrets.example.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.example.toml) to `secrets.toml` to change pins, device name, temperature unit, MQTT, OTA password or weather location. The copy is ignored by Git, so credentials stay local. Without it, the build uses the defaults from the example file. Wi-Fi credentials are optional too, as Wi-Fi can be set up from the hotspot and web interface.
 
 ### 2. Build and Flash
 
