@@ -85,6 +85,17 @@ Green ┼─ USB CC
 ──────┘
 ```
 
+### CO2 sensor diagram (optional)
+
+```text
+┌─────┐
+│ VDD ┼─ +3.3 V DC
+│ GND ┼─ 0 V DC
+│ SCL ┼─ co2_scl
+│ SDA ┼─ co2_sda
+└─────┘
+```
+
 ### RP2350 diagram
 
 ```text
@@ -106,6 +117,8 @@ Green ┼─ USB CC
 │   GP ├─ display_sda3
 │   GP ├─ climate_en
 │   GP ├─ climate_pdm
+│   GP ├─ co2_scl
+│   GP ├─ co2_sda
 │   GP ├─ light_sense
 │   GP ├─ power_sense
 └──────┘              
@@ -135,7 +148,7 @@ For simplified wiring without battery backup, these deviations take place:
 
 ### Wiring
 
-Wire up everything in accordance with diagrams. It’s advised to defer the USB cable, buttons and environmental sensors to the end.
+Wire up everything in accordance with diagrams. It’s advised to defer the USB cable, buttons and environmental sensors to the end. The CO2 sensor is an optional add-on and can be wired up last, or skipped altogether.
 
 ## 🔧 Configuration
 
@@ -254,6 +267,31 @@ Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secre
 button_rear = 27
 ```
 
+### CO2 sensor (optional)
+
+A Sensirion `SCD40`, `SCD41` or `SCD43` breakout adds a CO2 reading in ppm, shown by the `CO2` display mode and reported over REST, WebSocket and MQTT, including Home Assistant discovery.
+
+- Power the sensor from `3V3`, not `VBUS`, so the I2C lines stay at 3.3 V.
+- Most breakout boards include pull-up resistors. If yours doesn't, add 4.7 kΩ pull-ups from `SDA` and `SCL` to `3V3`.
+
+Any free I2C pin pair can be used, where `co2_sda` is an even pin and `co2_scl` is the pin right after it, such as `12`/`13`, `14`/`15`, `16`/`17`, `18`/`19` or `20`/`21`.
+
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+
+```toml
+[pin]
+co2_scl = 13
+co2_sda = 12
+```
+
+Remove both lines to disable the sensor. If the sensor doesn’t respond at boot, it is skipped and the clock runs as usual.
+
+> [!NOTE]
+> The `SCD40`, `SCD41` and `SCD43` share the same pinout and I2C protocol, so they are interchangeable. The exact variant is detected automatically and reported in the serial log and in the `variant` field of the `SCD4x` extension state.
+
+> [!TIP]
+> Automatic self-calibration is enabled by default. It assumes the sensor sees fresh outdoor air (about 400 ppm) at least once a week, so air out the room regularly to keep readings accurate.
+
 ## 🔗 Resources
 
 A collection of external links for deeper exploration — provided for reference only and with no formal connection to this project.
@@ -261,3 +299,4 @@ A collection of external links for deeper exploration — provided for reference
 - [Hackaday: Another IKEA Product Yields An LED Matrix](https://hackaday.com/2026/10/10/another-ikea-product-yields-an-led-matrix/)
 - [IKEA: KORTLINJE](https://www.ikea.com/se/en/p/kortlinje-alarm-clock-with-hygro-thermometer-red-90620468/)
 - [RevSpace forum: ikea kortlinje klok hacken](https://forum.revspace.nl/t/ikea-kortlinje-klok-hacken/1129)
+- [Sensirion: SCD4x CO2 sensor](https://sensirion.com/products/catalog/SCD41)

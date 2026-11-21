@@ -12,6 +12,7 @@
 #include "extensions/PhotocellExtension.h"
 #include "extensions/PlaylistExtension.h"
 #include "extensions/RestExtension.h"
+#include "extensions/Scd4xExtension.h"
 #include "extensions/SignExtension.h"
 #include "extensions/WebSocketExtension.h"
 #include "extensions/WebUiExtension.h"
@@ -32,6 +33,7 @@ OtaExtension ota{};
 PhotocellExtension photocell{};
 PlaylistExtension playlist{};
 RestExtension rest{};
+Scd4xExtension scd4x{};
 SignExtension sign{};
 WebSocketExtension webSocket{};
 WebUiExtension webUi{};
@@ -63,7 +65,7 @@ void ExtensionsService::handle()
 
 std::span<ExtensionModule *const> ExtensionsService::getAll()
 {
-    static constexpr std::array<ExtensionModule *, 15U> modules{
+    static constexpr std::array<ExtensionModule *, 16U> modules{
         &Extensions::alarm,
         &Extensions::alexa,
         &Extensions::battery,
@@ -76,6 +78,7 @@ std::span<ExtensionModule *const> ExtensionsService::getAll()
         &Extensions::photocell,
         &Extensions::playlist,
         &Extensions::rest,
+        &Extensions::scd4x,
         &Extensions::sign,
         &Extensions::webSocket,
         &Extensions::webUi,
@@ -132,6 +135,10 @@ ExtensionModule *const ExtensionsService::getExtension(std::string_view extensio
     if (extensionName == RestExtension::name)
     {
         return &Extensions::rest;
+    }
+    if (extensionName == Scd4xExtension::name)
+    {
+        return &Extensions::scd4x;
     }
     if (extensionName == SignExtension::name)
     {

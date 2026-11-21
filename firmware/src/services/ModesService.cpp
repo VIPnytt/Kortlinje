@@ -12,6 +12,7 @@
 #include "modes/BrightMode.h"
 #include "modes/CircleMode.h"
 #include "modes/ClockMode.h"
+#include "modes/Co2Mode.h"
 #include "modes/CountdownMode.h"
 #include "modes/DateMode.h"
 #include "modes/DrawMode.h"
@@ -141,6 +142,10 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     {
         return std::make_unique<ClockMode>();
     }
+    if (modeName == Co2Mode::name)
+    {
+        return std::make_unique<Co2Mode>();
+    }
     if (modeName == CountdownMode::name)
     {
         return std::make_unique<CountdownMode>();
@@ -242,6 +247,7 @@ std::span<const std::string_view> ModesService::getNames()
         BrightMode::name,
         CircleMode::name,
         ClockMode::name,
+        Co2Mode::name,
         CountdownMode::name,
         DateMode::name,
         DrawMode::name,

@@ -3,6 +3,7 @@
 #include "constants/board.h"
 #include "constants/secrets.h"
 #include "extensions/AlarmExtension.h"
+#include "extensions/Scd4xExtension.h"
 #include "pio/battery.pio.h"
 #include "services/DisplayService.h"
 
@@ -85,6 +86,7 @@ void BatteryExtension::onInterrupt()
 void BatteryExtension::sleep()
 {
     DisplayService::setPower(false);
+    Scd4xExtension::suspend();
     Serial.flush();
     Serial.end();
 #ifdef PICO_CYW43_SUPPORTED
@@ -141,5 +143,6 @@ void BatteryExtension::sleep()
         attachInterrupt(static_cast<pin_size_t>(Kortlinje::pin::power_sense), &onInterrupt, PinStatus::FALLING);
     }
     DisplayService::setPower(true);
+    Scd4xExtension::resume();
     AlarmExtension::reschedule();
 }

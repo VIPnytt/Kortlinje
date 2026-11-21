@@ -13,6 +13,7 @@ from .components.time import Time
 from .config.version import VERSION
 from .extensions.mqtt import Mqtt
 from .extensions.ota import Ota
+from .extensions.scd4x import Scd4x
 from .extensions.webui import WebUI
 from .firmware import Firmware
 from .modes.weather import Weather
@@ -31,6 +32,7 @@ class Kortlinje:
     firmware: Firmware
     mqtt: Mqtt
     ota: Ota
+    scd4x: Scd4x
     time: Time
     toml: dict[str, typing.Any]
     weather: Weather
@@ -51,6 +53,7 @@ class Kortlinje:
         self.firmware = Firmware(self)
         self.mqtt = Mqtt(self)
         self.ota = Ota(self)
+        self.scd4x = Scd4x(self)
         self.time = Time(self)
         self.weather = Weather(self)
         self.webui = WebUI(self)
@@ -88,10 +91,11 @@ class Kortlinje:
             self.webui.initialize()
 
     def configure(self) -> None:
-        """Configure the enabled OTA, time, and weather components."""
+        """Configure the enabled OTA, SCD4x, time, and weather components."""
         self.board.configure()
         self.mqtt.configure()
         self.ota.configure()
+        self.scd4x.configure()
         self.time.configure()
         self.weather.configure()
 

@@ -14,13 +14,14 @@ It transforms the stock clock into a connected smart display featuring a local w
 
 ## ✨ Features
 
-- **29 display modes**: Time and date, live weather, animations, autonomous games, scrolling text, and live matrix streaming.
+- **30 display modes**: Time and date, live weather, CO₂ level, animations, autonomous games, scrolling text, and live matrix streaming.
 - **Full onboard hardware support**:
   - Alarm clock with repeating timers and snooze
   - Live temperature and humidity readings
   - Ambient light sensor and 8-step brightness control
   - 8-step display brightness control
   - Dual-rail power management (USB-C primary with AAA backup)
+- **Optional CO₂ sensor**: Sensirion SCD40, SCD41 or SCD43 over I2C, with automatic variant detection.
 - **Web UI**: Responsive browser-based app featuring a live real-time display preview and device controls and settings.
 - **Local API**: Full two-way state control and telemetry via HTTP REST, WebSockets, and MQTT.
 
@@ -51,7 +52,7 @@ Connect your RP2350 board, open the project workspace in PlatformIO, and trigger
 Once flashed, Kortlinje integrates directly into your local network and smart home ecosystem:
 
 - **Wi-Fi Provisioning**: If no configured Wi-Fi network is found on boot, hold the rear cogwheel button to spin up an AP hotspot and configure credentials directly from your phone or PC.
-- **Home Assistant**: Native discovery support via MQTT for automatic entity creation, switches, and sensor telemetry.
+- **Home Assistant**: Native discovery support via MQTT for automatic entity creation, switches, and sensor telemetry, including CO₂ when the sensor is fitted.
 - **Voice Control**: Alexa bridge emulation for app and voice control of display power and brightness.
 - **Developer API**: REST endpoints and real-time WebSocket streams for custom scripts and home automation hubs.
 
