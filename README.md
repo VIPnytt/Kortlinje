@@ -36,6 +36,8 @@ Modding the clock requires swapping the stock MCU and soldering jumper wires to 
 
 The project uses [PlatformIO IDE](https://platformio.org/platformio-ide) for dependency management and building. PlatformIO integrates directly major editors via both official and 3rd party [integrations](https://platformio.org/install/integration).
 
+The build scripts require PlatformIO to run on Python 3.13 or newer. If PlatformIO's built-in Python is older, install a recent Python, disable the `platformio-ide.useBuiltinPython` setting in VS Code, delete `~/.platformio/penv` and restart VS Code.
+
 ### 1. Configure Secrets
 
 Copy or rename your configuration settings in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml) to include your Wi-Fi credentials and local preferences.
