@@ -43,6 +43,8 @@ class Kortlinje:
         Parameters:
             env (Environment): SCons build environment used to configure project components.
         """
+        if not pathlib.Path("secrets.toml").is_file():
+            shutil.copyfile("secrets.template.toml", "secrets.toml")
         self.toml = tomllib.loads(pathlib.Path("secrets.toml").read_text(encoding="utf-8"))
         self.env = env
         self.board = Board(self.env)
@@ -90,6 +92,7 @@ class Kortlinje:
     def configure(self) -> None:
         """Configure the enabled OTA, time, and weather components."""
         self.board.configure()
+        self.firmware.configure()
         self.mqtt.configure()
         self.ota.configure()
         self.time.configure()

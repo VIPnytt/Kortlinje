@@ -18,7 +18,7 @@ else:
 
 class WebUI:
     NAME: typing.Literal["Web UI"] = "Web UI"
-    path: pathlib.Path
+    path: typing.Final[pathlib.Path] = pathlib.Path("webui")
     project: "Kortlinje"
 
     def __init__(self, project: "Kortlinje") -> None:
@@ -27,7 +27,6 @@ class WebUI:
         Parameters:
             project (Kortlinje): The project associated with the web application.
         """
-        self.path = pathlib.Path("webui")
         self.project = project
 
     def initialize(self) -> None:
@@ -51,69 +50,64 @@ class WebUI:
         }.items():
             if isinstance(value, bool):
                 ts_type = "boolean"
-                ts_value = "true" if value else "false"
-            elif isinstance(value, int):
+            elif isinstance(value, int | float):
                 ts_type = "number"
-                ts_value = int(value)
-            elif isinstance(value, float):
-                ts_type = "number"
-                ts_value = float(value)
             else:
                 ts_type = "string"
-                ts_value = json.dumps(str(value), ensure_ascii=False)
-            secrets_lines.append(f"export const {key}: {ts_type} = {ts_value};")
-        secrets_content = "\n".join(secrets_lines) + "\n"
-        secrets_path = self.path / "src" / "constants" / "secrets.ts"
-        secrets_path.parent.mkdir(parents=True, exist_ok=True)
-        if not secrets_path.is_file() or secrets_path.read_text(encoding="utf-8") != secrets_content:
-            secrets_path.write_text(secrets_content, encoding="utf-8")
-        version_path = self.path / "src" / "constants" / "version.ts"
-        version_path.parent.mkdir(parents=True, exist_ok=True)
-        version_content = f'export const VERSION: string = "{VERSION}";\n'
-        if not version_path.is_file() or version_path.read_text(encoding="utf-8") != version_content:
-            version_path.write_text(version_content, encoding="utf-8")
+                value = str(value)
+            secrets_lines.append(f"export const {key}: {ts_type} = {json.dumps(value, ensure_ascii=False)};")
+
+        constants = self.path / "src" / "constants"
+        constants.mkdir(parents=True, exist_ok=True)
+        for file, content in {
+            constants / "secrets.ts": "\n".join(secrets_lines) + "\n",
+            constants / "version.ts": f"export const VERSION: string = {json.dumps(VERSION, ensure_ascii=False)};\n",
+        }.items():
+            if not file.is_file() or file.read_text(encoding="utf-8") != content:
+                file.write_text(content, encoding="utf-8")
+
         self._npm_build()
+
+    def _npm(self, *args: str) -> None:
+        """Run an npm command via the bundled Node.js wheel, falling back to system ``npm``."""
+        try:
+            nodejs_wheel.npm(list(args), cwd=self.path, check=True)
+        except FileNotFoundError:
+            subprocess.run([shutil.which("npm") or "npm", *args], cwd=self.path, check=True)
 
     def _npm_build(self) -> None:
         """
-        Build the web application and compress its generated assets for packaging.
-
-        The build retries after installing dependencies when the initial build fails and falls back to the system `npm` executable when the bundled npm tool is unavailable.
+        Install web dependencies when missing or stale, build the web app, and compress its assets.
         """
-        build_cmd = ["run", "build"]
-        install_cmd = ["install"]
-        try:
-            if nodejs_wheel.npm(build_cmd, stderr=subprocess.DEVNULL, cwd=self.path, check=False):
-                nodejs_wheel.npm(install_cmd, cwd=self.path, check=True)
-                nodejs_wheel.npm(build_cmd, cwd=self.path, check=True)
-        except FileNotFoundError:
-            if subprocess.run(["npm", *build_cmd], stderr=subprocess.DEVNULL, cwd=self.path, check=False).returncode:
-                subprocess.run(["npm", *install_cmd], cwd=self.path, check=True)
-                subprocess.run(["npm", *build_cmd], cwd=self.path, check=True)
+        lock = self.path / "package-lock.json"
+        installed = self.path / "node_modules" / ".package-lock.json"
+        if not installed.is_file() or (lock.is_file() and lock.stat().st_mtime > installed.stat().st_mtime):
+            self._npm("ci" if lock.is_file() else "install")
+        self._npm("run", "build")
+        webui_obj = self.project.env.File("${BUILD_DIR}/src/extensions/WebUiExtension.cpp.o")
         for file in (self.path / "dist").iterdir():
             if file.is_file() and file.suffix != ".gz":
-                (file.parent / f"{file.name}.gz").write_bytes(gzip.compress(file.read_bytes(), mtime=0))
-                self.project.env.Depends(
-                    self.project.env.File("${BUILD_DIR}/src/extensions/WebUiExtension.cpp.o"),
-                    self.project.env.File(f"#{file.as_posix()}"),
-                )
+                compressed = gzip.compress(file.read_bytes(), mtime=0)
+                gz_file = file.with_name(f"{file.name}.gz")
+                if not gz_file.is_file() or gz_file.read_bytes() != compressed:
+                    gz_file.write_bytes(compressed)
+                self.project.env.Depends(webui_obj, self.project.env.File(f"#{gz_file.as_posix()}"))
 
     @staticmethod
     def clean() -> None:
         """Remove generated web app files and dependencies from the project."""
-        webui = pathlib.Path("webui")
         for file in (
-            webui / "src" / "constants" / "secrets.ts",
-            webui / "src" / "constants" / "version.ts",
+            WebUI.path / "src" / "constants" / "secrets.ts",
+            WebUI.path / "src" / "constants" / "version.ts",
         ):
             if file.is_file():
                 file.unlink()
                 print(f"Removing {file}")
-        if (dist := webui / "dist").is_dir():
+        if (dist := WebUI.path / "dist").is_dir():
             for file in dist.iterdir():
                 if file.is_file():
                     file.unlink()
                     print(f"Removing {file}")
-        if (node_modules := webui / "node_modules").exists():
+        if (node_modules := WebUI.path / "node_modules").exists():
             shutil.rmtree(node_modules, ignore_errors=True)
             print(f"Removing {node_modules}")

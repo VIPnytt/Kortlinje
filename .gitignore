@@ -11,7 +11,7 @@
 /firmware/include/constants/secrets.h
 /firmware/src/pio/*.pio.h
 /logs
-/secrets.toml
+/secrets*.toml
 /webui/dist
 /webui/node_modules
 /webui/src/constants/secrets.ts

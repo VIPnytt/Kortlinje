@@ -11,7 +11,9 @@
 #include <array>
 #include <format>
 #include <iomanip>
+#include <meta>
 #include <sstream>
+#include <string>
 #include <string_view>
 
 /**
@@ -71,25 +73,23 @@ void CountdownMode::handle()
  * @brief Adds Home Assistant discovery components for countdown configuration.
  *
  * @param discovery Home Assistant discovery document to populate.
- * @param topic Base command and state topic for the countdown mode.
  * @param unique Unique identifier prefix for the discovered entities.
  */
-void CountdownMode::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void CountdownMode::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
-    {
-        const std::string id{std::string(name).append("_timestamp")};
-        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistant::Abbreviations::command_template].set(R"({"timestamp":"{{value}}"})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistant::Abbreviations::entity_category].set("config");
-        component[HomeAssistant::Abbreviations::icon].set("mdi:timer-sand-full");
-        component[HomeAssistant::Abbreviations::name].set(name);
-        component[HomeAssistant::Abbreviations::platform].set("time");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
-        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.timestamp}}");
-    }
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
+    constexpr std::string_view id{std::define_static_string(std::string{name} + "_timestamp")};
+    JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+    component[HomeAssistant::Abbreviations::command_template].set(R"({"timestamp":"{{value}}"})");
+    component[HomeAssistant::Abbreviations::command_topic].set(
+        std::define_static_string(std::string{stateTopic} + "/set"));
+    component[HomeAssistant::Abbreviations::entity_category].set("config");
+    component[HomeAssistant::Abbreviations::icon].set("mdi:timer-sand-full");
+    component[HomeAssistant::Abbreviations::name].set(name);
+    component[HomeAssistant::Abbreviations::platform].set("time");
+    component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+    component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+    component[HomeAssistant::Abbreviations::value_template].set("{{value_json.timestamp}}");
 }
 
 /**

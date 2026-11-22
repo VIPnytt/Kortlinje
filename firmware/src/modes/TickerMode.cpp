@@ -1,10 +1,15 @@
 #include "modes/TickerMode.h"
 
 #include "constants/HomeAssistant.h"
+#include "extensions/MqttExtension.h"
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
 #include "services/FontsService.h"
+
+#include <memory>
+#include <meta>
+#include <string>
 
 TickerMode::~TickerMode() { stopTimer(); }
 
@@ -48,39 +53,40 @@ void TickerMode::handle()
     }
 }
 
-void TickerMode::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void TickerMode::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
+    constexpr std::string_view commandTopic{std::define_static_string(std::string{stateTopic} + "/set")};
     {
-        const std::string id{std::string(name).append("_font")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_font")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::command_template].set(R"({"font":"{{value}}"})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
         component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
         component[HomeAssistant::Abbreviations::entity_category].set("config");
         component[HomeAssistant::Abbreviations::icon].set("mdi:format-font");
-        component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" font"));
+        component[HomeAssistant::Abbreviations::name].set(std::define_static_string(std::string{name} + " font"));
         JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
-        for (const std::string_view _name : FontsService::getNames())
+        for (const std::string_view option : FontsService::getCollection())
         {
-            options.add(_name);
+            options.add(option);
         }
         component[HomeAssistant::Abbreviations::platform].set("select");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.font}}");
     }
     {
-        const std::string id{std::string(name).append("_text")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_text")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::command_template].set(R"({"message":"{{value}}"})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
         component[HomeAssistant::Abbreviations::icon].set("mdi:message");
         component[HomeAssistant::Abbreviations::name].set(name);
         component[HomeAssistant::Abbreviations::platform].set("text");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
-        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.event}}");
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.message}}");
     }
 }
 
@@ -104,8 +110,7 @@ bool __time_critical_func(TickerMode::onTimer)(repeating_timer *rt)
 
 void TickerMode::setFont(std::string_view fontName)
 {
-    const std::span<const std::string_view> names{FontsService::getNames()};
-    if (std::ranges::find(names, fontName) != names.end())
+    if ((!font || font->name != fontName) && std::ranges::contains(FontsService::getCollection(), fontName))
     {
         font = FontsService::getFont(fontName);
         ConfigHandler::set(name, "font", fontName);
@@ -115,7 +120,7 @@ void TickerMode::setFont(std::string_view fontName)
 
 void TickerMode::setMessage(std::string_view _message)
 {
-    if (_message.length())
+    if (_message.length() && _message != message)
     {
         message = _message;
         ConfigHandler::set(name, "message", message);

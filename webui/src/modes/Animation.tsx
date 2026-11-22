@@ -22,9 +22,12 @@ import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
 import { WebSocketWS } from "../extensions/WebSocket";
-import { SidebarSection, WebUISidebar } from "../extensions/WebUI";
+import {
+  SidebarSection,
+  MainComponent as WebUIMainComponent,
+  WebUISidebar,
+} from "../extensions/WebUI";
 import { DisplayColumns, DisplayRows } from "../services/Display";
-import { MainComponent as ModesMainComponent } from "../services/Modes";
 
 export const name = "Animation";
 
@@ -349,7 +352,11 @@ export const Main: Component = () => {
   return (
     <Show
       fallback={
-        <ModesMainComponent icon={mdiAnimationPlay} text="Add a few frames to get started" />
+        <WebUIMainComponent
+          icon={mdiAnimationPlay}
+          title={name}
+          text="Add a few frames to get started"
+        />
       }
       when={getFramesDraft().length}
     >

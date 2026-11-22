@@ -1,11 +1,16 @@
 #include "extensions/AlarmExtension.h"
 
+#include "constants/HomeAssistant.h"
 #include "constants/Kortlinje.h"
+#include "extensions/MqttExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "pio/alarm.pio.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 
+#include <algorithm>
+#include <charconv>
+#include <string>
 #include <time.h>
 
 void AlarmExtension::configure()
@@ -63,6 +68,94 @@ void AlarmExtension::handle()
     {
         timeout = false;
         dismiss();
+    }
+}
+
+void AlarmExtension::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
+{
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
+    constexpr std::string_view commandTopic{std::define_static_string(std::string{stateTopic} + "/set")};
+    {
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_alarm1")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"alarm1":{"time":"{{value}}"}})");
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::icon].set("mdi:alarm");
+        component[HomeAssistant::Abbreviations::name].set("Alarm 1");
+        component[HomeAssistant::Abbreviations::platform].set("time");
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.alarm1.time}}");
+    }
+    {
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_alarm2")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"alarm2":{"time":"{{value}}"}})");
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::icon].set("mdi:alarm");
+        component[HomeAssistant::Abbreviations::name].set("Alarm 2");
+        component[HomeAssistant::Abbreviations::platform].set("time");
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.alarm2.time}}");
+    }
+    {
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_dismiss")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::icon].set("mdi:alarm-off");
+        component[HomeAssistant::Abbreviations::name].set("Dismiss");
+        component[HomeAssistant::Abbreviations::payload_press].set(R"({"action":"dismiss"})");
+        component[HomeAssistant::Abbreviations::platform].set("button");
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+    }
+    {
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_enabled1")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"alarm1":{"enabled":{{value}}}})");
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::icon].set("mdi:alarm");
+        component[HomeAssistant::Abbreviations::name].set("Alarm 1");
+        component[HomeAssistant::Abbreviations::payload_off].set("false");
+        component[HomeAssistant::Abbreviations::payload_on].set("true");
+        component[HomeAssistant::Abbreviations::platform].set("switch");
+        component[HomeAssistant::Abbreviations::state_off].set("False");
+        component[HomeAssistant::Abbreviations::state_on].set("True");
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.alarm1.enabled}}");
+    }
+    {
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_enabled2")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_template].set(R"({"alarm2":{"enabled":{{value}}}})");
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::icon].set("mdi:alarm");
+        component[HomeAssistant::Abbreviations::name].set("Alarm 2");
+        component[HomeAssistant::Abbreviations::payload_off].set("false");
+        component[HomeAssistant::Abbreviations::payload_on].set("true");
+        component[HomeAssistant::Abbreviations::platform].set("switch");
+        component[HomeAssistant::Abbreviations::state_off].set("False");
+        component[HomeAssistant::Abbreviations::state_on].set("True");
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.alarm2.enabled}}");
+    }
+    {
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_snooze")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::command_topic].set(commandTopic);
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::icon].set("mdi:alarm-snooze");
+        component[HomeAssistant::Abbreviations::name].set("Snooze");
+        component[HomeAssistant::Abbreviations::payload_press].set(R"({"action":"snooze"})");
+        component[HomeAssistant::Abbreviations::platform].set("button");
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
     }
 }
 
@@ -136,6 +229,18 @@ void AlarmExtension::onReceive(JsonObjectConst payload, std::string_view source)
             snooze();
         }
     }
+    if (const auto parsed{payload["alarm1"]["time"].is<std::string_view>()
+                              ? parseTime(payload["alarm1"]["time"].as<std::string_view>())
+                              : std::nullopt})
+    {
+        setTime1(parsed->first, parsed->second);
+    }
+    if (const auto parsed{payload["alarm2"]["time"].is<std::string_view>()
+                              ? parseTime(payload["alarm2"]["time"].as<std::string_view>())
+                              : std::nullopt})
+    {
+        setTime2(parsed->first, parsed->second);
+    }
     if (payload["alarm1"]["enabled"].is<bool>())
     {
         setAlarm1(payload["alarm1"]["enabled"].as<bool>());
@@ -143,14 +248,6 @@ void AlarmExtension::onReceive(JsonObjectConst payload, std::string_view source)
     if (payload["alarm2"]["enabled"].is<bool>())
     {
         setAlarm2(payload["alarm2"]["enabled"].as<bool>());
-    }
-    if (payload["alarm1"]["hour"].is<uint8_t>() && payload["alarm1"]["minute"].is<uint8_t>())
-    {
-        setTime1(payload["alarm1"]["hour"].as<uint8_t>(), payload["alarm1"]["minute"].as<uint8_t>());
-    }
-    if (payload["alarm2"]["hour"].is<uint8_t>() && payload["alarm2"]["minute"].is<uint8_t>())
-    {
-        setTime2(payload["alarm2"]["hour"].as<uint8_t>(), payload["alarm2"]["minute"].as<uint8_t>());
     }
 }
 
@@ -176,6 +273,24 @@ int64_t __time_critical_func(AlarmExtension::onAlarm)(alarm_id_t id, void *user_
         alarmId = add_alarm_in_us(0b1ULL << 30U, &onAlarm, nullptr, true);
     }
     return 0LL;
+}
+
+std::optional<std::pair<uint8_t, uint8_t>> AlarmExtension::parseTime(std::string_view value)
+{
+    const char *const end{value.data() + value.size()};
+    uint8_t hour{0U};
+    uint8_t minute{0U};
+    const auto [hourEnd, hourError]{std::from_chars(value.data(), end, hour)};
+    if (hourError != std::errc{} || hourEnd == end || *hourEnd != ':' || hour >= 24U)
+    {
+        return std::nullopt;
+    }
+    const auto [minuteEnd, minuteError]{std::from_chars(hourEnd + 1, end, minute)};
+    if (minuteError != std::errc{} || minute >= 60U || (minuteEnd != end && *minuteEnd != ':'))
+    {
+        return std::nullopt;
+    }
+    return std::pair{hour, minute};
 }
 
 void AlarmExtension::reschedule()
@@ -281,10 +396,8 @@ void AlarmExtension::transmit()
 {
     JsonDocument doc{};
     doc["alarm1"]["enabled"].set(alarm1.enabled);
-    doc["alarm1"]["hour"].set(alarm1.hour);
-    doc["alarm1"]["minute"].set(alarm1.minute);
+    doc["alarm1"]["time"].set(std::format("{:02d}:{:02d}", alarm1.hour, alarm1.minute));
     doc["alarm2"]["enabled"].set(alarm2.enabled);
-    doc["alarm2"]["hour"].set(alarm2.hour);
-    doc["alarm2"]["minute"].set(alarm2.minute);
+    doc["alarm2"]["time"].set(std::format("{:02d}:{:02d}", alarm2.hour, alarm2.minute));
     DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

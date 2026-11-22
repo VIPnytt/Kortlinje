@@ -2,6 +2,8 @@
 
 #include "modules/ModeModule.h"
 
+#include <string>
+
 class HumidityMode final : public ModeModule
 {
 private:
@@ -17,7 +19,7 @@ public:
     explicit HumidityMode() : ModeModule(name) {};
 
     void handle() override;
-    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
+    void onHomeAssistant(JsonDocument &discovery, std::string_view unique) override;
 
     static void set(uint8_t _humidity);
 };

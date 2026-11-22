@@ -83,7 +83,6 @@ void AnimationMode::setFrames(uint8_t count)
 
 void AnimationMode::setInterval(uint32_t milliseconds)
 {
-
     const uint32_t _interval{milliseconds * 1'000U};
     if (_interval != interval && _interval != 0U)
     {

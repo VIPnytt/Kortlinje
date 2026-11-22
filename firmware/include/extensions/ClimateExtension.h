@@ -2,6 +2,8 @@
 
 #include "modules/ExtensionModule.h"
 
+#include <string>
+
 class ClimateExtension final : public ExtensionModule
 {
 private:
@@ -24,7 +26,7 @@ public:
     void configure() override;
     void begin() override;
     void handle() override;
-    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
+    void onHomeAssistant(JsonDocument &discovery, std::string_view unique) override;
 
     [[nodiscard]] uint8_t getHumidity() const;
 

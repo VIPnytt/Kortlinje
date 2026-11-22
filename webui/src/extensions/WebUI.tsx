@@ -177,12 +177,7 @@ export const Main: Component = () => (
 );
 
 export const MainSecondary: Component = () => (
-  <div class="main">
-    <h1>
-      <Icon path={mdiClockDigital} />
-    </h1>
-    <div class="mode-title">{DEVICE_NAME}</div>
-  </div>
+  <MainComponent icon={mdiClockDigital} title={DEVICE_NAME} />
 );
 
 const Home: Component = () => (
@@ -201,18 +196,13 @@ const Footer: Component = () => (
   <>
     <div class="hr mb-3 mt-auto" />
     <div class="link">
-      <a
-        class="flex-1"
-        href="https://github.com/VIPnytt/Kortlinje/wiki"
-        rel="noopener"
-        target="_blank"
-      >
+      <a class="flex-1" href="https://github.com/VIPnytt/Kortlinje" rel="noopener" target="_blank">
         <Icon class="mr-2" path={mdiClockDigital} />
         Kortlinje
       </a>
       <a
         class="text-content-alt-light dark:text-content-alt-dark flex-none"
-        href="https://github.com/VIPnytt/Kortlinje/releases"
+        href="https://github.com/VIPnytt/Kortlinje/releases/latest"
         rel="noopener"
         target="_blank"
       >
@@ -271,6 +261,20 @@ const Layout: Component<{
       </aside>
     )}
     <main class="h-full overflow-auto rounded-none">{props.main}</main>
+  </div>
+);
+
+export const MainComponent: Component<{
+  icon: string;
+  title: string;
+  text?: string;
+}> = (props) => (
+  <div class="main">
+    <h1>
+      <Icon path={props.icon} />
+    </h1>
+    <div class="mode-title">{props.title}</div>
+    {props.text && <div class="mode-subtitle">{props.text}</div>}
   </div>
 );
 

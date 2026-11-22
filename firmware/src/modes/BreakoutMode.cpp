@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 BreakoutMode::~BreakoutMode() { cancel_alarm(alarmId); }
 
@@ -42,71 +43,59 @@ void BreakoutMode::handle()
             text.draw(0, static_cast<int8_t>((Display::grid::rows - text.getHeight()) / 2U));
         }
     }
-    const float rad{static_cast<float>(deg) * static_cast<float>(DEG_TO_RAD)};
-    const float dx{cosf(rad)};
-    const float dy{-sinf(rad)};
-    const float maxComponent{std::max(fabsf(dx), fabsf(dy))};
-    const float stepX{dx / maxComponent};
-    const float stepY{dy / maxComponent};
-    const int targetX{static_cast<int>(std::lroundf(xDec + stepX))};
-    const int targetY{static_cast<int>(std::lroundf(yDec + stepY))};
-    const uint8_t nextX{static_cast<uint8_t>(std::clamp(targetX, 0, static_cast<int>(Display::grid::maxX)))};
-    const uint8_t nextY{static_cast<uint8_t>(std::clamp(targetY, 0, static_cast<int>(Display::grid::maxY)))};
-    if (x == 0U && deg >= 90U && deg < 270U)
+    const uint8_t nextX{
+        static_cast<uint8_t>(std::clamp(static_cast<int>(x) + stepX, 0, static_cast<int>(Display::grid::maxX)))};
+    const uint8_t nextY{static_cast<uint8_t>(
+        std::clamp(static_cast<int>(std::lroundf(yDec + stepY)), 0, static_cast<int>(Display::grid::maxY)))};
+    if (x == 0U && stepX < 0)
     {
-        deg = deg >= 180U ? 540U - deg : 180U - deg; // Invert X
+        stepX = 1;
     }
-    if ((y == 0U && deg < 180U) || (y >= Display::grid::maxY && deg > 180U))
+    if ((y == 0U && stepY < .0F) || (y >= Display::grid::maxY && stepY > .0F))
     {
-        deg = 360U - deg; // Invert Y
+        stepY = -stepY;
     }
-    if (nextX >= Display::grid::maxX && (deg < 90U || deg > 270U))
+    if (nextX == Display::grid::maxX && stepX > 0)
     {
-        deg = static_cast<uint16_t>(random(150L, 211L));
+        stepX = -1;
+        stepY = (static_cast<float>(random(101L)) * 1e-2F) -
+                (static_cast<float>(y) * (1.0F / static_cast<float>(Display::grid::maxY)));
+        interval = static_cast<int64_t>(static_cast<float>(0b1U << 16U) * sqrtf(1.0F + (stepY * stepY)));
     }
     else if ((nextX != x || nextY != y) && DisplayService::getPixel(nextX, nextY))
     {
         DisplayService::setPixel(nextX, nextY, false);
         if (nextX == x)
         {
-            deg = 360U - deg; // Invert Y
-        }
-        else if (nextY == y)
-        {
-            deg = deg >= 180U ? 540U - deg : 180U - deg; // Invert X
+            stepY = -stepY;
         }
         else
         {
-            deg = deg >= 180U ? 540U - deg : 180U - deg;
+            stepX = -stepX;
         }
     }
-    const float moveRad{static_cast<float>(deg) * static_cast<float>(DEG_TO_RAD)};
-    const float moveDx{cosf(moveRad)};
-    const float moveDy{-sinf(moveRad)};
-    const float moveMaxComponent{std::max(fabsf(moveDx), fabsf(moveDy))};
     DisplayService::setPixel(x, y, false);
-    xDec += moveDx / moveMaxComponent;
-    yDec += moveDy / moveMaxComponent;
-    xDec = std::clamp(xDec, .0F, static_cast<float>(Display::grid::maxX));
-    yDec = std::clamp(yDec, .0F, static_cast<float>(Display::grid::maxY));
-    x = static_cast<uint8_t>(std::clamp<int>(std::lroundf(xDec), 0, static_cast<int>(Display::grid::maxX)));
-    y = static_cast<uint8_t>(std::clamp<int>(std::lroundf(yDec), 0, static_cast<int>(Display::grid::maxY)));
+    x = static_cast<uint8_t>(std::clamp(static_cast<int>(x) + stepX, 0, static_cast<int>(Display::grid::maxX - 1U)));
+    yDec = std::clamp(yDec + stepY, .0F, static_cast<float>(Display::grid::maxY));
+    y = static_cast<uint8_t>(std::lroundf(yDec));
     DisplayService::setPixel(x, y, true);
-    const float angleRad{atanf(std::max(.0F, static_cast<float>(Display::grid::maxX - 1U) - xDec) /
-                               std::max(.1F, std::fabs(static_cast<float>(paddleY) - yDec)))};
-    if (yDec < paddleY - 1U && angleRad < 1.0F && paddleY > 1U)
+    const float distX{static_cast<float>((Display::grid::maxX - 1U) - x)};
+    const float distY{fabsf(static_cast<float>(paddleY) - yDec)};
+    if (distX < distY * std::numbers::sqrt3_v<float>)
     {
-        DisplayService::setPixel(Display::grid::maxX, paddleY + 1U, false);
-        --paddleY;
-        DisplayService::setPixel(Display::grid::maxX, paddleY - 1U, true);
+        if (paddleY > 1U && yDec < static_cast<float>(paddleY - 1U))
+        {
+            DisplayService::setPixel(Display::grid::maxX, paddleY + 1U, false);
+            --paddleY;
+            DisplayService::setPixel(Display::grid::maxX, paddleY - 1U, true);
+        }
+        else if (paddleY < Display::grid::maxY - 1U && yDec > static_cast<float>(paddleY + 1U))
+        {
+            DisplayService::setPixel(Display::grid::maxX, paddleY - 1U, false);
+            ++paddleY;
+            DisplayService::setPixel(Display::grid::maxX, paddleY + 1U, true);
+        }
     }
-    else if (yDec > paddleY + 1U && angleRad < 1.0F && paddleY < Display::grid::maxY - 1U)
-    {
-        DisplayService::setPixel(Display::grid::maxX, paddleY - 1U, false);
-        ++paddleY;
-        DisplayService::setPixel(Display::grid::maxX, paddleY + 1U, true);
-    }
-    interval = static_cast<int64_t>(static_cast<float>(0b1U << 16U) / std::max(0.01F, moveMaxComponent));
 }
 
 int64_t __time_critical_func(BreakoutMode::onAlarm)(alarm_id_t id, void *user_data)

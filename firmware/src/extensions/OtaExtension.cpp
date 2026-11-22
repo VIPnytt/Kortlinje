@@ -11,6 +11,7 @@
 #include <ArduinoOTA.h>
 #include <hardware/watchdog.h>
 #include <pico/platform.h>
+#include <string>
 
 void OtaExtension::begin()
 {

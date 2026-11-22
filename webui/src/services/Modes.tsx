@@ -41,7 +41,7 @@ export const name = "Modes";
 const [getMode, setMode] = createSignal<string>("");
 const [getModes, setModes] = createSignal<string[]>([]);
 
-export const ModesList = getModes;
+export const ModesCollection = getModes;
 export const ModesMode = getMode;
 
 export const receiver = (json: { collection?: string[]; mode?: string }) => {
@@ -137,25 +137,4 @@ export const SidebarThird: Component = () => (
     <ModeCountdownLink />
     <ModeTickerLink />
   </SidebarSectionSecondary>
-);
-
-export const MainComponent: Component<{
-  icon: string;
-  internal?: boolean;
-  text?: string;
-}> = (props) => (
-  <div class="main">
-    <h1>
-      <Icon path={props.icon} />
-    </h1>
-    <a
-      class="mode-title"
-      href="https://github.com/VIPnytt/Kortlinje/wiki"
-      target="_blank"
-      rel="noopener"
-    >
-      {getMode()}
-    </a>
-    {props.text && <div class="mode-subtitle">{props.text}</div>}
-  </div>
 );

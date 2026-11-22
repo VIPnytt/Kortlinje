@@ -7,7 +7,7 @@ import { Toast } from "../components/Toast";
 import { Tooltip } from "../components/Tooltip";
 import { DisplayColumns, name as DisplayName } from "../services/Display";
 import { name as ExtensionsName } from "../services/Extensions";
-import { FontsList } from "../services/Fonts";
+import { FontsCollection } from "../services/Fonts";
 import { WebSocketWS } from "./WebSocket";
 
 export const name = "Message";
@@ -92,7 +92,7 @@ export const MainThird: Component = () => {
                 onchange={(e) => setFont(e.currentTarget.value)}
                 value={getFont()}
               >
-                <For each={FontsList()}>
+                <For each={FontsCollection()}>
                   {(fontName) => <option selected={fontName === getFont()}>{fontName}</option>}
                 </For>
               </select>

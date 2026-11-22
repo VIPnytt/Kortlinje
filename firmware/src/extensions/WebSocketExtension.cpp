@@ -4,6 +4,8 @@
 #include "services/DeviceService.h"
 #include "services/WebServerService.h"
 
+#include <vector>
+
 void WebSocketExtension::begin()
 {
     socket.onEvent(&onEvent);

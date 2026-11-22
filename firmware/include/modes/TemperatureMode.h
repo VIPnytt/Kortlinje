@@ -2,6 +2,8 @@
 
 #include "modules/ModeModule.h"
 
+#include <string>
+
 class TemperatureMode final : public ModeModule
 {
 private:
@@ -17,7 +19,7 @@ public:
     explicit TemperatureMode() : ModeModule(name) {};
 
     void handle() override;
-    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
+    void onHomeAssistant(JsonDocument &discovery, std::string_view unique) override;
 
     static void set(float _temperature);
 };

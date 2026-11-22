@@ -13,18 +13,18 @@ class BreakoutMode final : public ModeModule
 private:
     volatile bool tick{false};
 
+    int8_t stepX{-1};
+
     uint8_t paddleY{Display::grid::rows / 2U};
     uint8_t x{Display::grid::maxX - 1U};
     uint8_t y{Display::grid::rows / 2U};
-
-    uint16_t deg{180U};
 
     int hour{24};
     int minute{60};
 
     volatile int64_t interval{static_cast<int64_t>(0b1U << 16U)};
 
-    float xDec{static_cast<float>(Display::grid::maxX - 1U)};
+    float stepY{.0F};
     float yDec{static_cast<float>(Display::grid::rows / 2U)};
 
     alarm_id_t alarmId{0L};
@@ -32,9 +32,6 @@ private:
     time_t now{};
 
     tm local{};
-
-    void startAlarm();
-    void stopAlarm();
 
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 

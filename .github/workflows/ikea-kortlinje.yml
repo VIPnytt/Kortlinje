@@ -19,7 +19,7 @@ jobs:
   full:
     name: Full
     needs: context
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
@@ -76,7 +76,7 @@ jobs:
           [time]
           format = 24
           posix = 'UTC0'
-          zone = 'Etc/Universal'
+          zone = 'Etc/UTC'
           [weather]
           latitude = 0.000
           longitude = 0.000
@@ -89,7 +89,7 @@ jobs:
   minimal:
     name: Minimal
     needs: context
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:

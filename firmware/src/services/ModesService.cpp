@@ -1,6 +1,7 @@
 #include "services/ModesService.h"
 
 #include "constants/HomeAssistant.h"
+#include "extensions/MqttExtension.h"
 #include "extensions/PlaylistExtension.h"
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
@@ -39,21 +40,23 @@
 
 #include <RP2040Support.h>
 #include <array>
+#include <memory>
+#include <meta>
+#include <string>
+#include <utility>
 
 void ModesService::begin()
 {
     std::string _name{};
-    const RP2040::resetReason_t reason{rp2040.getResetReason()};
-    if (std::ranges::none_of(DeviceService::resetAbnormalities,
-                             [&](RP2040::resetReason_t _reason) { return _reason == reason; }) &&
+    if (!std::ranges::contains(DeviceService::resetAbnormalities, rp2040.getResetReason()) &&
         ConfigHandler::get(name, "mode", _name))
     {
         setMode(_name);
     }
     if (mode == nullptr)
     {
-        const std::span<const std::string_view> names{getNames()};
-        setMode(names[random(static_cast<long>(names.size()))]);
+        const std::span<const std::string_view> collection{getCollection()};
+        setMode(collection[static_cast<size_t>(random(static_cast<long>(collection.size())))]);
     }
 }
 
@@ -108,6 +111,42 @@ void ModesService::cancelAlarm()
 }
 
 bool ModesService::getActive() { return active; }
+
+std::span<const std::string_view> ModesService::getCollection()
+{
+    static constexpr std::array collection{
+        AnimationMode::name,
+        BlindsMode::name,
+        BlinkMode::name,
+        BreakoutMode::name,
+        BrightMode::name,
+        CircleMode::name,
+        ClockMode::name,
+        CountdownMode::name,
+        DateMode::name,
+        DrawMode::name,
+        EpochCounterMode::name,
+        EqualizerMode::name,
+        FireworkMode::name,
+        GameOfLifeMode::name,
+        GlitterMode::name,
+        HumidityMode::name,
+        LeafFallMode::name,
+        LinesMode::name,
+        NoiseMode::name,
+        PingPongMode::name,
+        RainMode::name,
+        ScanMode::name,
+        SnakeMode::name,
+        StarsMode::name,
+        TemperatureMode::name,
+        TickerMode::name,
+        WaveformMode::name,
+        WeatherMode::name,
+        WeekdayMode::name,
+    };
+    return collection;
+}
 
 ModeModule *ModesService::getMode() { return mode.get(); }
 
@@ -232,42 +271,6 @@ std::unique_ptr<ModeModule> ModesService::getMode(std::string_view modeName)
     return nullptr;
 }
 
-std::span<const std::string_view> ModesService::getNames()
-{
-    static constexpr std::array names{
-        AnimationMode::name,
-        BlindsMode::name,
-        BlinkMode::name,
-        BreakoutMode::name,
-        BrightMode::name,
-        CircleMode::name,
-        ClockMode::name,
-        CountdownMode::name,
-        DateMode::name,
-        DrawMode::name,
-        EpochCounterMode::name,
-        EqualizerMode::name,
-        FireworkMode::name,
-        GameOfLifeMode::name,
-        GlitterMode::name,
-        HumidityMode::name,
-        LeafFallMode::name,
-        LinesMode::name,
-        NoiseMode::name,
-        PingPongMode::name,
-        RainMode::name,
-        ScanMode::name,
-        SnakeMode::name,
-        StarsMode::name,
-        TemperatureMode::name,
-        TickerMode::name,
-        WaveformMode::name,
-        WeatherMode::name,
-        WeekdayMode::name,
-    };
-    return names;
-}
-
 int64_t __time_critical_func(ModesService::onAlarm)(alarm_id_t id, void *user_data)
 {
     static_cast<void>(id);
@@ -281,29 +284,27 @@ int64_t __time_critical_func(ModesService::onAlarm)(alarm_id_t id, void *user_da
  * @brief Adds Home Assistant discovery metadata for selecting the device mode.
  *
  * @param discovery JSON document to populate with the select component configuration.
- * @param topic Base MQTT topic for mode commands and state updates.
  * @param unique Identifier used to create a unique component ID.
  */
-void ModesService::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void ModesService::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
+    constexpr std::string_view id{std::define_static_string(std::string{name} + "_mode")};
+    JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+    component[HomeAssistant::Abbreviations::command_template].set(R"({"mode":"{{value}}"})");
+    component[HomeAssistant::Abbreviations::command_topic].set(
+        std::define_static_string(std::string{stateTopic} + "/set"));
+    component[HomeAssistant::Abbreviations::icon].set("mdi:format-list-bulleted");
+    component[HomeAssistant::Abbreviations::name].set("Mode");
+    JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
+    for (const std::string_view option : getCollection())
     {
-        const std::string id{std::string(name).append("_mode")};
-        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistant::Abbreviations::command_template].set(R"({"mode":"{{value}}"})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistant::Abbreviations::icon].set("mdi:format-list-bulleted");
-        component[HomeAssistant::Abbreviations::name].set("Mode");
-        JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
-        for (const std::string_view _name : getNames())
-        {
-            options.add(_name);
-        }
-        component[HomeAssistant::Abbreviations::platform].set("select");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
-        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.mode}}");
+        options.add(option);
     }
+    component[HomeAssistant::Abbreviations::platform].set("select");
+    component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+    component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+    component[HomeAssistant::Abbreviations::value_template].set("{{value_json.mode}}");
 }
 
 void ModesService::onReceive(JsonObjectConst payload, std::string_view source)
@@ -352,49 +353,38 @@ void ModesService::setMode(std::string_view modeName, bool power, bool splash)
 
 void ModesService::setModeNext()
 {
-    DisplayService::setPower(true);
+    const std::span<const std::string_view> collection{getCollection()};
     if (mode == nullptr)
     {
-        return;
+        setMode(collection.front());
     }
-    const std::span<const std::string_view> names{getNames()};
-    for (size_t idx{0U}; idx < names.size(); ++idx)
+    else if (const auto it{std::ranges::find(collection, mode->name)}; it != collection.end())
     {
-        if (names[idx] == mode->name)
-        {
-            const size_t index{(idx + 1U) % names.size()};
-            setMode(names[index], index != 0U);
-            return;
-        }
+        const auto next{std::next(it)};
+        setMode(*(next == collection.end() ? collection.begin() : next));
     }
 }
 
 void ModesService::setModePrevious()
 {
-    DisplayService::setPower(true);
+    const std::span<const std::string_view> collection{getCollection()};
     if (mode == nullptr)
     {
-        return;
+        setMode(collection.back());
     }
-    const std::span<const std::string_view> names{getNames()};
-    for (size_t idx{0U}; idx < names.size(); ++idx)
+    else if (const auto it{std::ranges::find(collection, mode->name)}; it != collection.end())
     {
-        if (names[idx] == mode->name)
-        {
-            const size_t index{(idx + names.size() - 1U) % names.size()};
-            setMode(names[index], index != 0U);
-            return;
-        }
+        setMode(*std::prev(it == collection.begin() ? collection.end() : it));
     }
 }
 
 void ModesService::transmit()
 {
     JsonDocument doc{};
-    JsonArray list{doc["collection"].to<JsonArray>()};
-    for (const std::string_view _name : getNames())
+    JsonArray collection{doc["collection"].to<JsonArray>()};
+    for (const std::string_view _name : getCollection())
     {
-        list.add(_name);
+        collection.add(_name);
     }
     if (mode != nullptr)
     {

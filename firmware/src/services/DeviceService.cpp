@@ -3,14 +3,20 @@
 #include "constants/HomeAssistant.h"
 #include "constants/Kortlinje.h"
 #include "extensions/ButtonExtension.h"
+#include "extensions/MqttExtension.h"
+#include "handlers/CertificateHandler.h"
 #include "services/ModesService.h"
 
+#include <HTTPClient.h>
 #include <LittleFS.h>
 #include <SimpleMDNS.h>
 #include <WiFi.h>
 #include <hardware/adc.h>
 #include <hardware/watchdog.h>
+#include <memory>
+#include <meta>
 #include <pico/cyw43_arch.h>
+#include <string>
 
 void DeviceService::begin0()
 {
@@ -22,6 +28,7 @@ void DeviceService::begin0()
     webServer.begin();
     extensions.begin();
     rp2040.fifo.push(1UL);
+    release();
 }
 
 void DeviceService::begin1()
@@ -108,14 +115,13 @@ JsonObjectConst DeviceService::getTransmits() { return transmits.as<JsonObjectCo
  * @brief Adds Home Assistant discovery definitions for device controls and temperature.
  *
  * @param discovery JSON document to receive the discovery components.
- * @param topic Base topic used for device commands and temperature updates.
  * @param unique Prefix used to create unique component identifiers.
  */
-void DeviceService::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void DeviceService::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
     {
-        const std::string id{std::string(name).append("_temperature")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_temperature")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::device_class].set("temperature");
         component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
@@ -123,13 +129,30 @@ void DeviceService::onHomeAssistant(JsonDocument &discovery, std::string topic, 
         component[HomeAssistant::Abbreviations::name].set("Internal temperature");
         component[HomeAssistant::Abbreviations::platform].set("sensor");
         component[HomeAssistant::Abbreviations::state_class].set("measurement");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
         component[HomeAssistant::Abbreviations::unit_of_measurement].set(Kortlinje::device::temperature_unit);
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.temperature}}");
     }
     {
-        const std::string id{std::string(name).append("_vsys")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_update")};
+        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+        component[HomeAssistant::Abbreviations::device_class].set("firmware");
+        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+        component[HomeAssistant::Abbreviations::entity_category].set("diagnostic");
+        component[HomeAssistant::Abbreviations::latest_version_template].set("{{value_json.latest}}");
+        component[HomeAssistant::Abbreviations::latest_version_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::name].set("Firmware");
+        component[HomeAssistant::Abbreviations::platform].set("update");
+        component[HomeAssistant::Abbreviations::release_url].set(
+            "https://github.com/VIPnytt/Kortlinje/releases/latest");
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::title].set("Kortlinje");
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.version}}");
+    }
+    {
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_vsys")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::device_class].set("voltage");
         component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
@@ -138,8 +161,8 @@ void DeviceService::onHomeAssistant(JsonDocument &discovery, std::string topic, 
         component[HomeAssistant::Abbreviations::name].set("System voltage");
         component[HomeAssistant::Abbreviations::platform].set("sensor");
         component[HomeAssistant::Abbreviations::state_class].set("measurement");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
         component[HomeAssistant::Abbreviations::unit_of_measurement].set("V");
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.voltage}}");
     }
@@ -181,9 +204,47 @@ void DeviceService::receive(JsonObjectConst payload, std::string_view source, st
     }
 }
 
+void DeviceService::release()
+{
+    if (std::ranges::contains(resetAbnormalities, rp2040.getResetReason()))
+    {
+        return;
+    }
+    BearSSL::WiFiClientSecure secure{};
+    secure.setTrustAnchors(&CertificateHandler::list());
+    HTTPClient http{};
+    http.setFollowRedirects(followRedirects_t::HTTPC_DISABLE_FOLLOW_REDIRECTS);
+    if (!http.begin(secure, "https://github.com/VIPnytt/Kortlinje/releases/latest"))
+    {
+        return;
+    }
+    http.setUserAgent(std::define_static_string(std::string{"Kortlinje/"} + Kortlinje::version +
+                                                " (+https://github.com/VIPnytt/Kortlinje)"));
+    if (http.sendRequest("HEAD") == t_http_codes::HTTP_CODE_FOUND)
+    {
+        constexpr std::string_view tagMarker{"/releases/tag/"};
+        const auto &location{http.getLocation()};
+        std::string_view view{location.c_str(), location.length()};
+        if (const size_t pos{view.find(tagMarker)}; pos != std::string_view::npos)
+        {
+            view.remove_prefix(pos + tagMarker.size());
+            if (view.starts_with('v'))
+            {
+                view.remove_prefix(1U);
+            }
+            latest = view;
+        }
+    }
+    http.end();
+}
+
 void DeviceService::transmit()
 {
     JsonDocument doc{};
+    if (!latest.empty())
+    {
+        doc["latest"].set(latest);
+    }
     doc["name"].set(Kortlinje::device::name);
     doc["repository"].set("https://github.com/VIPnytt/Kortlinje");
     doc["temperature"].set(temperature);

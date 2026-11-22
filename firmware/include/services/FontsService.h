@@ -4,6 +4,7 @@
 #include "modules/ServiceModule.h"
 
 #include <bits/unique_ptr.h>
+#include <memory>
 #include <span>
 #include <string_view>
 
@@ -17,7 +18,7 @@ public:
 
     void begin();
 
-    [[nodiscard]] static std::unique_ptr<const FontModule> getFont(std::string_view fontName);
+    [[nodiscard]] static std::span<const std::string_view> getCollection();
 
-    [[nodiscard]] static std::span<const std::string_view> getNames();
+    [[nodiscard]] static std::unique_ptr<const FontModule> getFont(std::string_view fontName);
 };

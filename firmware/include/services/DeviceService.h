@@ -11,10 +11,10 @@
 #include <ArduinoJson.h>
 #include <RP2040Support.h>
 #include <atomic>
+#include <string>
 
 class DeviceService final : public ServiceModule
 {
-
 public:
     static constexpr std::string_view name{"Device"};
 
@@ -31,7 +31,7 @@ public:
     void handle0();
     void handle1();
 
-    static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
+    static void onHomeAssistant(JsonDocument &discovery, std::string_view unique);
     static void receive(JsonObjectConst payload, std::string_view source, std::string_view destination);
     static void transmit(JsonObjectConst payload, std::string_view source, bool retain = true);
 
@@ -45,6 +45,8 @@ private:
     float voltage{.0F};
 
     std::atomic<bool> alive{false};
+
+    std::string latest{};
 
     ConnectivityService connectivity{};
 
@@ -60,6 +62,7 @@ private:
 
     WebServerService webServer{};
 
+    void release();
     void transmit();
 
     [[nodiscard]] uint16_t getSamples();

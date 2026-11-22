@@ -5,6 +5,7 @@
 
 #include <array>
 #include <span>
+#include <string>
 
 namespace Display::grid
 {
@@ -62,7 +63,7 @@ public:
     static void fillRow(uint8_t y, bool lit);
     static void fillRows(size_t minY, size_t rows, bool lit);
     static void invertFrame();
-    static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
+    static void onHomeAssistant(JsonDocument &discovery, std::string_view unique);
     static void onReceive(JsonObjectConst payload, std::string_view source);
     static void setBrightness(Brightness _brightness);
     static void setFrame(std::span<const bool, Display::grid::pixels> _frame);

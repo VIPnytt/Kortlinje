@@ -2,6 +2,7 @@
 
 #include "constants/HomeAssistant.h"
 #include "constants/Kortlinje.h"
+#include "extensions/MqttExtension.h"
 #include "fonts/KortlinjeFont.h"
 #include "fonts/SmallFont.h"
 #include "handlers/BitmapHandler.h"
@@ -19,7 +20,10 @@
 #include <algorithm>
 #include <cmath>
 #include <format>
+#include <meta>
 #include <string>
+#include <utility>
+#include <vector>
 
 const std::array<WeatherMode::Provider, 3U> WeatherMode::providers{{
     {"Open-Meteo", urlsOpenMeteo, &WeatherMode::parseOpenMeteo},
@@ -186,31 +190,29 @@ int64_t __time_critical_func(WeatherMode::onAlarm)(alarm_id_t id, void *user_dat
  * @brief Registers the weather provider selector with Home Assistant.
  *
  * @param discovery Home Assistant discovery document to update.
- * @param topic Base topic for the selector's command and state messages.
  * @param unique Prefix used to construct the selector's unique identifier.
  */
-void WeatherMode::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void WeatherMode::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
+    constexpr std::string_view id{std::define_static_string(std::string{name} + "_provider")};
+    JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+    component[HomeAssistant::Abbreviations::command_template].set(R"({"provider":"{{value}}"})");
+    component[HomeAssistant::Abbreviations::command_topic].set(
+        std::define_static_string(std::string{stateTopic} + "/set"));
+    component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
+    component[HomeAssistant::Abbreviations::entity_category].set("config");
+    component[HomeAssistant::Abbreviations::icon].set("mdi:weather-partly-cloudy");
+    component[HomeAssistant::Abbreviations::name].set(std::define_static_string(std::string{name} + " provider"));
+    JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
+    for (const Provider _provider : providers)
     {
-        const std::string id{std::string(name).append("_provider")};
-        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistant::Abbreviations::command_template].set(R"({"provider":"{{value}}"})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
-        component[HomeAssistant::Abbreviations::entity_category].set("config");
-        component[HomeAssistant::Abbreviations::icon].set("mdi:weather-partly-cloudy");
-        component[HomeAssistant::Abbreviations::name].set(std::string(name).append(" provider"));
-        JsonArray options{component[HomeAssistant::Abbreviations::options].to<JsonArray>()};
-        for (const Provider _provider : providers)
-        {
-            options.add(_provider.name);
-        }
-        component[HomeAssistant::Abbreviations::platform].set("select");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
-        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.provider}}");
+        options.add(_provider.name);
     }
+    component[HomeAssistant::Abbreviations::platform].set("select");
+    component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+    component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+    component[HomeAssistant::Abbreviations::value_template].set("{{value_json.provider}}");
 }
 
 void WeatherMode::onReceive(JsonObjectConst payload, std::string_view source)

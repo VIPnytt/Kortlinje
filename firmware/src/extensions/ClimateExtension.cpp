@@ -2,6 +2,7 @@
 
 #include "constants/HomeAssistant.h"
 #include "constants/Kortlinje.h"
+#include "extensions/MqttExtension.h"
 #include "modes/HumidityMode.h"
 #include "modes/TemperatureMode.h"
 #include "pio/climate.pio.h"
@@ -10,6 +11,8 @@
 #include <hardware/clocks.h>
 #include <hardware/irq.h>
 #include <hardware/pio.h>
+#include <meta>
+#include <string>
 
 void ClimateExtension::configure()
 {
@@ -74,30 +77,30 @@ void __time_critical_func(ClimateExtension::onPacer)()
     pio_sm_set_enabled(pio1, 0U, true);
 }
 
-void ClimateExtension::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void ClimateExtension::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
     {
-        const std::string id{std::string(name).append("_humidity")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_humidity")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::device_class].set("humidity");
         component[HomeAssistant::Abbreviations::name].set("Humidity");
         component[HomeAssistant::Abbreviations::platform].set("sensor");
         component[HomeAssistant::Abbreviations::state_class].set("measurement");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
         component[HomeAssistant::Abbreviations::unit_of_measurement].set("%");
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.humidity}}");
     }
     {
-        const std::string id{std::string(name).append("_temperature")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_temperature")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::device_class].set("temperature");
         component[HomeAssistant::Abbreviations::name].set("Temperature");
         component[HomeAssistant::Abbreviations::platform].set("sensor");
         component[HomeAssistant::Abbreviations::state_class].set("measurement");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
         component[HomeAssistant::Abbreviations::unit_of_measurement].set(Kortlinje::device::temperature_unit);
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.temperature}}");
     }

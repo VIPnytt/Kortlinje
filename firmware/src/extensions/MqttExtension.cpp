@@ -1,7 +1,6 @@
 #include "extensions/MqttExtension.h"
 
 #include "constants/HomeAssistant.h"
-#include "services/ConnectivityService.h"
 #include "services/DeviceService.h"
 #include "services/DisplayService.h"
 #include "services/ModesService.h"
@@ -9,7 +8,7 @@
 #include <WiFi.h>
 #include <array>
 #include <cstring>
-#include <hardware/watchdog.h>
+#include <string>
 #include <vector>
 
 /**
@@ -40,7 +39,6 @@ void MqttExtension::handle()
         {
             tick = false;
             add_alarm_in_us(0b1ULL << 26U, &onAlarm, this, true);
-            watchdog_update();
             if (client.connect(Kortlinje::device::hostname.data(),
                                Kortlinje::mqtt::username.data(),
                                Kortlinje::mqtt::password.data()))
@@ -52,7 +50,6 @@ void MqttExtension::handle()
                     discover();
                 }
             }
-            watchdog_update();
         }
     }
 }
@@ -81,43 +78,36 @@ void MqttExtension::discover()
     const std::string topic{topicPrefix};
     const std::string unique{std::format("0x{}_", rp2040.getChipID())};
     JsonDocument discovery{};
-    ConnectivityService::onHomeAssistant(discovery, topic, unique);
-    DeviceService::onHomeAssistant(discovery, topic, unique);
-    DisplayService::onHomeAssistant(discovery, topic, unique);
-    ModesService::onHomeAssistant(discovery, topic, unique);
+    ConnectivityService::onHomeAssistant(discovery, unique);
+    DeviceService::onHomeAssistant(discovery, unique);
+    DisplayService::onHomeAssistant(discovery, unique);
+    ModesService::onHomeAssistant(discovery, unique);
     for (ExtensionModule *extension : ExtensionsService::getAll())
     {
-        extension->onHomeAssistant(discovery, topic, unique);
+        extension->onHomeAssistant(discovery, unique);
     }
-    for (const std::string_view _mode : ModesService::getNames())
+    for (const std::string_view _name : ModesService::getCollection())
     {
-        ModesService::getMode(_mode)->onHomeAssistant(discovery, topic, unique);
+        ModesService::getMode(_name)->onHomeAssistant(discovery, unique);
     }
-    {
-        JsonObject availability{discovery[HomeAssistant::Abbreviations::availability].to<JsonObject>()};
-        availability[HomeAssistant::Abbreviations::payload_not_available].set("");
-        availability[HomeAssistant::Abbreviations::topic].set(availabilityTopic);
-    }
-    {
-        JsonObject device{discovery[HomeAssistant::Abbreviations::device].to<JsonObject>()};
-        device[HomeAssistant::Abbreviations::Device::configuration_url].set(
-            std::define_static_string(std::string{"http://"} + Kortlinje::device::hostname + ".local"));
-        device[HomeAssistant::Abbreviations::Device::connections][0U][0U].set("mac");
-        device[HomeAssistant::Abbreviations::Device::connections][0U][1U].set(WiFi.macAddress());
-        device[HomeAssistant::Abbreviations::Device::hw_version].set(ARDUINO_VARIANT);
-        device[HomeAssistant::Abbreviations::Device::identifiers][0U].set(std::format("0x{}", rp2040.getChipID()));
-        device[HomeAssistant::Abbreviations::Device::manufacturer].set("IKEA");
-        device[HomeAssistant::Abbreviations::Device::model].set("Kortlinje");
-        device[HomeAssistant::Abbreviations::Device::name].set(Kortlinje::device::name);
-        device[HomeAssistant::Abbreviations::Device::sw_version].set(Kortlinje::version);
-    }
-    {
-        JsonObject origin{discovery[HomeAssistant::Abbreviations::origin].to<JsonObject>()};
-        origin[HomeAssistant::Abbreviations::Origin::name].set("Kortlinje");
-        origin[HomeAssistant::Abbreviations::Origin::support_url].set(
-            "https://github.com/VIPnytt/Kortlinje/blob/main/docs/SUPPORT.md");
-        origin[HomeAssistant::Abbreviations::Origin::sw_version].set(Kortlinje::version);
-    }
+    JsonObject availability{discovery[HomeAssistant::Abbreviations::availability].to<JsonObject>()};
+    availability[HomeAssistant::Abbreviations::payload_not_available].set("");
+    availability[HomeAssistant::Abbreviations::topic].set(availabilityTopic);
+    JsonObject device{discovery[HomeAssistant::Abbreviations::device].to<JsonObject>()};
+    device[HomeAssistant::Abbreviations::Device::configuration_url].set(
+        std::define_static_string(std::string{"http://"} + Kortlinje::device::hostname + ".local"));
+    device[HomeAssistant::Abbreviations::Device::connections][0U][0U].set("mac");
+    device[HomeAssistant::Abbreviations::Device::connections][0U][1U].set(WiFi.macAddress());
+    device[HomeAssistant::Abbreviations::Device::hw_version].set(ARDUINO_VARIANT);
+    device[HomeAssistant::Abbreviations::Device::identifiers][0U].set(std::format("0x{}", rp2040.getChipID()));
+    device[HomeAssistant::Abbreviations::Device::manufacturer].set("IKEA");
+    device[HomeAssistant::Abbreviations::Device::model].set("Kortlinje");
+    device[HomeAssistant::Abbreviations::Device::name].set(Kortlinje::device::name);
+    device[HomeAssistant::Abbreviations::Device::sw_version].set(Kortlinje::version);
+    JsonObject origin{discovery[HomeAssistant::Abbreviations::origin].to<JsonObject>()};
+    origin[HomeAssistant::Abbreviations::Origin::name].set("Kortlinje");
+    origin[HomeAssistant::Abbreviations::Origin::support_url].set("https://github.com/VIPnytt/Kortlinje/discussions");
+    origin[HomeAssistant::Abbreviations::Origin::sw_version].set(Kortlinje::version);
     const size_t length{measureJson(discovery)};
     std::vector<char> payload(length + 1U);
     serializeJson(discovery, payload.data(), payload.size());

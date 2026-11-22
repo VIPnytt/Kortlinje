@@ -12,7 +12,6 @@
 
 class ModesService final : public ServiceModule
 {
-
 public:
     static constexpr std::string_view name{"Modes"};
 
@@ -21,7 +20,7 @@ public:
     void begin();
     void handle();
 
-    static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
+    static void onHomeAssistant(JsonDocument &discovery, std::string_view unique);
     static void onReceive(JsonObjectConst payload, std::string_view source);
     static void setActive(bool _active);
     static void setMode(std::string_view modeName, bool power = true, bool splash = true);
@@ -30,11 +29,11 @@ public:
 
     [[nodiscard]] static bool getActive();
 
+    [[nodiscard]] static std::span<const std::string_view> getCollection();
+
     [[nodiscard]] static ModeModule *getMode();
 
     [[nodiscard]] static std::unique_ptr<ModeModule> getMode(std::string_view modeName);
-
-    [[nodiscard]] static std::span<const std::string_view> getNames();
 
 private:
     static inline volatile bool active{true};

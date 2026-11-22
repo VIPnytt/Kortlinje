@@ -6,7 +6,9 @@
 #include "services/DisplayService.h"
 
 #include <bits/unique_ptr.h>
+#include <memory>
 #include <pico/time.h>
+#include <string>
 #include <string_view>
 
 class TickerMode final : public ModeModule
@@ -45,6 +47,6 @@ public:
 
     void begin() override;
     void handle() override;
-    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
+    void onHomeAssistant(JsonDocument &discovery, std::string_view unique) override;
     void onReceive(JsonObjectConst payload, std::string_view source) override;
 };

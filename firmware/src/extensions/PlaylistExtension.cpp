@@ -1,6 +1,7 @@
 #include "extensions/PlaylistExtension.h"
 
 #include "constants/HomeAssistant.h"
+#include "extensions/MqttExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "modes/ClockMode.h"
 #include "modes/DateMode.h"
@@ -15,13 +16,15 @@
 #include <LittleFS.h>
 #include <RP2040Support.h>
 #include <algorithm>
+#include <meta>
+#include <string>
+#include <utility>
+#include <vector>
 
 void PlaylistExtension::begin()
 {
     loadSchedule();
-    const RP2040::resetReason_t reason{rp2040.getResetReason()};
-    if (std::ranges::none_of(DeviceService::resetAbnormalities,
-                             [&](RP2040::resetReason_t _reason) { return _reason == reason; }) &&
+    if (!std::ranges::contains(DeviceService::resetAbnormalities, rp2040.getResetReason()) &&
         ConfigHandler::get(name, "enabled", enabled) && enabled)
     {
         step = 0U;
@@ -108,8 +111,8 @@ void PlaylistExtension::loadSchedule()
                 if (item["mode"].is<std::string_view>() && item["duration"].is<uint16_t>())
                 {
                     schedule.push_back({
-                        .mode{item["mode"].as<std::string_view>()},
                         .duration = item["duration"].as<uint16_t>(),
+                        .mode{item["mode"].as<std::string_view>()},
                     });
                 }
             }
@@ -118,11 +121,11 @@ void PlaylistExtension::loadSchedule()
     if (schedule.empty())
     {
         schedule = {
-            {.mode = ClockMode::name, .duration = 5U},
-            {.mode = DateMode::name, .duration = 5U},
-            {.mode = WeekdayMode::name, .duration = 5U},
-            {.mode = TemperatureMode::name, .duration = 5U},
-            {.mode = HumidityMode::name, .duration = 5U},
+            {.duration = 5U, .mode{ClockMode::name}},
+            {.duration = 5U, .mode{DateMode::name}},
+            {.duration = 5U, .mode{WeekdayMode::name}},
+            {.duration = 5U, .mode{TemperatureMode::name}},
+            {.duration = 5U, .mode{HumidityMode::name}},
         };
         saveSchedule();
     }
@@ -141,31 +144,29 @@ int64_t __time_critical_func(PlaylistExtension::onAlarm)(alarm_id_t id, void *us
  * @brief Adds Home Assistant switch discovery configuration for the playlist.
  *
  * @param discovery JSON document receiving the discovery configuration.
- * @param topic Base topic used for playlist commands and state.
  * @param unique Unique identifier prefix for the Home Assistant entity.
  */
-void PlaylistExtension::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void PlaylistExtension::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
-    {
-        const std::string id{std::string(name).append("_enabled")};
-        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistant::Abbreviations::command_template].set(R"({"enabled":{{value}}})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
-        component[HomeAssistant::Abbreviations::icon].set("mdi:format-list-bulleted");
-        component[HomeAssistant::Abbreviations::json_attributes_template].set(
-            "{%set ns=namespace(d={})%}{%for i in value_json.schedule%}{%set ns.d=ns.d|combine({i.mode:i.duration})%}{%endfor%}{{ns.d}}");
-        component[HomeAssistant::Abbreviations::json_attributes_topic].set(topic);
-        component[HomeAssistant::Abbreviations::name].set(name);
-        component[HomeAssistant::Abbreviations::payload_off].set("false");
-        component[HomeAssistant::Abbreviations::payload_on].set("true");
-        component[HomeAssistant::Abbreviations::platform].set("switch");
-        component[HomeAssistant::Abbreviations::state_off].set("False");
-        component[HomeAssistant::Abbreviations::state_on].set("True");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
-        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.enabled}}");
-    }
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
+    constexpr std::string_view id{std::define_static_string(std::string{name} + "_enabled")};
+    JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+    component[HomeAssistant::Abbreviations::command_template].set(R"({"enabled":{{value}}})");
+    component[HomeAssistant::Abbreviations::command_topic].set(
+        std::define_static_string(std::string{stateTopic} + "/set"));
+    component[HomeAssistant::Abbreviations::icon].set("mdi:presentation-play");
+    component[HomeAssistant::Abbreviations::json_attributes_template].set(
+        R"({{{"schedule":value_json.schedule}|to_json}})");
+    component[HomeAssistant::Abbreviations::json_attributes_topic].set(stateTopic);
+    component[HomeAssistant::Abbreviations::name].set(name);
+    component[HomeAssistant::Abbreviations::payload_off].set("false");
+    component[HomeAssistant::Abbreviations::payload_on].set("true");
+    component[HomeAssistant::Abbreviations::platform].set("switch");
+    component[HomeAssistant::Abbreviations::state_off].set("False");
+    component[HomeAssistant::Abbreviations::state_on].set("True");
+    component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+    component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+    component[HomeAssistant::Abbreviations::value_template].set("{{value_json.enabled}}");
 }
 
 void PlaylistExtension::onReceive(JsonObjectConst payload, std::string_view source)
@@ -179,8 +180,8 @@ void PlaylistExtension::onReceive(JsonObjectConst payload, std::string_view sour
             if (item["mode"].is<std::string_view>() && item["duration"].is<uint16_t>())
             {
                 nextItem.push_back({
-                    .mode{item["mode"].as<std::string_view>()},
                     .duration = item["duration"].as<uint16_t>(),
+                    .mode{item["mode"].as<std::string_view>()},
                 });
             }
         }
@@ -250,9 +251,9 @@ void PlaylistExtension::transmit()
     JsonArray _schedule{doc["schedule"].to<JsonArray>()};
     for (const Item &item : schedule)
     {
-        JsonObject obj{_schedule.add<JsonObject>()};
-        obj["mode"].set(item.mode);
-        obj["duration"].set(item.duration);
+        JsonObject _item{_schedule.add<JsonObject>()};
+        _item["duration"].set(item.duration);
+        _item["mode"].set(item.mode);
     }
     DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

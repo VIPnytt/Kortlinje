@@ -3,6 +3,7 @@
 #include "modules/ExtensionModule.h"
 
 #include <pico/time.h>
+#include <string>
 #include <string_view>
 
 class PhotocellExtension final : public ExtensionModule
@@ -29,7 +30,7 @@ public:
     void configure() override;
     void begin() override;
     void handle() override;
-    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
+    void onHomeAssistant(JsonDocument &discovery, std::string_view unique) override;
     void onReceive(JsonObjectConst payload, std::string_view source) override;
     void setEnabled(bool enable);
 

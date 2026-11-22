@@ -4,6 +4,8 @@
 #include "handlers/TextHandler.h"
 #include "services/DisplayService.h"
 
+#include <string>
+
 void WeekdayMode::begin() { pending = true; }
 
 void WeekdayMode::handle()

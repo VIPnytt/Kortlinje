@@ -151,7 +151,7 @@ Wire up everything in accordance with diagrams. It’s advised to defer the USB 
 
 Any 5 V tolerant GPIO pin can be used for the `VK1640` `SCLK` clock lines.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -164,7 +164,7 @@ display_sclk3 = 3
 
 Any 5 V tolerant GPIO pin can be used for the `VK1640` `DIN` data lines.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -177,7 +177,7 @@ display_sda3 = 6
 
 Any GPIO pin can be used for control signals to the buzzer.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -188,7 +188,7 @@ audio_buzzer = 7
 
 Any GPIO pin can be used to activate the `U6` chip.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -199,7 +199,7 @@ climate_en = 8
 
 Any 5 V tolerant GPIO pin can be used to read temperature and humidity data from the `U6` chip.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -210,7 +210,7 @@ climate_pdm = 9
 
 Any 5 V tolerant GPIO pin can be used to detect ambient light presence.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -225,7 +225,7 @@ Used to wake up the RP2350 from sleep when USB power is applied, and to put it b
 
 Any 5 V tolerant GPIO pin can be used to detect the presence of USB power.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -236,7 +236,7 @@ power_sense = 11
 
 Any analog input pin can be used to detect button presses.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]
@@ -247,7 +247,7 @@ button_top = 26
 
 Any analog input pin can be used to detect button presses.
 
-Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.toml):
+Configure in [secrets.toml](https://github.com/VIPnytt/Kortlinje/blob/main/secrets.template.toml):
 
 ```toml
 [pin]

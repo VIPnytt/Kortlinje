@@ -19,19 +19,19 @@ public:
     void begin();
     void handle();
 
-    static void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique);
+    static void onHomeAssistant(JsonDocument &discovery, std::string_view unique);
     static void onReceive(JsonObjectConst payload, std::string_view source);
 
 private:
     bool dnsRunning{false};
     bool mdns{false};
-    static inline volatile bool pending{false};
     static inline bool pendingConnect{false};
     static inline bool pendingScan{false};
     bool routable{false};
     bool scanning{false};
+    static inline volatile bool tick{false};
 
-    repeating_timer timer{};
+    alarm_id_t alarmId{0L};
 
     static inline std::string pendingSsid{};
     static inline std::string pendingKey{};
@@ -46,7 +46,8 @@ private:
     void onDisconnected();
     void onRoutable();
     void onScan(int8_t count);
+    void schedule(uint64_t delay);
     void transmit();
 
-    [[nodiscard]] static bool onTimer(repeating_timer *rt);
+    [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 };

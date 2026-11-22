@@ -7,7 +7,7 @@ import { Tooltip } from "../components/Tooltip";
 import { WebSocketWS } from "../extensions/WebSocket";
 import { SidebarSection } from "../extensions/WebUI";
 import { name as DisplayName, DisplayPower } from "../services/Display";
-import { FontsList } from "../services/Fonts";
+import { FontsCollection } from "../services/Fonts";
 import { ModesMode, name as ModesName } from "../services/Modes";
 
 export const name = "Ticker";
@@ -76,7 +76,7 @@ export const Sidebar: Component = () => {
             value={getFont()}
             onchange={(e) => handleFont(e.currentTarget.value)}
           >
-            <For each={FontsList()}>{(font) => <option>{font}</option>}</For>
+            <For each={FontsCollection()}>{(font) => <option>{font}</option>}</For>
           </select>
         </Tooltip>
       </div>
@@ -133,7 +133,7 @@ export const Main: Component = () => {
                   onchange={(e) => setFont(e.currentTarget.value)}
                   value={getFont()}
                 >
-                  <For each={FontsList()}>{(font) => <option>{font}</option>}</For>
+                  <For each={FontsCollection()}>{(font) => <option>{font}</option>}</For>
                 </select>
               </Tooltip>
             </div>

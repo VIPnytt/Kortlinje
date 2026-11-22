@@ -15,8 +15,8 @@ private:
 
     struct Item
     {
-        std::string_view mode{};
         uint16_t duration{0U};
+        std::string mode{};
     };
 
     static inline bool enabled{false};
@@ -49,7 +49,7 @@ public:
 
     void begin() override;
     void handle() override;
-    void onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique) override;
+    void onHomeAssistant(JsonDocument &discovery, std::string_view unique) override;
     void onReceive(JsonObjectConst payload, std::string_view source) override;
 
     static void setEnabled(bool enable);

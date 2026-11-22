@@ -1,5 +1,11 @@
+import importlib
+import importlib.util
+import os
+import pathlib
+import shutil
 import subprocess
 import sys
+import tomllib
 import typing
 
 if typing.TYPE_CHECKING:
@@ -21,32 +27,39 @@ def main() -> None:
         "size",
     }.isdisjoint(COMMAND_LINE_TARGETS):
         return
-
+    requires = tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["requires-python"]
+    if sys.version_info < tuple(map(int, requires.removeprefix(">=").split("."))):
+        sys.exit(f"Python {sys.version.split()[0]} is incompatible (requires {requires}).")
     Import("env")
     env: Environment = typing.cast(Environment, globals()["env"])
-
-    uv = subprocess.run(
-        [sys.executable, "-m", "uv", "sync", "--active", "--inexact", "--only-group", "scripts"],
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    if uv.returncode:
-        pip = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "uv"],
-            stderr=subprocess.DEVNULL,
-            check=False,
-        )
-        if pip.returncode:
+    if importlib.util.find_spec("uv") is None:
+        if importlib.util.find_spec("pip") is None:
             subprocess.run([sys.executable, "-m", "ensurepip"], check=True)
-            subprocess.run(pip.args, check=True)
-        subprocess.run(uv.args, check=True)
-
+        subprocess.run([sys.executable, "-m", "pip", "install", "uv"], check=True)
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "uv",
+            "sync",
+            "--active",
+            "--frozen",
+            "--inexact",
+            "--no-python-downloads",
+            "--only-group",
+            "scripts",
+            "--python",
+            f"{sys.version_info.major}.{sys.version_info.minor}",
+        ],
+        env={**os.environ, "VIRTUAL_ENV": sys.prefix} if sys.prefix != sys.base_prefix else None,
+        check=True,
+    )
+    importlib.invalidate_caches()
     from src.kortlinje import Kortlinje
 
     if env.IsCleanTarget():
         Kortlinje.clean()
         return
-
     Kortlinje(env).run()
 
 

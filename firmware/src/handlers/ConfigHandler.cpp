@@ -1,5 +1,9 @@
 #include "handlers/ConfigHandler.h"
 
+#include <cstdio>
+#include <string>
+#include <utility>
+
 bool ConfigHandler::formatPath(std::span<char> out, std::string_view module, std::string_view key)
 {
     const int written{snprintf(out.data(),

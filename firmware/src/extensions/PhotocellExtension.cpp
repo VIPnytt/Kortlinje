@@ -13,6 +13,8 @@
 #include <hardware/clocks.h>
 #include <hardware/irq.h>
 #include <hardware/pio.h>
+#include <meta>
+#include <string>
 
 void PhotocellExtension::configure()
 {
@@ -108,17 +110,17 @@ int64_t __time_critical_func(PhotocellExtension::onAlarm)(alarm_id_t id, void *u
  * @brief Adds Home Assistant discovery entries for photocell activation and illuminance.
  *
  * @param discovery JSON document receiving the discovery configuration.
- * @param topic Base topic for the generated entities.
  * @param unique Prefix used to generate unique entity identifiers.
  */
-void PhotocellExtension::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void PhotocellExtension::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
     {
-        const std::string id{std::string(name).append("_enabled")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_enabled")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::command_template].set(R"({"enabled":{{value}}})");
-        component[HomeAssistant::Abbreviations::command_topic].set(topic + "/set");
+        component[HomeAssistant::Abbreviations::command_topic].set(
+            std::define_static_string(std::string{stateTopic} + "/set"));
         component[HomeAssistant::Abbreviations::icon].set("mdi:brightness-auto");
         component[HomeAssistant::Abbreviations::name].set(name);
         component[HomeAssistant::Abbreviations::payload_off].set("false");
@@ -126,22 +128,22 @@ void PhotocellExtension::onHomeAssistant(JsonDocument &discovery, std::string to
         component[HomeAssistant::Abbreviations::platform].set("switch");
         component[HomeAssistant::Abbreviations::state_off].set("False");
         component[HomeAssistant::Abbreviations::state_on].set("True");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.enabled}}");
     }
     {
-        const std::string id{std::string(name).append("_lit")};
+        constexpr std::string_view id{std::define_static_string(std::string{name} + "_lit")};
         JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
         component[HomeAssistant::Abbreviations::device_class].set("light");
         component[HomeAssistant::Abbreviations::enabled_by_default].set(false);
-        component[HomeAssistant::Abbreviations::icon].set("mdi:brightness-5");
+        component[HomeAssistant::Abbreviations::icon].set("mdi:theme-light-dark");
         component[HomeAssistant::Abbreviations::name].set(name);
         component[HomeAssistant::Abbreviations::payload_off].set("False");
         component[HomeAssistant::Abbreviations::payload_on].set("True");
         component[HomeAssistant::Abbreviations::platform].set("binary_sensor");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
+        component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+        component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
         component[HomeAssistant::Abbreviations::value_template].set("{{value_json.lit}}");
     }
 }

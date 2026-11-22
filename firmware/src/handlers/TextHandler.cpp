@@ -2,6 +2,9 @@
 
 #include "services/DisplayService.h"
 
+#include <algorithm>
+#include <string>
+
 TextHandler::TextHandler(std::string text, const FontModule &font) : text(text), font(&font)
 {
     if (text.length())

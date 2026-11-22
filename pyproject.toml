@@ -12,7 +12,11 @@ Homepage = "https://github.com/VIPnytt/Kortlinje"
 Documentation = "https://github.com/VIPnytt/Kortlinje/wiki"
 
 [dependency-groups]
+cpplint = [
+    "cpplint==2.0.2",
+]
 dev = [
+    { include-group = "cpplint" },
     { include-group = "nodejs" },
     { include-group = "ruff" },
 ]

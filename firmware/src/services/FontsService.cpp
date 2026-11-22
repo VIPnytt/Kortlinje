@@ -11,12 +11,12 @@
 #include "services/DeviceService.h"
 
 #include <array>
+#include <memory>
 
 void FontsService::begin() { transmit(); }
 
 std::unique_ptr<const FontModule> FontsService::getFont(std::string_view fontName)
 {
-
     if (fontName == KortlinjeFont::name)
     {
         return std::make_unique<const KortlinjeFont>();
@@ -52,9 +52,9 @@ std::unique_ptr<const FontModule> FontsService::getFont(std::string_view fontNam
     return nullptr;
 }
 
-std::span<const std::string_view> FontsService::getNames()
+std::span<const std::string_view> FontsService::getCollection()
 {
-    static constexpr std::array names{
+    static constexpr std::array collection{
         MicroFont::name,
         MiniFont::name,
         SmallFont::name,
@@ -64,16 +64,16 @@ std::span<const std::string_view> FontsService::getNames()
         KortlinjeFont::name,
         LargeFont::name,
     };
-    return names;
+    return collection;
 }
 
 void FontsService::transmit()
 {
     JsonDocument doc{};
-    JsonArray list{doc["list"].to<JsonArray>()};
-    for (const std::string_view _name : getNames())
+    JsonArray collection{doc["collection"].to<JsonArray>()};
+    for (const std::string_view _name : getCollection())
     {
-        list.add(_name);
+        collection.add(_name);
     }
     DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

@@ -3,6 +3,7 @@
 #include "constants/HomeAssistant.h"
 #include "constants/secrets.h"
 #include "extensions/AlexaExtension.h"
+#include "extensions/MqttExtension.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
 
@@ -12,7 +13,10 @@
 #include <cstring>
 #include <hardware/gpio.h>
 #include <hardware/watchdog.h>
+#include <meta>
+#include <string>
 #include <time.h>
+#include <utility>
 
 /**
  * @brief Configures Wi-Fi, checks the boot button for hotspot mode, and starts NTP synchronization.
@@ -28,17 +32,9 @@ void ConnectivityService::begin()
     gpio_disable_pulls(Kortlinje::pin::button_rear);
     gpio_set_dir(Kortlinje::pin::button_rear, gpio_dir::GPIO_IN);
     sleep_us(0b1UL << 4U);
-    const bool hotspot{!gpio_get(Kortlinje::pin::button_rear)};
+    const bool button{!gpio_get(Kortlinje::pin::button_rear)};
     gpio_deinit(Kortlinje::pin::button_rear);
-    if (hotspot)
-    {
-        initHotspot();
-    }
-    else
-    {
-        initStation();
-    }
-    add_repeating_timer_us(-static_cast<int64_t>(0b1U << 28U), &onTimer, this, &timer);
+    button ? initHotspot() : initStation();
 }
 
 void ConnectivityService::handle()
@@ -92,16 +88,21 @@ void ConnectivityService::handle()
         {
             onDisconnected();
         }
-        if (pending)
+        else if (tick)
         {
-            pending = false;
+            tick = false;
+            alarmId = 0L;
             if (routable)
             {
                 transmit();
+                schedule(0b1ULL << 28U);
             }
             else
             {
+                watchdog_update();
                 multi.run();
+                watchdog_update();
+                schedule(0b1ULL << 29U);
             }
         }
     }
@@ -136,7 +137,7 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
     multi.clearAPList();
     multi.addAP(_ssid.c_str(), _key.empty() ? nullptr : _key.c_str());
     watchdog_update();
-    const bool connected{multi.run(0b1U << 14U) == WL_CONNECTED && WiFi.localIP().isSet()};
+    const bool connected{multi.run(0b1U << 14U) == wl_status_t::WL_CONNECTED && WiFi.localIP().isSet()};
     watchdog_update();
     for (const JsonPairConst pair : doc.as<JsonObjectConst>())
     {
@@ -145,10 +146,7 @@ void ConnectivityService::connect(std::string_view ssid, std::string_view key)
             multi.addAP(pair.key().c_str(), pair.value().as<const char *>());
         }
     }
-    if (connected)
-    {
-        onRoutable();
-    }
+    connected ? onRoutable() : onDisconnected();
     transmit();
 }
 
@@ -190,12 +188,24 @@ void ConnectivityService::initStation()
         multi.addAP(pair.key().c_str(), pair.value().as<const char *>());
     }
     watchdog_update();
-    if (multi.run(0b1U << 14U) == wl_status_t::WL_CONNECTED && WiFi.localIP().isSet())
+    const bool connected{multi.run(0b1U << 14U) == wl_status_t::WL_CONNECTED && WiFi.localIP().isSet()};
+    watchdog_update();
+    if (connected)
     {
         onRoutable();
         transmit();
     }
-    watchdog_update();
+    else
+    {
+        schedule(0b1ULL << 25U);
+    }
+}
+
+int64_t __time_critical_func(ConnectivityService::onAlarm)(alarm_id_t id, void *user_data)
+{
+    static_cast<void>(id);
+    static_cast<ConnectivityService *>(user_data)->tick = true;
+    return 0LL;
 }
 
 /**
@@ -209,31 +219,29 @@ void ConnectivityService::onDisconnected()
         MDNS.end();
         mdns = false;
     }
+    schedule(0b1ULL << 26U);
 }
 
 /**
  * @brief Adds a Home Assistant diagnostic sensor for Wi-Fi signal strength.
  *
  * @param discovery Home Assistant discovery document to update.
- * @param topic Base topic used to read the signal-strength value.
  * @param unique Prefix used to construct the sensor's unique identifier.
  */
-void ConnectivityService::onHomeAssistant(JsonDocument &discovery, std::string topic, std::string unique)
+void ConnectivityService::onHomeAssistant(JsonDocument &discovery, std::string_view unique)
 {
-    topic.append(name);
-    {
-        const std::string id{std::string(name).append("_rssi")};
-        JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
-        component[HomeAssistant::Abbreviations::device_class].set("signal_strength");
-        component[HomeAssistant::Abbreviations::entity_category].set("diagnostic");
-        component[HomeAssistant::Abbreviations::name].set("Wi-Fi signal");
-        component[HomeAssistant::Abbreviations::platform].set("sensor");
-        component[HomeAssistant::Abbreviations::state_class].set("measurement");
-        component[HomeAssistant::Abbreviations::state_topic].set(topic);
-        component[HomeAssistant::Abbreviations::unique_id].set(unique + id);
-        component[HomeAssistant::Abbreviations::unit_of_measurement].set("dBm");
-        component[HomeAssistant::Abbreviations::value_template].set("{{value_json.rssi}}");
-    }
+    constexpr std::string_view stateTopic{std::define_static_string(std::string{MqttExtension::topicPrefix} + name)};
+    constexpr std::string_view id{std::define_static_string(std::string{name} + "_rssi")};
+    JsonObject component{discovery[HomeAssistant::Abbreviations::components][id].to<JsonObject>()};
+    component[HomeAssistant::Abbreviations::device_class].set("signal_strength");
+    component[HomeAssistant::Abbreviations::entity_category].set("diagnostic");
+    component[HomeAssistant::Abbreviations::name].set("Wi-Fi signal");
+    component[HomeAssistant::Abbreviations::platform].set("sensor");
+    component[HomeAssistant::Abbreviations::state_class].set("measurement");
+    component[HomeAssistant::Abbreviations::state_topic].set(stateTopic);
+    component[HomeAssistant::Abbreviations::unique_id].set(std::string{unique} + id);
+    component[HomeAssistant::Abbreviations::unit_of_measurement].set("dBm");
+    component[HomeAssistant::Abbreviations::value_template].set("{{value_json.rssi}}");
 }
 
 /**
@@ -277,6 +285,7 @@ void ConnectivityService::onRoutable()
             AlexaExtension::onMdns();
         }
     }
+    schedule(0b1ULL << 27U);
 }
 
 /**
@@ -300,13 +309,16 @@ void ConnectivityService::onScan(int8_t count)
     }
 }
 
-/**
- * @brief Hardware repeating timer ISR that flags periodic telemetry or reconnection checks.
- */
-bool __time_critical_func(ConnectivityService::onTimer)(repeating_timer *rt)
+void ConnectivityService::schedule(uint64_t delay)
 {
-    static_cast<ConnectivityService *>(rt->user_data)->pending = true;
-    return true;
+    const alarm_id_t _alarmId{alarmId};
+    if (_alarmId > 0L)
+    {
+        alarmId = 0L;
+        cancel_alarm(_alarmId);
+    }
+    tick = false;
+    alarmId = add_alarm_in_us(delay, &onAlarm, this, true);
 }
 
 /**

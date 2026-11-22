@@ -12,7 +12,7 @@ permissions:
 jobs:
   idle-check:
     name: Idle check
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
 
     outputs:
       active: ${{ steps.idle.outputs.active }}
@@ -35,7 +35,7 @@ jobs:
   nodejs-wheel:
     name: Node.js wheel version
     needs: idle-check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ fromJSON(needs.idle-check.outputs.active) }}
 
     outputs:
@@ -56,7 +56,7 @@ jobs:
     needs:
       - idle-check
       - nodejs-wheel
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     if: ${{ fromJSON(needs.idle-check.outputs.active) }}
 
     strategy:
@@ -77,7 +77,7 @@ jobs:
   python:
     name: Python
     needs: idle-check
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     if: ${{ fromJSON(needs.idle-check.outputs.active) }}
     steps:
       - name: End-of-Life
@@ -85,4 +85,17 @@ jobs:
         with:
           product: python
           version: 3.13
+          fail_on_eol: true
+
+  ubuntu:
+    name: Ubuntu
+    needs: idle-check
+    runs-on: ubuntu-26.04
+    if: ${{ fromJSON(needs.idle-check.outputs.active) }}
+    steps:
+      - name: End-of-Life
+        uses: sindrel/endoflife-github-action@5f91adaabc542a346876290ff0f447c7bc355f99 # v1.0.3
+        with:
+          product: ubuntu
+          version: 26.04
           fail_on_eol: true

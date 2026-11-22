@@ -2,12 +2,13 @@
   "name": "kortlinje",
   "version": "0.0.0",
   "homepage": "https://github.com/VIPnytt/Kortlinje",
+  "license": "MIT",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/VIPnytt/Kortlinje.git",
     "directory": "webui"
   },
-  "license": "MIT",
   "scripts": {
     "build": "vite build",
     "check": "biome check ./src",

@@ -48,27 +48,18 @@ const icons = {
 export const receiver = (json: {
   alarm1?: {
     enabled?: boolean;
-    hour?: number;
-    minute?: number;
+    time?: string;
   };
   alarm2?: {
     enabled?: boolean;
-    hour?: number;
-    minute?: number;
+    time?: string;
   };
 }) => {
   ([1, 2] as const).forEach((id) => {
     const item = json?.[`alarm${id}`];
     if (!item) return;
     item.enabled !== undefined && alarms[id].setEnabled(item.enabled);
-    item.hour !== undefined &&
-      item.minute !== undefined &&
-      alarms[id].setTime(
-        Temporal.PlainTime.from({
-          hour: item.hour,
-          minute: item.minute,
-        }),
-      );
+    item.time && alarms[id].setTime(Temporal.PlainTime.from(item.time));
   });
 };
 
@@ -78,14 +69,12 @@ const getTime = (id: AlarmId) =>
   });
 
 const handleUpdate = (id: AlarmId) => {
-  const time = alarms[id].getTime();
   WebSocketWS.send(
     JSON.stringify({
       [name]: {
         [`alarm${id}`]: {
           enabled: alarms[id].getEnabled(),
-          hour: time.hour,
-          minute: time.minute,
+          time: getTime(id),
         },
       },
     }),

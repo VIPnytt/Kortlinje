@@ -15,7 +15,7 @@ permissions:
 jobs:
   npm-cache:
     name: Node.js cache
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: npm-cache
       queue: max
@@ -48,7 +48,7 @@ jobs:
 
   pio-cache:
     name: PlatformIO cache
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: pio-cache
       queue: max
@@ -80,7 +80,7 @@ jobs:
 
   pio-environments:
     name: PlatformIO environments
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       pio: ${{ steps.platformio.outputs.environments }}
 

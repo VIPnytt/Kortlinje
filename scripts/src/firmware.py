@@ -11,13 +11,16 @@ if typing.TYPE_CHECKING:
 
 class Firmware:
     NAME: typing.Literal["Firmware"] = "Firmware"
-    path: pathlib.Path
+    path: typing.Final[pathlib.Path] = pathlib.Path("firmware")
     project: "Kortlinje"
 
     def __init__(self, project: "Kortlinje") -> None:
         """Initialize the firmware component with its parent project and component path."""
-        self.path = pathlib.Path("firmware")
         self.project = project
+
+    def configure(self) -> None:
+        if self.project.certificate:
+            self.project.certificate.add_host("github.com")
 
     def finalize(self) -> None:
         """Generate the C++ configuration header from TOML options."""
@@ -101,11 +104,10 @@ class Firmware:
     @staticmethod
     def clean() -> None:
         """Remove generated PIO and configuration header files from the project."""
-        firmware = pathlib.Path("firmware")
         for file in (
-            firmware / "include" / "constants" / "Kortlinje.h",
-            firmware / "include" / "constants" / "secrets.h",
-            *(firmware / "src" / "pio").glob("*.pio.h"),
+            Firmware.path / "include" / "constants" / "Kortlinje.h",
+            Firmware.path / "include" / "constants" / "secrets.h",
+            *(Firmware.path / "src" / "pio").glob("*.pio.h"),
         ):
             if file.is_file():
                 file.unlink()

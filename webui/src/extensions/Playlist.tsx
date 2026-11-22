@@ -5,7 +5,7 @@ import { type Component, createSignal, For, Index } from "solid-js";
 import { Icon } from "../components/Icon";
 import { Tooltip } from "../components/Tooltip";
 import { name as ExtensionsName } from "../services/Extensions";
-import { ModesList, name as ModesName } from "../services/Modes";
+import { ModesCollection, name as ModesName } from "../services/Modes";
 import { WebSocketWS } from "./WebSocket";
 
 export const name = "Playlist";
@@ -72,7 +72,7 @@ export const MainThird: Component = () => {
       ...getSchedule(),
       {
         duration: getDuration(),
-        mode: ModesList()[Math.round(Math.random() * (ModesList().length - 1))],
+        mode: ModesCollection()[Math.round(Math.random() * (ModesCollection().length - 1))],
       },
     ]);
   };
@@ -129,7 +129,7 @@ export const MainThird: Component = () => {
                         onChange={(e) => handleMode(index, e.currentTarget.value)}
                         value={item().mode}
                       >
-                        <For each={ModesList()}>{(mode) => <option>{mode}</option>}</For>
+                        <For each={ModesCollection()}>{(mode) => <option>{mode}</option>}</For>
                       </select>
                       <div class="relative">
                         <input
