@@ -39,8 +39,7 @@ void BreakoutMode::handle()
                 DisplayService::setPixel(DisplayService::Symbol::PM, local.tm_hour >= 12);
             }
             const KortlinjeFont font{};
-            const TextHandler text{std::format("{:02d}:{:02d}", _hour, minute), font};
-            text.draw(0, static_cast<int8_t>((Display::grid::rows - text.getHeight()) / 2U));
+            TextHandler(std::format("{:02d}:{:02d}", _hour, minute), font).draw(0U);
         }
     }
     const uint8_t nextX{

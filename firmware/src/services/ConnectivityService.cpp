@@ -31,7 +31,7 @@ void ConnectivityService::begin()
     gpio_init(Kortlinje::pin::button_rear);
     gpio_disable_pulls(Kortlinje::pin::button_rear);
     gpio_set_dir(Kortlinje::pin::button_rear, gpio_dir::GPIO_IN);
-    sleep_us(0b1UL << 4U);
+    sleep_us(0b1ULL << 4U);
     const bool button{!gpio_get(Kortlinje::pin::button_rear)};
     gpio_deinit(Kortlinje::pin::button_rear);
     button ? initHotspot() : initStation();

@@ -40,7 +40,7 @@ void OtaExtension::onStart()
     ModesService::setActive(false);
     DisplayService::fillFrame(false);
     const KortlinjeFont font{};
-    TextHandler(std::string("OTA"), font).draw();
+    TextHandler("OTA", font).draw();
     DisplayService::setPower(true);
     MqttExtension::disconnect();
 }

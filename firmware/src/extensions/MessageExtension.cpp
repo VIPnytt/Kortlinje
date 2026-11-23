@@ -8,9 +8,7 @@
 #include "services/ModesService.h"
 
 #include <algorithm>
-#include <memory>
 #include <meta>
-#include <ranges>
 #include <string>
 
 void MessageExtension::begin()
@@ -21,7 +19,6 @@ void MessageExtension::begin()
     {
         fontName = SmallFont::name;
     }
-    font = FontsService::getFont(fontName);
     pending = true;
 }
 
@@ -30,119 +27,56 @@ void MessageExtension::handle()
     if (pending)
     {
         pending = false;
-        font = FontsService::getFont(fontName);
-        if (active)
+        if (active && !reload)
         {
-            text = std::make_unique<TextHandler>(message, *font);
-            offsetY = (Display::grid::rows - text->getHeight()) / 2U;
-            width = text->getWidth();
+            text.emplace(message, *FontsService::getFont(fontName));
+            if (text->empty())
+            {
+                stop();
+            }
         }
         transmit();
     }
     if (reload)
     {
         reload = false;
+        text.emplace(message, *FontsService::getFont(fontName));
+        if (text->empty())
+        {
+            stop();
+            return;
+        }
         if (!active)
         {
             active = true;
             ModesService::setActive(false);
             std::ranges::copy(DisplayService::getFrame(), frame.begin());
             DisplayService::setPower(true);
-            if (!timerRunning)
-            {
-                timerRunning = add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
-            }
+            add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
         }
-        text = std::make_unique<TextHandler>(message, *font);
-        offsetX = Display::grid::columns;
-        offsetY = (Display::grid::rows - text->getHeight()) / 2U;
-        width = text->getWidth();
+        step = 1U;
         count = 0U;
+        tick = true;
     }
     if (active && tick)
     {
         tick = false;
-        if (offsetX + width < 0)
+        if (step >= Display::grid::columns + text->getWidth())
         {
-            if (++count < repeat)
+            if (count < repeat)
             {
-                offsetX = Display::grid::columns;
+                ++count;
+                step = 0U;
             }
             else
             {
-                if (timerRunning)
-                {
-                    cancel_repeating_timer(&timer);
-                    timerRunning = false;
-                    tick = false;
-                }
-                active = false;
-                text.reset();
-                DisplayService::setFrame(frame);
-                ModesService::setActive(true);
+                stop();
                 return;
             }
         }
         DisplayService::fillFrame(false);
-        text->draw(offsetX, static_cast<int8_t>(offsetY));
-        --offsetX;
-    }
-}
-
-void MessageExtension::setMessage(std::string_view _message)
-{
-    if (!_message.empty())
-    {
-        message = _message;
-        reload = true;
-        JsonDocument doc{};
-        doc["event"].set(message);
-        DeviceService::transmit(doc.as<JsonObjectConst>(), name, false);
-    }
-}
-
-void MessageExtension::setFont(std::string_view _fontName)
-{
-    if (_fontName != fontName && std::ranges::contains(FontsService::getCollection(), _fontName))
-    {
-        fontName = _fontName;
-        ConfigHandler::set(name, "font", fontName);
-        pending = true;
-    }
-}
-
-void MessageExtension::setRepeat(uint8_t _repeat)
-{
-    if (_repeat != repeat)
-    {
-        repeat = _repeat;
-        ConfigHandler::set(name, "repeat", repeat);
-        pending = true;
-    }
-}
-
-void MessageExtension::transmit()
-{
-    JsonDocument doc{};
-    doc["font"].set(fontName);
-    doc["repeat"].set(repeat);
-    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
-}
-
-void MessageExtension::onReceive(JsonObjectConst payload, std::string_view source)
-{
-    static_cast<void>(source);
-    if (payload["font"].is<std::string_view>())
-    {
-        setFont(payload["font"].as<std::string_view>());
-    }
-    if (payload["message"].is<std::string_view>())
-    {
-        setMessage(payload["message"].as<std::string_view>());
-    }
-    if (payload["repeat"].is<uint8_t>())
-    {
-        setRepeat(payload["repeat"].as<uint8_t>());
+        text->drawMarquee(step);
+        ++step;
     }
 }
 
@@ -199,8 +133,79 @@ void MessageExtension::onHomeAssistant(JsonDocument &discovery, std::string_view
     }
 }
 
+void MessageExtension::onReceive(JsonObjectConst payload, std::string_view source)
+{
+    static_cast<void>(source);
+    if (payload["font"].is<std::string_view>())
+    {
+        setFont(payload["font"].as<std::string_view>());
+    }
+    if (payload["message"].is<std::string_view>())
+    {
+        setMessage(payload["message"].as<std::string_view>());
+    }
+    if (payload["repeat"].is<uint8_t>())
+    {
+        setRepeat(payload["repeat"].as<uint8_t>());
+    }
+}
+
 bool __time_critical_func(MessageExtension::onTimer)(repeating_timer *rt)
 {
     static_cast<MessageExtension *>(rt->user_data)->tick = true;
     return true;
+}
+
+void MessageExtension::setFont(std::string_view _fontName)
+{
+    if (_fontName != fontName && std::ranges::contains(FontsService::getCollection(), _fontName))
+    {
+        fontName = _fontName;
+        ConfigHandler::set(name, "font", fontName);
+        pending = true;
+    }
+}
+
+void MessageExtension::setMessage(std::string_view _message)
+{
+    if (!_message.empty())
+    {
+        message = _message;
+        reload = true;
+        JsonDocument doc{};
+        doc["event"].set(_message);
+        DeviceService::transmit(doc.as<JsonObjectConst>(), name, false);
+    }
+}
+
+void MessageExtension::setRepeat(uint8_t _repeat)
+{
+    if (_repeat != repeat)
+    {
+        repeat = _repeat;
+        ConfigHandler::set(name, "repeat", repeat);
+        pending = true;
+    }
+}
+
+void MessageExtension::stop()
+{
+    text.reset();
+    std::string{}.swap(message);
+    if (active)
+    {
+        cancel_repeating_timer(&timer);
+        tick = false;
+        active = false;
+        DisplayService::setFrame(frame);
+        ModesService::setActive(true);
+    }
+}
+
+void MessageExtension::transmit()
+{
+    JsonDocument doc{};
+    doc["font"].set(fontName);
+    doc["repeat"].set(repeat);
+    DeviceService::transmit(doc.as<JsonObjectConst>(), name);
 }

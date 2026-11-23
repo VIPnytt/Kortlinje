@@ -5,51 +5,56 @@
 #include "fonts/SmallFont.h"
 #include "handlers/ConfigHandler.h"
 #include "services/DeviceService.h"
+#include "services/DisplayService.h"
 #include "services/FontsService.h"
 
-#include <memory>
+#include <algorithm>
 #include <meta>
 #include <string>
+#include <utility>
 
-TickerMode::~TickerMode() { stopTimer(); }
+TickerMode::~TickerMode() { cancel_repeating_timer(&timer); }
 
 void TickerMode::begin()
 {
-    ConfigHandler::get(name, "message", message);
-    std::string fontName{};
-    if (ConfigHandler::get(name, "font", fontName))
+    std::string _message{};
+    if (ConfigHandler::get(name, "message", _message) && !_message.empty())
     {
-        setFont(fontName);
+        message = std::move(_message);
+    }
+    std::string fontName{};
+    if (ConfigHandler::get(name, "font", fontName) && std::ranges::contains(FontsService::getCollection(), fontName))
+    {
+        font = FontsService::getFont(fontName);
     }
     if (font == nullptr)
     {
-        setFont(SmallFont::name);
+        font = FontsService::getFont(SmallFont::name);
     }
     pending = true;
+    add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
 }
 
 void TickerMode::handle()
 {
     if (pending)
     {
-        text = std::make_unique<TextHandler>(message, *font);
-        offsetX = Display::grid::columns;
-        offsetY = (Display::grid::rows - text->getHeight()) / 2U;
-        width = static_cast<int16_t>(text->getWidth());
-        transmit();
         pending = false;
-        (text && width > 0) ? startTimer() : stopTimer();
+        text.emplace(message, *font);
+        step = 1U;
+        tick = true;
+        transmit();
     }
-    else if (tick && text)
+    if (tick && text)
     {
         tick = false;
-        if (width + offsetX < 0)
+        if (step >= Display::grid::columns + text->getWidth())
         {
-            offsetX = Display::grid::columns;
+            step = 0U;
         }
         DisplayService::fillFrame(false);
-        text->draw(offsetX, offsetY);
-        --offsetX;
+        text->drawMarquee(step);
+        ++step;
     }
 }
 
@@ -120,29 +125,11 @@ void TickerMode::setFont(std::string_view fontName)
 
 void TickerMode::setMessage(std::string_view _message)
 {
-    if (_message.length() && _message != message)
+    if (!_message.empty() && _message != message)
     {
         message = _message;
         ConfigHandler::set(name, "message", message);
         pending = true;
-    }
-}
-
-void TickerMode::startTimer()
-{
-    if (!timerRunning)
-    {
-        timerRunning = add_repeating_timer_us(-static_cast<int64_t>(0b1U << 17U), &onTimer, this, &timer);
-    }
-}
-
-void TickerMode::stopTimer()
-{
-    if (timerRunning)
-    {
-        cancel_repeating_timer(&timer);
-        timerRunning = false;
-        tick = false;
     }
 }
 

@@ -38,11 +38,11 @@ private:
     static void cancelTimer();
     static void save();
 
-    [[nodiscard]] static std::optional<std::pair<uint8_t, uint8_t>> parseTime(std::string_view value);
-
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 
     [[nodiscard]] static time_t getEpoch(time_t now, AlarmTime config);
+
+    [[nodiscard]] static std::optional<std::pair<uint8_t, uint8_t>> parseTime(std::string_view value);
 
 public:
     static constexpr std::string_view name{"Alarm"};

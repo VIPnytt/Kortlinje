@@ -1,239 +1,202 @@
 #include "handlers/TextHandler.h"
 
-#include "services/DisplayService.h"
-
 #include <algorithm>
-#include <string>
+#include <array>
+#include <bit>
+#include <concepts>
+#include <limits>
+#include <numeric>
+#include <optional>
 
-TextHandler::TextHandler(std::string text, const FontModule &font) : text(text), font(&font)
+TextHandler::TextHandler(std::string_view text, const FontModule &font, uint8_t tracking)
 {
-    if (text.length())
+    int ascent{0};
+    int yMin{0};
+    while (const std::optional<char32_t> codepoint{nextCodepoint(text)})
     {
-        {
-            char32_t codepoint{0U};
-            int8_t yMax{0};
-            int8_t yMin{0};
-            size_t index{0U};
-            while (nextCodepoint(index, codepoint))
-            {
-                const FontModule::Symbol character{font.getChar(codepoint)};
-                std::visit(
-                    [&](auto &&bitmap)
-                    {
-                        if (!bitmap.empty())
-                        {
-                            yMax = max<int8_t>(yMax, bitmap.size() + character.offsetY);
-                        }
-                    },
-                    character.bitmap);
-                yMin = min<int8_t>(yMin, character.offsetY);
-            }
-            height = yMax - yMin;
-        }
-        tracking = static_cast<uint8_t>(ceilf(height / 10.0F));
-        {
-            width = 0U;
-            char32_t codepoint{0U};
-            size_t index{0U};
-            while (nextCodepoint(index, codepoint))
-            {
-                const FontModule::Symbol character{font.getChar(codepoint)};
-                std::visit(
-                    [&](auto &&bitmap)
-                    {
-                        if (!bitmap.empty())
-                        {
-                            width += calcMsbMax(bitmap) + 1U + character.offsetX + tracking;
-                        }
-                        else if (character.offsetX != 0U)
-                        {
-                            width += character.offsetX + tracking;
-                        }
-                    },
-                    character.bitmap);
-            }
-            if (width > tracking)
-            {
-                width -= tracking;
-            }
-        }
-    }
-}
-
-void TextHandler::draw() const
-{
-    draw(Display::grid::columns > width ? (Display::grid::columns - width) / 2U : 0U,
-         (static_cast<int>(Display::grid::rows) - static_cast<int>(height)) / 2);
-}
-
-void TextHandler::draw(int16_t x, int8_t y) const
-{
-    char32_t codepoint{0U};
-    size_t index{0U};
-    while (nextCodepoint(index, codepoint))
-    {
-        const FontModule::Symbol character{font->getChar(codepoint)};
+        const FontModule::Symbol character{font.getChar(*codepoint)};
+        yMin = std::min<int>(yMin, character.offsetY);
         std::visit(
-            [&](auto &&bitmap)
+            [&](auto bitmap)
             {
-                const uint8_t _height{static_cast<uint8_t>(bitmap.size())};
-                if (_height != 0U)
+                using RowT = typename decltype(bitmap)::value_type;
+                if (!bitmap.empty())
                 {
-                    const uint8_t msbMax{calcMsbMax(bitmap)};
-                    for (uint16_t _x{0U}; _x <= msbMax; ++_x)
+                    const uint8_t glyphHeight{static_cast<uint8_t>(bitmap.size())};
+                    const int glyphTopExtent{static_cast<int>(glyphHeight) + static_cast<int>(character.offsetY)};
+                    if (glyphTopExtent > ascent)
                     {
-                        for (uint8_t _y{0U}; _y < _height; ++_y)
-                        {
-                            const int pixelX{static_cast<int>(x) + static_cast<int>(character.offsetX) +
-                                             static_cast<int>(_x)};
-                            const int pixelY{static_cast<int>(y) + static_cast<int>(height) -
-                                             static_cast<int>(_height) - static_cast<int>(character.offsetY) +
-                                             static_cast<int>(_y)};
-                            if (pixelX >= 0 && pixelX < Display::grid::columns && pixelY >= 0 &&
-                                pixelY < Display::grid::rows && (((bitmap[_y] >> (msbMax - _x)) & 0b1U) != 0U))
+                        const int shift{glyphTopExtent - ascent};
+                        std::visit(
+                            [shift](auto &storage)
                             {
-                                DisplayService::setPixel(
-                                    static_cast<uint8_t>(pixelX), static_cast<uint8_t>(pixelY), true);
-                            }
+                                for (uint16_t &col : storage)
+                                {
+                                    col = shift < 16 ? static_cast<uint16_t>(col << shift) : 0U;
+                                }
+                            },
+                            buffer);
+                        ascent = glyphTopExtent;
+                    }
+                    const int glyphTop{ascent - glyphTopExtent};
+                    const uint8_t glyphWidth{calcGlyphWidth(bitmap)};
+                    const size_t gap{columns().empty() ? 0U : tracking};
+                    const std::span<uint16_t> glyphCols{
+                        appendColumns(gap + static_cast<size_t>(character.offsetX) + glyphWidth).last(glyphWidth)};
+                    for (uint8_t row{0U}; row < glyphHeight; ++row)
+                    {
+                        const int destRow{glyphTop + static_cast<int>(row)};
+                        if (destRow >= 16)
+                        {
+                            break;
+                        }
+                        const uint16_t rowBit{static_cast<uint16_t>(1U << destRow)};
+                        RowT bits{bitmap[row]};
+                        while (bits != 0U)
+                        {
+                            const uint8_t bit{static_cast<uint8_t>(std::countr_zero(bits))};
+                            glyphCols[glyphWidth - 1U - bit] |= rowBit;
+                            bits = static_cast<RowT>(bits & static_cast<RowT>(bits - 1U));
                         }
                     }
-                    x += msbMax + 1 + character.offsetX + tracking;
                 }
                 else if (character.offsetX != 0U)
                 {
-                    x += character.offsetX + tracking;
+                    const size_t gap{columns().empty() ? 0U : tracking};
+                    static_cast<void>(appendColumns(gap + static_cast<size_t>(character.offsetX)));
                 }
             },
             character.bitmap);
     }
+    height = std::saturating_cast<uint8_t>(ascent - yMin);
 }
 
-uint8_t TextHandler::getHeight() const { return height; }
-
-uint8_t TextHandler::getWidth() const { return width; }
-
-bool TextHandler::nextCodepoint(size_t &index, char32_t &buffer) const
+std::span<uint16_t> TextHandler::appendColumns(size_t count)
 {
-    if (index >= text.length())
+    if (auto *inlineBuf{std::get_if<std::inplace_vector<uint16_t, Display::grid::columns>>(&buffer)})
     {
-        return false;
+        const size_t prevSize{inlineBuf->size()};
+        if (prevSize + count <= inlineBuf->capacity())
+        {
+            inlineBuf->resize(prevSize + count, 0U);
+            return std::span<uint16_t>{*inlineBuf}.subspan(prevSize, count);
+        }
+        std::vector<uint16_t> heapBuf{};
+        heapBuf.reserve(std::max<size_t>(prevSize + count, inlineBuf->capacity() * 2U));
+        heapBuf.assign(inlineBuf->begin(), inlineBuf->end());
+        heapBuf.resize(prevSize + count, 0U);
+        auto &stored{buffer.emplace<std::vector<uint16_t>>(std::move(heapBuf))};
+        return std::span<uint16_t>{stored}.subspan(prevSize, count);
     }
-    const uint8_t first{static_cast<uint8_t>(text[index])};
-    ++index;
+    auto &heapBuf{std::get<std::vector<uint16_t>>(buffer)};
+    const size_t prevSize{heapBuf.size()};
+    heapBuf.resize(prevSize + count, 0U);
+    return std::span<uint16_t>{heapBuf}.subspan(prevSize, count);
+}
+
+std::span<const uint16_t> TextHandler::columns() const noexcept
+{
+    return std::visit([](const auto &storage) noexcept -> std::span<const uint16_t> { return storage; }, buffer);
+}
+
+void TextHandler::draw() const
+{
+    draw(static_cast<uint8_t>(subSat<uint16_t>(Display::grid::columns, getWidth()) >> 1U),
+         static_cast<uint8_t>(subSat<uint8_t>(static_cast<uint8_t>(Display::grid::rows), height) >> 1U));
+}
+
+void TextHandler::draw(uint8_t x) const
+{
+    drawColumns(x, static_cast<uint8_t>(subSat<uint8_t>(static_cast<uint8_t>(Display::grid::rows), height) >> 1U), 0U);
+}
+
+void TextHandler::draw(uint8_t x, uint8_t y) const { drawColumns(x, y, 0U); }
+
+void TextHandler::drawColumns(uint8_t x, uint8_t y, uint16_t offsetX) const
+{
+    const std::span<const uint16_t> cols{columns()};
+    if (x >= Display::grid::columns || y >= Display::grid::rows || offsetX >= cols.size())
+    {
+        return;
+    }
+    const uint8_t visibleRows{static_cast<uint8_t>(Display::grid::rows - y)};
+    const uint16_t rowMask{static_cast<uint16_t>(std::numeric_limits<uint16_t>::max() >> (16U - visibleRows))};
+    for (uint8_t col{0U};
+         col < static_cast<uint8_t>(std::min<size_t>(cols.size() - offsetX, Display::grid::columns - x));
+         ++col)
+    {
+        uint16_t bits{static_cast<uint16_t>(cols[offsetX + col] & rowMask)};
+        while (bits != 0U)
+        {
+            const uint8_t row{static_cast<uint8_t>(std::countr_zero(bits))};
+            DisplayService::setPixel(static_cast<uint8_t>(x + col), static_cast<uint8_t>(y + row), true);
+            bits = static_cast<uint16_t>(bits & static_cast<uint16_t>(bits - 1U));
+        }
+    }
+}
+
+void TextHandler::drawMarquee(uint16_t offsetX) const
+{
+    drawMarquee(offsetX,
+                static_cast<uint8_t>(subSat<uint8_t>(static_cast<uint8_t>(Display::grid::rows), height) >> 1U));
+}
+
+void TextHandler::drawMarquee(uint16_t offsetX, uint8_t y) const
+{
+    const uint8_t x{offsetX < Display::grid::columns ? static_cast<uint8_t>(Display::grid::columns - offsetX)
+                                                     : uint8_t{0U}};
+    const uint16_t srcX{offsetX > Display::grid::columns ? static_cast<uint16_t>(offsetX - Display::grid::columns)
+                                                         : uint16_t{0U}};
+    drawColumns(x, y, srcX);
+}
+
+bool TextHandler::empty() const noexcept { return columns().empty(); }
+
+uint8_t TextHandler::getHeight() const noexcept { return height; }
+
+uint16_t TextHandler::getWidth() const noexcept { return std::saturating_cast<uint16_t>(columns().size()); }
+
+std::optional<char32_t> TextHandler::nextCodepoint(std::string_view &sv) noexcept
+{
+    if (sv.empty())
+    {
+        return std::nullopt;
+    }
+    const uint8_t first{static_cast<uint8_t>(sv.front())};
     if (first < 0x80U)
     {
-        buffer = first;
-        return true;
+        sv.remove_prefix(1U);
+        return static_cast<char32_t>(first);
     }
-    char32_t codepoint{};
-    char32_t minimum{};
-    uint8_t remaining{};
-    if ((first & 0xE0U) == 0xC0U)
+    const int len{std::countl_one(first)};
+    if (len < 2 || len > 4)
     {
-        codepoint = first & 0x1FU;
-        minimum = 0x80U;
-        remaining = 1U;
+        sv.remove_prefix(1U);
+        return U'\uFFFD';
     }
-    else if ((first & 0xF0U) == 0xE0U)
+    const size_t seqLen{static_cast<size_t>(len)};
+    if (sv.size() < seqLen)
     {
-        codepoint = first & 0x0FU;
-        minimum = 0x800U;
-        remaining = 2U;
+        sv = {};
+        return U'\uFFFD';
     }
-    else if ((first & 0xF8U) == 0xF0U)
+    static constexpr std::array<uint8_t, 5U> masks{0x7FU, 0U, 0x1FU, 0xFU, 0x7U};
+    static constexpr std::array<char32_t, 5U> mins{0U, 0U, 0x80U, 0x800U, 0x10000U};
+    char32_t codepoint{static_cast<char32_t>(first & masks[seqLen])};
+    for (size_t i{1U}; i < seqLen; ++i)
     {
-        codepoint = first & 0x07U;
-        minimum = 0x10000U;
-        remaining = 3U;
-    }
-    else
-    {
-        buffer = U'\uFFFD';
-        return true;
-    }
-    if (index + remaining > text.length())
-    {
-        index = text.length();
-        buffer = U'\uFFFD';
-        return true;
-    }
-    while (remaining != 0U)
-    {
-        const uint8_t next{static_cast<uint8_t>(text[index])};
+        const uint8_t next{static_cast<uint8_t>(sv[i])};
         if ((next & 0xC0U) != 0x80U)
         {
-            buffer = U'\uFFFD';
-            return true;
+            sv.remove_prefix(i);
+            return U'\uFFFD';
         }
-        ++index;
-        codepoint = (codepoint << 6U) | (next & 0x3FU);
-        --remaining;
+        codepoint = (codepoint << 6U) | static_cast<char32_t>(next & 0x3FU);
     }
-    if (codepoint < minimum || codepoint > 0x10FFFFU || (codepoint >= 0xD800U && codepoint <= 0xDFFFU))
+    sv.remove_prefix(seqLen);
+    if (codepoint < mins[seqLen] || codepoint > 0x10FFFFU || (codepoint >= 0xD800U && codepoint <= 0xDFFFU))
     {
-        buffer = U'\uFFFD';
-        return true;
+        return U'\uFFFD';
     }
-    buffer = codepoint;
-    return true;
-}
-
-template <typename T>
-    requires std::is_unsigned_v<T>
-uint8_t TextHandler::calcMsbMax(std::span<const T> bitmap) const
-{
-    uint8_t msbMax{0U};
-    for (const T bitset : bitmap)
-    {
-        if (bitset != 0U)
-        {
-            msbMax = max(msbMax, static_cast<uint8_t>(std::bit_width(bitset) - 1));
-        }
-    }
-    return msbMax;
-}
-
-std::array<char, 5U> TextHandler::encode(char32_t codepoint)
-{
-    if (codepoint >= 0x110000U || (codepoint >= 0xD800U && codepoint <= 0xDFFFU))
-    {
-        return std::array<char, 5U>{'\0'};
-    }
-    if (codepoint < 0x80U)
-    {
-        return std::array<char, 5U>{
-            static_cast<char>(codepoint),
-            '\0',
-            '\0',
-            '\0',
-            '\0',
-        };
-    }
-    if (codepoint < 0x800U)
-    {
-        return std::array<char, 5U>{
-            static_cast<char>(0xC0U | (codepoint >> 6U)),
-            static_cast<char>(0x80U | (codepoint & 0x3FU)),
-            '\0',
-            '\0',
-            '\0',
-        };
-    }
-    if (codepoint < 0x10000U)
-    {
-        return std::array<char, 5U>{
-            static_cast<char>(0xE0U | (codepoint >> 12U)),
-            static_cast<char>(0x80U | ((codepoint >> 6U) & 0x3FU)),
-            static_cast<char>(0x80U | (codepoint & 0x3FU)),
-            '\0',
-            '\0',
-        };
-    }
-    return std::array<char, 5U>{
-        static_cast<char>(0xF0U | (codepoint >> 18U)),
-        static_cast<char>(0x80U | ((codepoint >> 12U) & 0x3FU)),
-        static_cast<char>(0x80U | ((codepoint >> 6U) & 0x3FU)),
-        static_cast<char>(0x80U | (codepoint & 0x3FU)),
-        '\0',
-    };
+    return codepoint;
 }

@@ -98,7 +98,7 @@ void DeviceService::handle1()
 uint16_t DeviceService::getSamples()
 {
     adc_fifo_drain();
-    sleep_us(0b1UL << 4U);
+    sleep_us(0b1ULL << 4U);
     adc_run(true);
     uint16_t sum{0U};
     for (uint8_t idx{0U}; idx < samples; ++idx)

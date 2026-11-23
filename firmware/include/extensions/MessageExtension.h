@@ -3,12 +3,11 @@
 #include "fonts/SmallFont.h"
 #include "handlers/TextHandler.h"
 #include "modules/ExtensionModule.h"
-#include "modules/FontModule.h"
 #include "services/DisplayService.h"
 
 #include <array>
 #include <cstdint>
-#include <memory>
+#include <optional>
 #include <pico/time.h>
 #include <string>
 #include <string_view>
@@ -30,30 +29,27 @@ public:
     static void setRepeat(uint8_t _repeat);
 
 private:
-    static inline bool active{false};
+    bool active{false};
     static inline volatile bool pending{false};
     static inline volatile bool reload{false};
     volatile bool tick{false};
-    bool timerRunning{false};
 
-    static inline uint8_t count{0U};
-    static inline uint8_t offsetY{0U};
+    uint8_t count{0U};
     static inline uint8_t repeat{3U};
-    static inline uint8_t width{0U};
 
-    static inline int16_t offsetX{Display::grid::columns};
+    uint16_t step{0U};
 
-    static inline repeating_timer timer{};
+    repeating_timer timer{};
 
     static inline std::string fontName{SmallFont::name};
     static inline std::string message{};
 
-    static inline std::array<bool, Display::grid::pixels> frame{};
+    std::array<bool, Display::grid::pixels> frame{};
 
-    static inline std::unique_ptr<const FontModule> font{};
-    static inline std::unique_ptr<TextHandler> text{};
+    std::optional<TextHandler> text{};
 
-    static void transmit();
+    void stop();
+    void transmit();
 
     [[nodiscard]] static bool onTimer(repeating_timer *rt);
 };

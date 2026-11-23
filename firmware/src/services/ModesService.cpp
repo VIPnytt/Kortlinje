@@ -76,7 +76,7 @@ void ModesService::handle()
             PlaylistExtension::setEnabled(false);
             DisplayService::fillFrame(false);
             const SmallFont font{};
-            TextHandler(std::string(mode->name), font).draw();
+            TextHandler(mode->name, font).draw();
             cancelAlarm();
             alarmId = add_alarm_in_us(0b1ULL << 21U, &onAlarm, nullptr, true);
         }

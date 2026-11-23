@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  format:
+  cpplint:
     name: cpplint
     runs-on: ubuntu-26.04
 
@@ -25,10 +25,12 @@ jobs:
           version: latest-known
 
       - name: cpplint
-        run: uv run --only-group cpplint cpplint \
-          --counting=detailed \
-          --filter=+,-build/include_alpha,-build/include_order,-legal/copyright,-readability/braces,-readability/fn_size,-runtime/int,-runtime/references,-whitespace/braces,-whitespace/comments,-whitespace/indent,-whitespace/line_length,-whitespace/newline \
-          --quiet \
-          --recursive \
-          --verbose=0 \
-          .
+        run: |
+          uv run --only-group cpplint \
+            cpplint \
+              --counting=detailed \
+              --filter=+,-build/include_alpha,-build/include_order,-legal/copyright,-readability/braces,-readability/fn_size,-runtime/int,-runtime/references,-whitespace/braces,-whitespace/comments,-whitespace/indent,-whitespace/line_length,-whitespace/newline \
+              --quiet \
+              --recursive \
+              --verbose=0 \
+              .

@@ -106,8 +106,8 @@ void WeatherMode::draw()
     const uint8_t textWidth{text.getWidth()};
     const uint8_t marginsX{static_cast<uint8_t>(max(0U, Display::grid::columns - bitmap.getWidth() - textWidth) / 3U)};
     DisplayService::fillFrame(false);
-    bitmap.draw(marginsX, (Display::grid::rows - bitmap.getHeight()) / 2U);
-    text.draw(Display::grid::maxX - textWidth - marginsX, (Display::grid::rows - text.getHeight()) / 2U);
+    bitmap.draw(marginsX);
+    text.draw(Display::grid::maxX - textWidth - marginsX);
 }
 
 int WeatherMode::fetch(const char *url, std::vector<char> &body)
