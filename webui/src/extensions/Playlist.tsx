@@ -1,6 +1,6 @@
 import { mdiDelete, mdiPlay, mdiPlaylistPlay, mdiPlus, mdiStop } from "@mdi/js";
 import Cookies from "js-cookie";
-import { type Component, createSignal, For, Index } from "solid-js";
+import { type Component, createSignal, For } from "solid-js";
 
 import { Icon } from "../components/Icon";
 import { Tooltip } from "../components/Tooltip";
@@ -28,12 +28,13 @@ export const receiver = (json: { enabled?: boolean; schedule?: Item[] }) => {
   json?.schedule !== undefined && setSchedule(json.schedule);
 };
 
-const handleEnabled = () => {
-  setEnabled(!getEnabled());
+const handleEnable = () => {
+  const enable = !getEnabled();
+  setEnabled(enable);
   WebSocketWS.send(
     JSON.stringify({
       [name]: {
-        enabled: getEnabled(),
+        enabled: enable,
         schedule: getSchedule(),
       },
     }),
@@ -50,7 +51,7 @@ export const Actions: Component = () => (
       <button
         class={`w-full ${getEnabled() ? "action-activated" : "action-deactivated"}`}
         disabled={!getSchedule().length}
-        onclick={handleEnabled}
+        onClick={handleEnable}
         type="button"
       >
         <Icon path={getEnabled() ? mdiStop : mdiPlay} />
@@ -89,7 +90,7 @@ export const MainThird: Component = () => {
           : item,
       ),
     );
-    Cookies.set(`${name}.duration`, getDuration().toString(), {
+    Cookies.set(`${name}.duration`, duration.toString(), {
       expires: 365,
     });
   };
@@ -120,7 +121,7 @@ export const MainThird: Component = () => {
             {getSchedule().length && (
               <>
                 <h3>{ModesName}</h3>
-                <Index each={getSchedule()}>
+                <For each={getSchedule()} keyed={false}>
                   {(item, index) => (
                     <div class="flex items-center gap-3">
                       <select
@@ -150,7 +151,7 @@ export const MainThird: Component = () => {
                         <button
                           class="action-negative"
                           disabled={getEnabled() || getSchedule().length <= 2}
-                          onclick={() => handleRemove(index)}
+                          onClick={() => handleRemove(index)}
                           type="button"
                         >
                           <Icon path={mdiDelete} />
@@ -158,7 +159,7 @@ export const MainThird: Component = () => {
                       </div>
                     </div>
                   )}
-                </Index>
+                </For>
               </>
             )}
             <div class="grid grid-cols-2 gap-3 mt-3">
@@ -166,7 +167,7 @@ export const MainThird: Component = () => {
                 <button
                   class={`action-neutral w-full ${getSchedule().length < 2 ? `bg-neutral-light dark:enabled:bg-neutral-dark text-interactive-light dark:text-content-dark` : ""}`}
                   disabled={getEnabled()}
-                  onclick={handleAdd}
+                  onClick={handleAdd}
                   type="button"
                 >
                   <Icon path={mdiPlus} />
@@ -176,7 +177,7 @@ export const MainThird: Component = () => {
                 <button
                   class={`w-full ${getEnabled() ? "action-activated" : "action-positive"}`}
                   disabled={getSchedule().length < 2}
-                  onclick={handleEnabled}
+                  onClick={handleEnable}
                   type="button"
                 >
                   <Icon path={getEnabled() ? mdiStop : mdiPlay} />

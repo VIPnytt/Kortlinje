@@ -83,16 +83,21 @@ void AnimationMode::setFrames(uint8_t count)
 
 void AnimationMode::setInterval(uint32_t milliseconds)
 {
-    const uint32_t _interval{milliseconds * 1'000U};
-    if (_interval != interval && _interval != 0U)
+    if (milliseconds == 0U)
     {
-        interval = _interval * 1'000U;
-        ConfigHandler::set(name, "interval", interval);
-        if (timerRunning)
-        {
-            stopTimer();
-            startTimer();
-        }
+        return;
+    }
+    const int64_t _interval{static_cast<int64_t>(milliseconds) * 1'000LL};
+    if (_interval == interval)
+    {
+        return;
+    }
+    interval = _interval;
+    ConfigHandler::set(name, "interval", interval);
+    if (timerRunning)
+    {
+        stopTimer();
+        startTimer();
     }
 }
 
@@ -100,7 +105,7 @@ void AnimationMode::startTimer()
 {
     if (!timerRunning && !frames.empty())
     {
-        timerRunning = add_repeating_timer_us(-static_cast<int64_t>(interval), &onTimer, this, &timer);
+        timerRunning = add_repeating_timer_us(-interval, &onTimer, this, &timer);
     }
 }
 

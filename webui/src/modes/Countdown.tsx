@@ -45,11 +45,11 @@ const event = (action: string) => {
   }
 };
 
-const handleRelative = () => {
+const handleRelative = (minutes = getMinutes(), seconds = getSeconds()) => {
   WebSocketWS.send(
     JSON.stringify({
       [name]: {
-        time: getMinutes() * 60 + getSeconds(),
+        time: minutes * 60 + seconds,
       },
       ...(!DisplayPower() && {
         [DisplayName]: {
@@ -64,10 +64,10 @@ const handleRelative = () => {
     }),
   );
   toast(`${name} started`);
-  Cookies.set(`${name}.minutes`, getMinutes().toString(), {
+  Cookies.set(`${name}.minutes`, minutes.toString(), {
     expires: 365,
   });
-  Cookies.set(`${name}.seconds`, getSeconds().toString(), {
+  Cookies.set(`${name}.seconds`, seconds.toString(), {
     expires: 365,
   });
 };
@@ -88,7 +88,7 @@ const handleRelativeInput = (minutes: number, seconds: number, send = false) => 
       }),
   );
   if (send) {
-    handleRelative();
+    handleRelative(m, s);
   }
 };
 
@@ -131,7 +131,7 @@ export const Actions: Component = () => (
       <button
         class={`w-full ${ModesMode() === name ? "action-activated" : "action-deactivated"}`}
         disabled={ModesMode() === name}
-        onclick={handleRelative}
+        onClick={() => handleRelative()}
         type="button"
       >
         <Icon path={ModesMode() === name ? mdiTimerSandComplete : mdiTimerSand} />
@@ -160,7 +160,7 @@ export const Sidebar: Component = () => (
             max="99"
             min="0"
             name="minutes"
-            onchange={(e) => handleRelativeInput(e.currentTarget.valueAsNumber, getSeconds(), true)}
+            onChange={(e) => handleRelativeInput(e.currentTarget.valueAsNumber, getSeconds(), true)}
             type="number"
             value={getMinutes()}
           />
@@ -174,7 +174,7 @@ export const Sidebar: Component = () => (
             max="59"
             min="0"
             name="seconds"
-            onchange={(e) => handleRelativeInput(getMinutes(), e.currentTarget.valueAsNumber, true)}
+            onChange={(e) => handleRelativeInput(getMinutes(), e.currentTarget.valueAsNumber, true)}
             type="number"
             value={getSeconds()}
           />
@@ -190,7 +190,7 @@ export const Sidebar: Component = () => (
           min={Temporal.Now.plainTimeISO().toString({
             smallestUnit: "minute",
           })}
-          onchange={(e) => handleAbsoluteInput(e.currentTarget.value, true)}
+          onChange={(e) => handleAbsoluteInput(e.currentTarget.value, true)}
           type="time"
           value={getTimestamp().slice(0, 5)}
         />
@@ -213,7 +213,7 @@ export const Main: Component = () => (
                 max="99"
                 min="0"
                 name="minutes"
-                oninput={(e) => handleRelativeInput(e.currentTarget.valueAsNumber, getSeconds())}
+                onInput={(e) => handleRelativeInput(e.currentTarget.valueAsNumber, getSeconds())}
                 type="number"
                 value={getMinutes()}
               />
@@ -227,7 +227,7 @@ export const Main: Component = () => (
                 max="59"
                 min="0"
                 name="seconds"
-                oninput={(e) => handleRelativeInput(getMinutes(), e.currentTarget.valueAsNumber)}
+                onInput={(e) => handleRelativeInput(getMinutes(), e.currentTarget.valueAsNumber)}
                 type="number"
                 value={getSeconds()}
               />
@@ -243,7 +243,7 @@ export const Main: Component = () => (
               min={Temporal.Now.plainTimeISO().toString({
                 smallestUnit: "minute",
               })}
-              oninput={(e) => handleAbsoluteInput(e.currentTarget.value)}
+              onInput={(e) => handleAbsoluteInput(e.currentTarget.value)}
               type="time"
               value={getTimestamp().slice(0, 5)}
             />
@@ -251,7 +251,7 @@ export const Main: Component = () => (
           <button
             class="action-positive mt-3 w-full"
             disabled={!getMinutes() && !getSeconds()}
-            onclick={handleRelative}
+            onClick={() => handleRelative()}
             type="button"
           >
             <Icon class="mr-2" path={mdiTimerSand} />

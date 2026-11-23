@@ -65,7 +65,7 @@ export const MainThird: Component = () => {
               autofocus
               class="w-full"
               maxlength="255"
-              onchange={(e) => setMessage(e.currentTarget.value)}
+              onChange={(e) => setMessage(e.currentTarget.value)}
               placeholder="Hello, World!"
               spellcheck="true"
               type="text"
@@ -77,7 +77,7 @@ export const MainThird: Component = () => {
                 class="pr-14 text-right w-full"
                 min="0"
                 max={2 ** 8 - 1}
-                onchange={(e) => setRepeat(e.currentTarget.valueAsNumber)}
+                onChange={(e) => setRepeat(e.currentTarget.valueAsNumber)}
                 type="number"
                 value={getRepeat()}
               />
@@ -89,7 +89,7 @@ export const MainThird: Component = () => {
             <Tooltip text="Character availability may vary">
               <select
                 class="w-full"
-                onchange={(e) => setFont(e.currentTarget.value)}
+                onChange={(e) => setFont(e.currentTarget.value)}
                 value={getFont()}
               >
                 <For each={FontsCollection()}>
@@ -100,7 +100,7 @@ export const MainThird: Component = () => {
             <button
               class="action-positive mt-3 w-full"
               disabled={getMessage().length === 0}
-              onclick={handleSend}
+              onClick={handleSend}
               type="button"
             >
               <Icon class="mr-2" path={mdiSend} />

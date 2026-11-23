@@ -15,7 +15,6 @@ const toast = (text: string, duration: number = 3e3) => {
   setToast({
     id,
     text,
-    duration,
   });
   setTimeout(() => {
     if (getToast()?.id === id) {
@@ -33,30 +32,32 @@ const ToastContext = createContext<{
 export const ToastProvider: ParentComponent = (props) => {
   const Toast = (props: { item: ToastItem }) => {
     return (
-      <div
-        class="border bottom-4 bg-base-light dark:bg-base-dark fixed flex items-center left-4 px-4 py-3 rounded-md shadow-lg space-x-2 z-50"
-        role="status"
+      <button
+        class="border bg-base-light dark:bg-base-dark cursor-pointer flex items-center px-4 py-3 rounded-md shadow-lg space-x-2"
+        onClick={() => setToast(null)}
         style="animation: toast 0.15s ease-out forwards;"
-        onclick={() => setToast(null)}
+        type="button"
       >
         <Icon class="mr-2" path={mdiInformation} />
         {props.item.text}
-      </div>
+      </button>
     );
   };
 
   return (
-    <ToastContext.Provider
+    <ToastContext
       value={{
         toast,
       }}
     >
-      {(() => {
-        const item = getToast();
-        return item && <Toast item={item} />;
-      })()}
+      <div class="bottom-4 fixed left-4 z-50" role="status">
+        {(() => {
+          const item = getToast();
+          return item && <Toast item={item} />;
+        })()}
+      </div>
       {props.children}
-    </ToastContext.Provider>
+    </ToastContext>
   );
 };
 

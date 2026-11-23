@@ -1,14 +1,6 @@
 import { mdiClockDigital, mdiDockLeft, mdiHome, mdiMenu, mdiWindowClose } from "@mdi/js";
-import {
-  type Component,
-  createEffect,
-  createSignal,
-  type JSX,
-  Match,
-  onCleanup,
-  onMount,
-  Switch,
-} from "solid-js";
+import type { JSX } from "@solidjs/web";
+import { type Component, createEffect, createSignal, Match, onSettled, Switch } from "solid-js";
 
 import { Canvas } from "../components/Canvas";
 import { Icon } from "../components/Icon";
@@ -57,12 +49,6 @@ export const WebUISidebarSet = setSidebar;
 
 const onChange = () => setHash(location.hash);
 
-createEffect(() => {
-  if (!DisplayPower() && !getSidebar()) {
-    setSidebar(true);
-  }
-});
-
 export const receiver = (bytes: Uint8Array) => {
   const pixels = new Array<boolean>(DisplayColumns * DisplayRows);
   for (let idx = 0; idx < DisplayColumns * DisplayRows; ++idx) {
@@ -71,34 +57,42 @@ export const receiver = (bytes: Uint8Array) => {
   setFrame(pixels);
 };
 
-onMount(() => {
-  addEventListener("hashchange", onChange, false);
-});
-
-onCleanup(() => {
-  removeEventListener("hashchange", onChange, false);
-});
-
 export const WebUIPath = () => getHash().replace(/^#/, "") || "/";
 
-export const WebUI: Component = () => (
-  <WebSocketmessages>
-    <ToastProvider>
-      <Switch
-        fallback={
-          <>
-            {WebUIPath() === "/" ? <Primary /> : <Secondary />}
-            {(DisplayPower() || !getSidebar()) && <Toggle />}
-          </>
-        }
-      >
-        <Match when={WebSocketState() !== WebSocketWS.OPEN}>
-          <MainSecondary />
-        </Match>
-      </Switch>
-    </ToastProvider>
-  </WebSocketmessages>
-);
+export const WebUI: Component = () => {
+  createEffect(
+    () => !DisplayPower() && !getSidebar(),
+    (shouldOpen) => {
+      if (shouldOpen) {
+        setSidebar(true);
+      }
+    },
+  );
+
+  onSettled(() => {
+    addEventListener("hashchange", onChange, false);
+    return () => removeEventListener("hashchange", onChange, false);
+  });
+
+  return (
+    <WebSocketmessages>
+      <ToastProvider>
+        <Switch
+          fallback={
+            <>
+              {WebUIPath() === "/" ? <Primary /> : <Secondary />}
+              {(DisplayPower() || !getSidebar()) && <Toggle />}
+            </>
+          }
+        >
+          <Match when={WebSocketState() !== WebSocketWS.OPEN}>
+            <MainSecondary />
+          </Match>
+        </Switch>
+      </ToastProvider>
+    </WebSocketmessages>
+  );
+};
 
 const Primary: Component = () => (
   <Layout
@@ -216,7 +210,7 @@ const Toggle: Component = () => (
   <div class={`absolute ${getSidebar() ? "left-[calc(--spacing(68)-1px)] top-0" : "left-6 top-6"}`}>
     <button
       class={`text-interactive-light dark:text-content-dark ${getSidebar() ? "border-0 bg-menu-light dark:bg-menu-dark hover:bg-negative-alt-light dark:hover:bg-negative-alt-dark" : "bg-neutral-light dark:bg-neutral-dark hover:bg-positive-alt-light dark:hover:bg-positive-alt-dark"}`}
-      onclick={() => setSidebar(!getSidebar())}
+      onClick={() => setSidebar(!getSidebar())}
       type="button"
     >
       <Icon path={getSidebar() ? mdiWindowClose : mdiDockLeft} />

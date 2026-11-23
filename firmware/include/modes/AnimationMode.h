@@ -19,7 +19,7 @@ private:
 
     uint8_t index{0U};
 
-    uint32_t interval{0b1U << 19U};
+    int64_t interval{static_cast<int64_t>(0b1U << 29U)};
 
     repeating_timer timer{};
 

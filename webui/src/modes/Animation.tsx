@@ -39,9 +39,6 @@ const [getFrames, setFrames] = createSignal<Frame[]>([]);
 const [getFramesDraft, setFramesDraft] = createSignal<FrameSignal[]>([]);
 const [getPreview, setPreview] = createSignal<boolean>(false);
 const [getPreviewIndex, setPreviewIndex] = createSignal<number>(0);
-const [getPreviewTimer, setPreviewTimer] = createSignal<ReturnType<typeof setInterval> | undefined>(
-  undefined,
-);
 const [getSaved, setSaved] = createSignal<boolean>(true);
 
 export const receiver = (json: { frame?: number[]; index?: number; interval?: number }) => {
@@ -50,7 +47,12 @@ export const receiver = (json: { frame?: number[]; index?: number; interval?: nu
     for (let i = 0; i < pixels.length; ++i) {
       pixels[i] = Boolean((json.frame[i >> 3] >> (i & 7)) & 1);
     }
-    setFrames(handleFrameAt(json.index, pixels)) && getSaved() && handleLoad();
+    const nextFrames = handleFrameAt(json.index, pixels)(getFrames());
+    setFrames(nextFrames);
+    if (getSaved()) {
+      setFramesDraft(nextFrames.map((frame) => handleNew(frame)));
+      setSaved(true);
+    }
   }
   json?.interval !== undefined && setFrameInterval(json.interval);
 };
@@ -98,33 +100,32 @@ const scrollToEnd = () => {
   }
 };
 
-createEffect(() => {
-  if (!getPreview()) {
-    clearInterval(getPreviewTimer());
-    setPreviewTimer(undefined);
-    scrollToEnd();
-    return;
-  }
-
-  let i = 0;
-  const cycle = () => {
-    setPreviewIndex(i);
-    i++;
-    if (i >= getFramesDraft().length) {
-      i = 0;
+createEffect(
+  () => ({
+    preview: getPreview(),
+    interval: getFrameInterval(),
+    count: getFramesDraft().length,
+  }),
+  ({ preview, interval, count }) => {
+    if (!preview || count === 0) {
+      scrollToEnd();
+      return;
     }
-  };
 
-  cycle();
-  const nodeTimeout = setInterval(cycle, getFrameInterval());
-  setPreviewTimer(nodeTimeout);
+    let i = 0;
+    const cycle = () => {
+      setPreviewIndex(i);
+      i = (i + 1) % count;
+    };
 
-  return () => {
-    clearInterval(nodeTimeout);
-    setPreviewTimer(undefined);
-    scrollToEnd();
-  };
-});
+    cycle();
+    const timer = setInterval(cycle, interval);
+
+    return () => {
+      clearInterval(timer);
+    };
+  },
+);
 
 export const Sidebar: Component = () => {
   const { toast } = Toast();
@@ -149,7 +150,7 @@ export const Sidebar: Component = () => {
     WebSocketWS.send(
       JSON.stringify({
         [name]: {
-          interval: getFrameInterval(),
+          interval: time,
         },
       }),
     );
@@ -220,7 +221,7 @@ export const Sidebar: Component = () => {
           <button
             class={`action-neutral w-full ${getFramesDraft().length < 2 ? "not-hover:enabled:bg-neutral-light dark:not-hover:enabled:bg-neutral-dark not-hover:enabled:text-interactive-light dark:not-hover:enabled:text-content-dark" : ""}`}
             disabled={getPreview()}
-            onclick={handleAdd}
+            onClick={handleAdd}
             type="button"
           >
             <Icon path={mdiPlus} />
@@ -237,7 +238,7 @@ export const Sidebar: Component = () => {
               getFramesDraft().length < 2 ||
               !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel))
             }
-            onclick={handlePreview}
+            onClick={handlePreview}
             type="button"
           >
             <Icon path={getPreview() ? mdiStop : mdiPlay} />
@@ -251,7 +252,7 @@ export const Sidebar: Component = () => {
           <button
             class={`action-neutral w-full ${!getFramesDraft().length ? "not-hover:enabled:bg-neutral-light dark:not-hover:enabled:bg-neutral-dark not-hover:enabled:text-interactive-light dark:not-hover:enabled:text-content-dark" : ""}`}
             disabled={!getFrames().length || getSaved()}
-            onclick={handleLoad}
+            onClick={handleLoad}
             type="button"
           >
             <Icon path={mdiBackupRestore} />
@@ -265,7 +266,7 @@ export const Sidebar: Component = () => {
               !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel)) ||
               getSaved()
             }
-            onclick={handleSave}
+            onClick={handleSave}
             type="button"
           >
             <Icon path={mdiContentSave} />
@@ -276,7 +277,7 @@ export const Sidebar: Component = () => {
         <Icon path={mdiFileOutline} />
         Import/export
         <Tooltip text="Upload animation, drawing or image">
-          <button class="w-full" disabled={getPreview()} onclick={handleUpload} type="button">
+          <button class="w-full" disabled={getPreview()} onClick={handleUpload} type="button">
             <Icon path={mdiUpload} />
           </button>
         </Tooltip>
@@ -287,7 +288,7 @@ export const Sidebar: Component = () => {
               getFramesDraft().length < 2 ||
               !getFramesDraft().some(([frame]) => frame().some((pixel) => pixel))
             }
-            onclick={handleDownload}
+            onClick={handleDownload}
             type="button"
           >
             <Icon path={mdiDownload} />
@@ -388,7 +389,7 @@ export const Main: Component = () => {
                       >
                         <button
                           class="canvas-action-neutral"
-                          onclick={() => handleInsert(index())}
+                          onClick={() => handleInsert(index())}
                           type="button"
                         >
                           <Icon path={mdiPlus} />
@@ -402,7 +403,7 @@ export const Main: Component = () => {
                               [index()][0]?.()
                               .some((pixel) => pixel)
                           }
-                          onclick={() => handleClear(index())}
+                          onClick={() => handleClear(index())}
                           type="button"
                         >
                           <Icon path={mdiEraser} />
@@ -411,7 +412,7 @@ export const Main: Component = () => {
                       <Tooltip text={`Remove frame #${index() + 1}`}>
                         <button
                           class="canvas-action-negative"
-                          onclick={() => handleRemove(index())}
+                          onClick={() => handleRemove(index())}
                           type="button"
                         >
                           <Icon path={mdiDelete} />

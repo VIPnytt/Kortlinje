@@ -1,6 +1,6 @@
 import { createEventSignal } from "@solid-primitives/event-listener";
 import { createReconnectingWS, createWSState } from "@solid-primitives/websocket";
-import { batch, createEffect, type ParentComponent } from "solid-js";
+import { createEffect, type ParentComponent } from "solid-js";
 
 import { DEVICE_HOSTNAME } from "../constants/secrets";
 import { name as ModeAnimationName, receiver as ModeAnimationReceiver } from "../modes/Animation";
@@ -33,26 +33,32 @@ export const WebSocketWS = createReconnectingWS(
 );
 export const WebSocketState = createWSState(WebSocketWS);
 
-createEffect(() => {
-  if (WebSocketState() === WebSocketWS.OPEN) {
-    WebUICanonical();
-  }
-});
-
 export const WebSocketmessages: ParentComponent = (props) => {
+  createEffect(
+    () => WebSocketState() === WebSocketWS.OPEN,
+    (isOpen) => {
+      if (isOpen) {
+        WebUICanonical();
+      }
+    },
+  );
+
   const event = createEventSignal<{
     message: MessageEvent;
   }>(WebSocketWS, "message");
-  createEffect(() => {
-    const raw = event().data;
-    if (raw instanceof Blob) {
-      raw.arrayBuffer().then((buffer) => {
-        ExtensionWebUIReceiver(new Uint8Array(buffer));
-      });
-      return;
-    }
-    const json = JSON.parse(raw);
-    batch(() => {
+
+  createEffect(
+    () => event(),
+    (ev) => {
+      if (!ev) return;
+      const raw = ev.data;
+      if (raw instanceof Blob) {
+        raw.arrayBuffer().then((buffer) => {
+          ExtensionWebUIReceiver(new Uint8Array(buffer));
+        });
+        return;
+      }
+      const json = JSON.parse(raw);
       json[ConnectivityName] && ConnectivityReceiver(json[ConnectivityName]);
       json[DisplayName] && DisplayReceiver(json[DisplayName]);
       json[FontsName] && FontsReceiver(json[FontsName]);
@@ -67,7 +73,8 @@ export const WebSocketmessages: ParentComponent = (props) => {
       json[ModeDrawName] && ModeDrawReceiver(json[ModeDrawName]);
       json[ModeTickerName] && ModeTickerReceiver(json[ModeTickerName]);
       json[ModeWeatherName] && ModeWeatherReceiver(json[ModeWeatherName]);
-    });
-  });
+    },
+  );
+
   return props.children;
 };

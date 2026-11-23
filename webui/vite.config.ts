@@ -1,7 +1,7 @@
 import { mdiClockDigital } from "@mdi/js";
+import solidPlugin from "@solidjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
 import { DEVICE_NAME } from "./src/constants/secrets.ts";
 
 export default defineConfig(() => ({

@@ -94,7 +94,7 @@ export const Sidebar: Component = () => {
           <button
             class="action-neutral w-full"
             disabled={getSaved()}
-            onclick={handleLoad}
+            onClick={handleLoad}
             type="button"
           >
             <Icon path={mdiBackupRestore} />
@@ -104,7 +104,7 @@ export const Sidebar: Component = () => {
           <button
             class="action-positive w-full"
             disabled={!getFrame()?.some((pixel) => pixel) || getSaved()}
-            onclick={handleSave}
+            onClick={handleSave}
             type="button"
           >
             <Icon path={mdiContentSave} />
@@ -115,7 +115,7 @@ export const Sidebar: Component = () => {
         <Icon path={mdiFileOutline} />
         Import/export
         <Tooltip text="Upload drawing or image">
-          <button class="w-full" onclick={handleUpload} type="button">
+          <button class="w-full" onClick={handleUpload} type="button">
             <Icon path={mdiUpload} />
           </button>
         </Tooltip>
@@ -123,7 +123,7 @@ export const Sidebar: Component = () => {
           <button
             class="w-full"
             disabled={!getFrame()?.some((pixel) => pixel)}
-            onclick={handleDownload}
+            onClick={handleDownload}
             type="button"
           >
             <Icon path={mdiDownload} />
@@ -189,7 +189,7 @@ export const Main: Component = () => {
               <button
                 class="canvas-action-negative"
                 disabled={!getFrame()?.some((pixel) => pixel)}
-                onclick={handleClear}
+                onClick={handleClear}
                 type="button"
               >
                 <Icon path={mdiEraser} />

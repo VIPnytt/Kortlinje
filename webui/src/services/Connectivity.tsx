@@ -13,7 +13,7 @@ import {
   mdiWifiStrengthLockOutline,
   mdiWifiStrengthOutline,
 } from "@mdi/js";
-import { type Component, createSignal, For, Index } from "solid-js";
+import { type Component, createSignal, For } from "solid-js";
 
 import { Icon } from "../components/Icon";
 import { Toast } from "../components/Toast";
@@ -84,7 +84,7 @@ export const MainThird: Component = () => {
                 autocomplete="username"
                 id="ssid"
                 list="scan"
-                oninput={(e) => setCredentialSsid(e.currentTarget.value)}
+                onInput={(e) => setCredentialSsid(e.currentTarget.value)}
                 placeholder={getSsid() ?? "Name"}
                 type="text"
                 value={getCredentialSsid()}
@@ -99,7 +99,7 @@ export const MainThird: Component = () => {
                 class="w-full"
                 autocomplete="current-password"
                 id="key"
-                oninput={(e) => setCredentialKey(e.currentTarget.value)}
+                onInput={(e) => setCredentialKey(e.currentTarget.value)}
                 placeholder={!getCredentialSsid() && getSsid() ? "********" : "Password"}
                 type="password"
               />
@@ -111,7 +111,7 @@ export const MainThird: Component = () => {
                 (getCredentialKey().length > 0 && getCredentialKey().length < 8)
               }
               id="connect"
-              onclick={handleConnect}
+              onClick={handleConnect}
               type="button"
             >
               <Icon class="mr-2" path={mdiContentSave} />
@@ -151,11 +151,11 @@ export const SidebarThird: Component = () => {
           Scanning...
         </div>
       ) : (
-        <Index each={getScan().toSorted((a, b) => b.rssi - a.rssi)}>
+        <For each={getScan().toSorted((a, b) => b.rssi - a.rssi)} keyed={false}>
           {(item) => (
             <button
               class="cursor-pointer link normal-case space-y-2 w-full"
-              onclick={() => handleSelect(item().ssid)}
+              onClick={() => handleSelect(item().ssid)}
               type="button"
             >
               <Icon
@@ -185,7 +185,7 @@ export const SidebarThird: Component = () => {
               {item().ssid}
             </button>
           )}
-        </Index>
+        </For>
       )}
     </SidebarSectionSecondary>
   );

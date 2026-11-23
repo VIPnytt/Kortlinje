@@ -19,18 +19,19 @@
   },
   "dependencies": {
     "@mdi/js": "7.4.47",
-    "@solid-primitives/event-listener": "2.4.6",
-    "@solid-primitives/websocket": "1.4.0",
+    "@solid-primitives/event-listener": "3.0.0",
+    "@solid-primitives/websocket": "2.0.0",
+    "@solidjs/web": "2.0.3",
     "js-cookie": "3.0.8",
-    "solid-js": "1.9.19",
+    "solid-js": "2.0.3",
     "temporal-polyfill-lite": "^1.0.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.8",
+    "@solidjs/vite-plugin": "3.0.1",
     "@tailwindcss/vite": "4.3.5",
     "@types/js-cookie": "3.0.6",
-    "vite": "8.3.8",
-    "vite-plugin-solid": "2.11.16"
+    "vite": "8.3.8"
   },
   "private": true
 }

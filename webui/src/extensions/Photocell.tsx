@@ -14,12 +14,13 @@ export const receiver = (json: { enabled?: boolean }) => {
   json?.enabled !== undefined && setEnabled(json.enabled);
 };
 
-const handleEnabled = () => {
-  setEnabled(!getEnabled());
+const handleEnable = () => {
+  const enable = !getEnabled();
+  setEnabled(enable);
   WebSocketWS.send(
     JSON.stringify({
       [name]: {
-        enabled: getEnabled(),
+        enabled: enable,
       },
     }),
   );
@@ -34,7 +35,7 @@ export const Actions: Component = () => (
     <Tooltip text={`${getEnabled() ? "Disable" : "Enable"} ${name.toLowerCase()}`}>
       <button
         class={`w-full ${getEnabled() ? "action-activated" : "action-deactivated"}`}
-        onclick={handleEnabled}
+        onClick={handleEnable}
         type="button"
       >
         <Icon path={getEnabled() ? mdiBrightnessAuto : mdiBrightness6} />
@@ -62,7 +63,7 @@ export const MainThird: Component = () => (
           <div class="text-sm">Automatically switches on/off the display.</div>
           <button
             class={`mt-3 w-full ${getEnabled() ? "action-activated" : "action-deactivated"}`}
-            onclick={handleEnabled}
+            onClick={handleEnable}
             type="button"
           >
             <Icon class="mr-2" path={getEnabled() ? mdiBrightnessAuto : mdiBrightness6} />

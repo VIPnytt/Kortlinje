@@ -37,7 +37,7 @@ export const Sidebar: Component = () => {
     WebSocketWS.send(
       JSON.stringify({
         [name]: {
-          font: getFont(),
+          font,
         },
       }),
     );
@@ -48,7 +48,7 @@ export const Sidebar: Component = () => {
     WebSocketWS.send(
       JSON.stringify({
         [name]: {
-          message: getMessage(),
+          message,
         },
       }),
     );
@@ -61,7 +61,7 @@ export const Sidebar: Component = () => {
         <input
           class="mt-1 w-full"
           maxlength="255"
-          onchange={(e) => handleMessage(e.currentTarget.value)}
+          onChange={(e) => handleMessage(e.currentTarget.value)}
           placeholder="Message"
           spellcheck="true"
           type="text"
@@ -74,7 +74,7 @@ export const Sidebar: Component = () => {
           <select
             class="w-full"
             value={getFont()}
-            onchange={(e) => handleFont(e.currentTarget.value)}
+            onChange={(e) => handleFont(e.currentTarget.value)}
           >
             <For each={FontsCollection()}>{(font) => <option>{font}</option>}</For>
           </select>
@@ -118,7 +118,7 @@ export const Main: Component = () => {
               <input
                 class="w-full"
                 maxlength="255"
-                oninput={(e) => setMessage(e.currentTarget.value)}
+                onInput={(e) => setMessage(e.currentTarget.value)}
                 placeholder="Message"
                 spellcheck="true"
                 type="text"
@@ -130,7 +130,7 @@ export const Main: Component = () => {
               <Tooltip text="Character availability may vary">
                 <select
                   class="w-full"
-                  onchange={(e) => setFont(e.currentTarget.value)}
+                  onChange={(e) => setFont(e.currentTarget.value)}
                   value={getFont()}
                 >
                   <For each={FontsCollection()}>{(font) => <option>{font}</option>}</For>
@@ -140,7 +140,7 @@ export const Main: Component = () => {
             <button
               class="action-positive mt-3 w-full"
               disabled={!getFont() || !getMessage()}
-              onclick={handleSave}
+              onClick={handleSave}
               type="button"
             >
               <Icon class="mr-2" path={mdiMessage} />

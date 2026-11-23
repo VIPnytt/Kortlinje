@@ -7,6 +7,8 @@
 #include <limits>
 #include <numeric>
 #include <optional>
+#include <utility>
+#include <vector>
 
 TextHandler::TextHandler(std::string_view text, const FontModule &font, uint8_t tracking)
 {

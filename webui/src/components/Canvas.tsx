@@ -1,4 +1,4 @@
-import { type Component, createEffect, onCleanup, onMount } from "solid-js";
+import { type Component, createEffect, onSettled } from "solid-js";
 import { WebUISidebar } from "../extensions/WebUI";
 import { DisplayColumns, DisplayRows } from "../services/Display";
 
@@ -15,35 +15,36 @@ export const Canvas: Component<{
   let isDrawing: boolean = false;
   let lit: boolean = true;
 
-  onMount(() => {
+  onSettled(() => {
     if (canvasRef) {
       canvasRef.addEventListener("pointerdown", handleDown);
       canvasRef.addEventListener("pointerleave", handleUp);
       canvasRef.addEventListener("pointermove", handleMove);
       canvasRef.addEventListener("pointerup", handleUp);
     }
+    let resizeObserver: ResizeObserver | undefined;
     if (divRef) {
-      const resizeObserver = new ResizeObserver(() => {
+      resizeObserver = new ResizeObserver(() => {
         draw();
       });
       resizeObserver.observe(divRef);
-      onCleanup(() => {
-        resizeObserver.disconnect();
-      });
     }
     draw();
+    return () => {
+      canvasRef?.removeEventListener("pointerdown", handleDown);
+      canvasRef?.removeEventListener("pointerleave", handleUp);
+      canvasRef?.removeEventListener("pointermove", handleMove);
+      canvasRef?.removeEventListener("pointerup", handleUp);
+      resizeObserver?.disconnect();
+    };
   });
 
-  onCleanup(() => {
-    canvasRef?.removeEventListener("pointerdown", handleDown);
-    canvasRef?.removeEventListener("pointerleave", handleUp);
-    canvasRef?.removeEventListener("pointermove", handleMove);
-    canvasRef?.removeEventListener("pointerup", handleUp);
-  });
-
-  createEffect(() => {
-    draw();
-  });
+  createEffect(
+    () => props.pixels,
+    () => {
+      draw();
+    },
+  );
 
   const draw = () => {
     if (!canvasRef || !divRef) {

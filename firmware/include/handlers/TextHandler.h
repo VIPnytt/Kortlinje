@@ -4,6 +4,7 @@
 #include "modules/HandlerModule.h"
 #include "services/DisplayService.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <inplace_vector>
 #include <span>

@@ -42,42 +42,38 @@ void BreakoutMode::handle()
             TextHandler(std::format("{:02d}:{:02d}", _hour, minute), font).draw(0U);
         }
     }
-    const uint8_t nextX{
-        static_cast<uint8_t>(std::clamp(static_cast<int>(x) + stepX, 0, static_cast<int>(Display::grid::maxX)))};
-    const uint8_t nextY{static_cast<uint8_t>(
-        std::clamp(static_cast<int>(std::lroundf(yDec + stepY)), 0, static_cast<int>(Display::grid::maxY)))};
-    if (x == 0U && stepX < 0)
-    {
-        stepX = 1;
-    }
-    if ((y == 0U && stepY < .0F) || (y >= Display::grid::maxY && stepY > .0F))
-    {
-        stepY = -stepY;
-    }
-    if (nextX == Display::grid::maxX && stepX > 0)
+    reflectWalls();
+    bool advance{true};
+    if (x == Display::grid::maxX - 1U && stepX > 0)
     {
         stepX = -1;
         stepY = (static_cast<float>(random(101L)) * 1e-2F) -
                 (static_cast<float>(y) * (1.0F / static_cast<float>(Display::grid::maxY)));
         interval = static_cast<int64_t>(static_cast<float>(0b1U << 16U) * sqrtf(1.0F + (stepY * stepY)));
     }
-    else if ((nextX != x || nextY != y) && DisplayService::getPixel(nextX, nextY))
+    else if (const std::optional<Hit> hit{findHit()}; hit.has_value())
     {
-        DisplayService::setPixel(nextX, nextY, false);
-        if (nextX == x)
-        {
-            stepY = -stepY;
-        }
-        else
+        DisplayService::setPixel(hit->x, hit->y, false);
+        if (hit->flipX)
         {
             stepX = -stepX;
         }
+        else
+        {
+            stepY = -stepY;
+        }
+        reflectWalls();
+        advance = (x < Display::grid::maxX - 1U || stepX < 0) && !findHit().has_value();
     }
-    DisplayService::setPixel(x, y, false);
-    x = static_cast<uint8_t>(std::clamp(static_cast<int>(x) + stepX, 0, static_cast<int>(Display::grid::maxX - 1U)));
-    yDec = std::clamp(yDec + stepY, .0F, static_cast<float>(Display::grid::maxY));
-    y = static_cast<uint8_t>(std::lroundf(yDec));
-    DisplayService::setPixel(x, y, true);
+    if (advance)
+    {
+        DisplayService::setPixel(x, y, false);
+        x = static_cast<uint8_t>(
+            std::clamp(static_cast<int>(x) + stepX, 0, static_cast<int>(Display::grid::maxX - 1U)));
+        yDec = std::clamp(yDec + stepY, .0F, static_cast<float>(Display::grid::maxY));
+        y = static_cast<uint8_t>(std::lroundf(yDec));
+        DisplayService::setPixel(x, y, true);
+    }
     const float distX{static_cast<float>((Display::grid::maxX - 1U) - x)};
     const float distY{fabsf(static_cast<float>(paddleY) - yDec)};
     if (distX < distY * std::numbers::sqrt3_v<float>)
@@ -97,10 +93,51 @@ void BreakoutMode::handle()
     }
 }
 
+std::optional<BreakoutMode::Hit> BreakoutMode::findHit() const
+{
+    const uint8_t nextX{
+        static_cast<uint8_t>(std::clamp(static_cast<int>(x) + stepX, 0, static_cast<int>(Display::grid::maxX)))};
+    const uint8_t nextY{static_cast<uint8_t>(
+        std::clamp(static_cast<int>(std::lroundf(yDec + stepY)), 0, static_cast<int>(Display::grid::maxY)))};
+    if (nextY == y)
+    {
+        if (DisplayService::getPixel(nextX, y))
+        {
+            return Hit{true, nextX, y};
+        }
+        return std::nullopt;
+    }
+    const float yMid{yDec + (0.5F * stepY)};
+    const bool xFirst{fabsf(yMid - static_cast<float>(y)) <= 0.5F};
+    const uint8_t midX{xFirst ? nextX : x};
+    const uint8_t midY{xFirst ? y : nextY};
+    if (DisplayService::getPixel(midX, midY))
+    {
+        return Hit{xFirst, midX, midY};
+    }
+    if (DisplayService::getPixel(nextX, nextY))
+    {
+        return Hit{!xFirst, nextX, nextY};
+    }
+    return std::nullopt;
+}
+
 int64_t __time_critical_func(BreakoutMode::onAlarm)(alarm_id_t id, void *user_data)
 {
     static_cast<void>(id);
     auto *self{static_cast<BreakoutMode *>(user_data)};
     self->tick = true;
     return self->interval;
+}
+
+void BreakoutMode::reflectWalls()
+{
+    if (x == 0U && stepX < 0)
+    {
+        stepX = 1;
+    }
+    if ((y == 0U && stepY < .0F) || (y >= Display::grid::maxY && stepY > .0F))
+    {
+        stepY = -stepY;
+    }
 }

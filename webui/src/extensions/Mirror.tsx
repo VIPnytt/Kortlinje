@@ -17,11 +17,12 @@ export const receiver = (json: { active?: boolean }) => {
 };
 
 const handleEnable = () => {
-  setEnabled(!getEnabled());
+  const enable = !getEnabled();
+  setEnabled(enable);
   WebSocketWS.send(
     JSON.stringify({
       [name]: {
-        enabled: getEnabled(),
+        enabled: enable,
       },
     }),
   );
@@ -37,7 +38,7 @@ export const Actions: Component = () => (
       <button
         class={`w-full ${getEnabled() ? "action-activated" : "action-deactivated"}`}
         disabled={!getEnabled() && ModesMode() === StreamName}
-        onclick={handleEnable}
+        onClick={handleEnable}
         type="button"
       >
         <Icon path={getEnabled() ? mdiStop : mdiPlay} />
@@ -63,7 +64,7 @@ export const MainThird: Component = () => (
           <button
             class={`mt-3 w-full ${getEnabled() ? "action-activated" : "action-deactivated"}`}
             disabled={!getEnabled() && ModesMode() === StreamName}
-            onclick={handleEnable}
+            onClick={handleEnable}
             type="button"
           >
             <Icon class="mr-2" path={getEnabled() ? mdiStop : mdiPlay} />

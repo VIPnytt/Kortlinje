@@ -38,7 +38,7 @@ export const Sidebar: Component = () => {
         <select
           class="w-full"
           value={getProvider()}
-          onchange={(e) => handleProvider(e.currentTarget.value)}
+          onChange={(e) => handleProvider(e.currentTarget.value)}
         >
           <For each={getProviders()}>{(provider) => <option>{provider}</option>}</For>
         </select>

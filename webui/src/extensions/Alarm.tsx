@@ -68,13 +68,13 @@ const getTime = (id: AlarmId) =>
     smallestUnit: "minute",
   });
 
-const handleUpdate = (id: AlarmId) => {
+const handleUpdate = (id: AlarmId, next?: { enabled?: boolean; time?: string }) => {
   WebSocketWS.send(
     JSON.stringify({
       [name]: {
         [`alarm${id}`]: {
-          enabled: alarms[id].getEnabled(),
-          time: getTime(id),
+          enabled: next?.enabled ?? alarms[id].getEnabled(),
+          time: next?.time ?? getTime(id),
         },
       },
     }),
@@ -82,8 +82,9 @@ const handleUpdate = (id: AlarmId) => {
 };
 
 const handleEnable = (id: AlarmId) => {
-  alarms[id].setEnabled(!alarms[id].getEnabled());
-  handleUpdate(id);
+  const enable = !alarms[id].getEnabled();
+  alarms[id].setEnabled(enable);
+  handleUpdate(id, { enabled: enable });
 };
 
 export const Actions: Component = () => (
@@ -98,7 +99,7 @@ export const Actions: Component = () => (
       >
         <button
           class={`w-full ${alarms[id].getEnabled() ? "action-activated" : "action-deactivated"}`}
-          onclick={() => handleEnable(id)}
+          onClick={() => handleEnable(id)}
           type="button"
         >
           <Icon path={alarms[id].getEnabled() ? mdiAlarm : mdiAlarmOff} />
@@ -130,8 +131,13 @@ export const MainThird: Component = () => {
 
   const handleTime = (id: AlarmId, value: string) => {
     if (!value) return;
-    alarms[id].setTime(Temporal.PlainTime.from(value));
-    handleUpdate(id);
+    const time = Temporal.PlainTime.from(value);
+    alarms[id].setTime(time);
+    handleUpdate(id, {
+      time: time.toString({
+        smallestUnit: "minute",
+      }),
+    });
   };
 
   return (
@@ -145,7 +151,7 @@ export const MainThird: Component = () => {
                 <Icon path={icons[id]} />
                 <input
                   class="cursor-pointer"
-                  onchange={(e) => handleTime(id, e.currentTarget.value)}
+                  onChange={(e) => handleTime(id, e.currentTarget.value)}
                   type="time"
                   value={getTime(id)}
                 />
@@ -155,7 +161,7 @@ export const MainThird: Component = () => {
                   >
                     <button
                       class={alarms[id].getEnabled() ? "action-activated" : "action-deactivated"}
-                      onclick={() => handleEnable(id)}
+                      onClick={() => handleEnable(id)}
                       type="button"
                     >
                       <Icon path={alarms[id].getEnabled() ? mdiAlarm : mdiAlarmOff} />
@@ -171,7 +177,7 @@ export const MainThird: Component = () => {
               <button
                 class="mt-3 w-full action-neutral"
                 disabled={!alarms[1].getEnabled() && !alarms[2].getEnabled()}
-                onclick={() => handleAction("snooze")}
+                onClick={() => handleAction("snooze")}
                 type="button"
               >
                 <Icon path={mdiAlarmSnooze} />
@@ -181,7 +187,7 @@ export const MainThird: Component = () => {
               <button
                 class="mt-3 w-full action-negative"
                 disabled={!alarms[1].getEnabled() && !alarms[2].getEnabled()}
-                onclick={() => handleAction("dismiss")}
+                onClick={() => handleAction("dismiss")}
                 type="button"
               >
                 <Icon path={mdiBellOffOutline} />

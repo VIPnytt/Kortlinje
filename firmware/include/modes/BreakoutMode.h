@@ -5,12 +5,20 @@
 
 #include <cstdint>
 #include <ctime>
+#include <optional>
 #include <pico/time.h>
 #include <string_view>
 
 class BreakoutMode final : public ModeModule
 {
 private:
+    struct Hit
+    {
+        bool flipX{};
+        uint8_t x{};
+        uint8_t y{};
+    };
+
     volatile bool tick{false};
 
     int8_t stepX{-1};
@@ -32,6 +40,10 @@ private:
     time_t now{};
 
     tm local{};
+
+    void reflectWalls();
+
+    [[nodiscard]] std::optional<Hit> findHit() const;
 
     [[nodiscard]] static int64_t onAlarm(alarm_id_t id, void *user_data);
 

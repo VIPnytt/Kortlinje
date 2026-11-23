@@ -81,7 +81,7 @@ export const Sidebar: Component = () => {
           <select
             class="w-full"
             name={name}
-            onchange={(e) => handleMode(e.currentTarget.value)}
+            onChange={(e) => handleMode(e.currentTarget.value)}
             value={getMode()}
           >
             <For each={getModes()}>{(mode) => <option>{mode}</option>}</For>
